@@ -1259,7 +1259,7 @@ void detect_Revised_Mat(CRForestDetector& crDetect) {
 }
 
 void detect_he(CRForestDetector& crDetect) {
-
+	//
 	if (!SetTestVideo_Mat())	exit(-1);
 
 	char buffer[200];
