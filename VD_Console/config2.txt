@@ -1,0 +1,44 @@
+# Path to trees + prefix 'treetable'
+example_added\\trees\\treetable
+# Number of trees
+15
+# Patch width
+12
+# Patch height
+12
+# Path to images
+example_added\\testimages
+# Path to video file
+example_added\\testimages\\cvlab_1.mp4
+# Extract features
+1
+# Scales (Number of scales - Scales)
+4 0.34 0.49 0.7 1.0
+# Ratios (Number of ratios - ratio)
+1 1
+# Output path
+example_added\\detect
+# Scale factor for output image (default: 128)
+50
+# Path to positive examples
+example_added\\trainimages\\positive\\no_bg
+# File with postive examples
+example_added\\train_pos.txt
+# Subset of positive images -1: all images
+-1
+# Sample patches from pos. examples
+747
+# Path to negative examples
+example_added\\trainimages\\negative\\for_no_bg
+# File with negative examples
+example_added\\train_neg.txt
+# Subset of negative images -1: all images
+-1
+# Sample patches from neg. examples
+2254
+# Training image size - width
+60
+# Training image size - height
+48
+
+
