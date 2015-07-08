@@ -110,6 +110,8 @@ int main()
 				//strcpy(szPrescanDB_dir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_1/2015-04-13-14h-20m-45s_straight_");
 				//strcpy(szPrescanDB_dir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_2/2015-04-13-14h-20m-45s_straight_2_");
 				strcpy(szPrescanDB_dir, "./[DB]FreeScaleDemo/Cloudy/Urban/Straight_2/2015-04-13-14h-20m-45s_straight_2_");
+				//strcpy(szPrescanDB_dir, "D:/02.project/MultiROILaneDetectionVS2013/MultiROILaneDetectionVS2013/[DB]FreeScaleDemo/Cloudy/Urban/Straight_2/2015-04-13-14h-20m-45s_straight_2_");
+			
 			}
 			if (INIT_ROADINFO == EXPRESSWAY)
 			{
@@ -514,7 +516,11 @@ int main()
 			obj.m_imgOrigin = imread(string(obj.m_sPreScanDB.szDataName));
 			
 			if (obj.m_imgOrigin.empty())
+			{
+				printf("empty\n");
 				break;
+			}
+				
 			obj.InitialResizeFunction(sizeResizeImg);
 			//resize(obj.m_imgOrigin,obj.m_imgResizeOrigin,sizeResizeImg);
 		}///end		
@@ -1314,7 +1320,7 @@ int main()
 
 			}
 			if ((obj.bLeftDraw == true) && (obj.bRightDraw == true)){
-				if ((fRightGround - fLeftGround) < 1.5)
+				if ((fRightGround - fLeftGround) < MIN_WORLD_WIDTH)
 				{
 					obj.ClearDetectionResult();
 					/*obj.bLeftDraw = false;

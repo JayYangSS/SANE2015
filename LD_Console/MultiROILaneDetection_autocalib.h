@@ -28,6 +28,7 @@ using namespace std;
 #define TRACKING_FLAG_NUM 4
 #define TRACKING_ERASE_LEVEL 1
 #define TRACKINGERASE 5
+#define MIN_WORLD_WIDTH 2.0
 enum EROINUMBER{
 	CENTER_ROI = 0,
 	LEFT_ROI0,
