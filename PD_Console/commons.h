@@ -4,7 +4,7 @@
 using namespace std;
 using namespace cv;
 
-SDetector
+struct SDetector
 {
 	struct opts
 	{
