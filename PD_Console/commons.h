@@ -4,22 +4,22 @@
 using namespace std;
 using namespace cv;
 
-struct SDetector
+SDetector
 {
-	static struct opts
+	struct opts
 	{
-		static struct pPyramid
+		struct pPyramid
 		{
-			static struct pChns
+			struct pChns
 			{
 				double shrink;
-				static struct pColor
+				struct pColor
 				{
 					double enabled;
 					double smooth;
 					string colorSpace;
 				};
-				static struct pGradMag
+				struct pGradMag
 				{
 					double enabled;
 					double colorChn;
@@ -27,7 +27,7 @@ struct SDetector
 					double normConst;
 					double full;
 				};
-				static struct pGradHist
+				struct pGradHist
 				{
 					double enabled;
 					double binSize;
@@ -51,7 +51,7 @@ struct SDetector
 		double filters;
 		double modelDs[2];
 		double modelDsPad[2];
-		static struct pNms
+		struct pNms
 		{
 			string type;
 			double overlap;
@@ -61,9 +61,9 @@ struct SDetector
 		double cascThr;
 		double cascCal;
 		double nWeak[4];
-		static struct pBoost
+		struct pBoost
 		{
-			static struct pTree
+			struct pTree
 			{
 				double nBins;
 				double maxDepth;
@@ -77,7 +77,7 @@ struct SDetector
 		};
 		double seed;
 		// imreadf = imread function handle
-		static struct pLoad
+		struct pLoad
 		{
 			double squarify[2];
 			double lbls;
@@ -89,13 +89,13 @@ struct SDetector
 		double nNeg;
 		double nPerNeg;
 		double nAccNeg;
-		static struct pJitter
+		struct pJitter
 		{
 			double flip;
 		};
 		double windsSave;
 	};
-	static struct clf
+	struct clf
 	{
 		unsigned int fids[63][4096];
 		double thrs[63][4096];
@@ -107,10 +107,10 @@ struct SDetector
 		double losses[4096];
 		int treeDepth;
 	};
-	static struct info_color
+	struct info_color
 	{
 		string name;
-		static struct pChn
+		struct pChn
 		{
 			double enabled;
 			double smooth;
@@ -119,10 +119,10 @@ struct SDetector
 		double nChns;
 		string padWith;
 	};
-	static struct info_gradMag
+	struct info_gradMag
 	{
 		string name;
-		static struct pChn
+		struct pChn
 		{
 			double enabled;
 			double colorChn;
@@ -132,10 +132,10 @@ struct SDetector
 		};
 		double nChns;
 	};
-	static struct info_gradhist
+	struct info_gradhist
 	{
 		string name;
-		static struct pChn
+		struct pChn
 		{
 			double enabled;
 			double binSize;
