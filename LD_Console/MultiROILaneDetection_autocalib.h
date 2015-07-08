@@ -28,7 +28,7 @@ using namespace std;
 #define TRACKING_FLAG_NUM 4
 #define TRACKING_ERASE_LEVEL 1
 #define TRACKINGERASE 5
-#define MIN_WORLD_WIDTH 2.0
+#define MIN_WORLD_WIDTH 2.0		//Left,Right lane minimum interval
 enum EROINUMBER{
 	CENTER_ROI = 0,
 	LEFT_ROI0,
@@ -266,14 +266,16 @@ private:
 
 
 public:
+	void SetRoiIpmCofig(EROINUMBER nFlag);
+
 	void StartLanedetection(EROINUMBER nFlag){
 		GetIPM(nFlag);
-		FilterLinesIPM(nFlag);
+		FilterLinesIPM(nFlag); //input = m_imgIPM, Output1= m_ipmFiltered, Output2= m_ipmFilteredThreshold
 		GetLinesIPM(nFlag);
 		LineFitting(nFlag);
 		IPM2ImLines(nFlag);
 	}
-	void SetRoiIpmCofig(EROINUMBER nFlag);
+	
 	void InitialResizeFunction(Size sizeResize);
 	void GetIPM(EROINUMBER nFlag);
 	void FilterLinesIPM(EROINUMBER nFlag);
@@ -562,13 +564,13 @@ void CMultiROILaneDetection::SetRoiIpmCofig(EROINUMBER nFlag ){
 	float fEps = m_sConfig.fVanishPortion * fHeight;
 
 
-
+	//vanishing point validation
 	m_sRoiInfo[nFlag].nLeft = MAX(0,m_sRoiInfo[nFlag].nLeft);
 	m_sRoiInfo[nFlag].nRight = MIN(fWidth,m_sRoiInfo[nFlag].nRight);
 	m_sRoiInfo[nFlag].nTop = MAX(ptVp.y+fEps, m_sRoiInfo[nFlag].nTop);
 	m_sRoiInfo[nFlag].nBottom = MIN(fHeight-1,m_sRoiInfo[nFlag].nBottom);
 
-
+	//ROI boundary limits
 	float fArrLimits[] = {
 		ptVp.x,					m_sRoiInfo[nFlag].nRight, m_sRoiInfo[nFlag].nLeft, ptVp.x,
 		m_sRoiInfo[nFlag].nTop, m_sRoiInfo[nFlag].nTop,   m_sRoiInfo[nFlag].nTop,  m_sRoiInfo[nFlag].nBottom
@@ -595,7 +597,7 @@ void CMultiROILaneDetection::SetRoiIpmCofig(EROINUMBER nFlag ){
 	//construct the grid to sample
 
 	Mat matXyGrid(2,outRow*outCol,CV_32FC1);
-
+	//Grid is LUT
 	float *pMatXyGrid= (float*)&matXyGrid.data[0];
 	int i,j;
 	float x,y;
@@ -649,6 +651,7 @@ void CMultiROILaneDetection::GetIPM( EROINUMBER nFlag){
 	int nIpmHeight = m_sRoiInfo[nFlag].sizeIPM.height;
 	int nUvGridWidth = m_matUVGrid[nFlag].cols;
 	int nUvGridHeight = m_matUVGrid[nFlag].rows;
+	//IPM image make process
 	for (i=0; i<nIpmHeight; i++)
 		for (j=0; j<nIpmWidth; j++){ 
 			/*get pixel coordiantes*/ 
@@ -656,7 +659,6 @@ void CMultiROILaneDetection::GetIPM( EROINUMBER nFlag){
 			ui = pMatUvGrid[nUvGridWidth*0+i*nIpmWidth+j];
 			vi = pMatUvGrid[nUvGridWidth*1+i*nIpmWidth+j];
 			/*check if out-of-bounds*/ 
-
 			if (ui<m_sRoiInfo[nFlag].nLeft || ui>m_sRoiInfo[nFlag].nRight || 
 				vi<m_sRoiInfo[nFlag].nTop || vi>m_sRoiInfo[nFlag].nBottom) { 
 					ppMatOutImage[nIpmWidth*i+j]=(float)dmean;
@@ -754,7 +756,7 @@ void CMultiROILaneDetection::FilterLinesIPM(EROINUMBER nFlag){
 		matFy,Point(-1,-1),0.0,BORDER_REPLICATE);
 	//double dStartTick = (double)getTickCount();
 	Mat rowMat;
-	rowMat = Mat(m_ipmFiltered[nFlag]).reshape(0,1);
+	rowMat = Mat(m_ipmFiltered[nFlag]).reshape(0,1); //1row로 누적시킴
 	//get the quantile
 	float fQval;
 	fQval = quantile((float*) &rowMat.data[0], rowMat.cols, m_sConfig.fLowerQuantile);
@@ -869,7 +871,7 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 	//	cout<<m_laneScore[nFlag].at(i)<<","<<endl;
 	if((nFlag!=CENTER_ROI) && (nFlag !=AUTOCALIB) && (m_lanes[nFlag].size()>0)){
 		if (m_bTracking[nFlag])
-			GetTrackingLineCandidate(nFlag);
+			GetTrackingLineCandidate(nFlag);//이전에 추적한 결과가 있을 경우, 검출 대상 차선의 위치가 월드좌표상으로 멀리 떨어진 값인지 확인
 		else
 			GetMaxLineScore(nFlag);
 	}else if(nFlag==AUTOCALIB){
@@ -933,6 +935,7 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 		float lineRTheta[2]={-1,0};
 		float lineScore;
 		SLine line;
+		//RANSAC 결과
 
 		FitRansacLine(matSubImage, m_sRoiInfo[nFlag].nRansacNumSamples,
 			m_sRoiInfo[nFlag].nRansacNumIterations,
@@ -952,7 +955,8 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 				put = false;
 			
 			//IPM ROI border line rejection
-			int nBorderX = (line.ptStartLine.x + line.ptEndLine.x) / 2; int nBorderGap = m_sRoiInfo[nFlag].sizeIPM.width / 10;
+			int nBorderX = (line.ptStartLine.x + line.ptEndLine.x) / 2; 
+			int nBorderGap = m_sRoiInfo[nFlag].sizeIPM.width / 10;
 			if (nBorderX<(nBorderGap) || nBorderX>(m_sRoiInfo[nFlag].sizeIPM.width - nBorderGap))
 				put = false;
 
@@ -1013,6 +1017,7 @@ void CMultiROILaneDetection::IPM2ImLines(EROINUMBER nFlag){
 	if(m_lanes[nFlag].size()!=0){
 		//PointImIPM2World
 		//m_lanes[nFlag].
+		//IPM2WORLD
 		for(int i=0; i<m_lanes[nFlag].size();i++){
 			m_lanesResult[nFlag].push_back(m_lanes[nFlag].at(i));
 			//cout<<m_lanes[nFlag].at(i).ptStartLine<<endl;
@@ -1034,7 +1039,7 @@ void CMultiROILaneDetection::IPM2ImLines(EROINUMBER nFlag){
 			//record ground location
 			m_lanesGroundResult[nFlag].push_back(m_lanesResult[nFlag].at(i));
 		}
-		
+		//WORLD2IMAGE
 		//convert them from world frame into camera frame
 		//
 		//put a dummy line at the beginning till we check that cvDiv bug
@@ -1849,51 +1854,7 @@ void CMultiROILaneDetection::FitRansacLine(const Mat& matImage, int numSamples, 
 				bestLineAbc[2] = curLineAbc[2];
 				bestEndPointLine = curEndPointLine;
 			}
-		} // if numClose
-		//Debug LINES
-		//if(DEBUG_LINE == 1){
-		//	//if(0){
-		//	char str[256];
-		//	//convert image to rgb
-		//	//CvMat* im = cvCloneMat(matImage);
-		//	Mat im = matImage.clone();
-		//	//mcvScaleMat(matImage, im);
-		//	ScaleMat(matImage,im);
-		//	//CvMat *imageClr = cvCreateMat(image->rows, image->cols, CV_32FC3);
-		//	Mat imageClr= Mat(matImage.rows,matImage.cols,CV_32FC3);
-		//	//cvCvtColor(im, imageClr, CV_GRAY2RGB);
-		//	cvtColor(matImage,imageClr,CV_GRAY2RGB);
-
-		//	SLine line;
-		//	//draw current line if there
-		//	if (curLineRTheta[0]>0)
-		//	{
-		//		IntersectLineRThetaWithBB(curLineRTheta[0], curLineRTheta[1],
-		//			Size(matImage.cols, matImage.rows), &line);
-		//		mcvDrawLine(imageClr, line, CV_RGB(1,0,0), 1);
-		//		if (getEndPoints)
-		//			mcvDrawLine(imageClr, curEndPointLine, CV_RGB(0,1,0), 1);
-		//	}
-
-		//	//draw best line
-		//	if (bestLineRTheta[0]>0)
-		//	{
-		//		mcvIntersectLineRThetaWithBB(bestLineRTheta[0], bestLineRTheta[1],
-		//			cvSize(image->cols, image->rows), &line);
-		//		mcvDrawLine(imageClr, line, CV_RGB(0,0,1), 1);
-		//		if (getEndPoints)
-		//			mcvDrawLine(imageClr, bestEndPointLine, CV_RGB(1,1,0), 1);
-		//	}
-		//	sprintf(str, "%d, scor=%.2f, best=%.2f",numIterations, score, bestScore);
-		//	mcvDrawText(imageClr, str, cvPoint(30, 30), .6, CV_RGB(255,255,255));
-
-		//	SHOW_IMAGE(imageClr, "Fit Ransac Line", 10);
-
-		//	//clear
-		//	cvReleaseMat(&im);
-		//	cvReleaseMat(&imageClr);
-
-		//}
+		}
 	} // for i
 
 	//return

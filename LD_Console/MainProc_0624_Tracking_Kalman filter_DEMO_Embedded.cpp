@@ -210,7 +210,7 @@ int main()
 	char szSaveText[20] = "0_SaveText.txt";
 	strcpy(szAnnotationSaveFile, szTestDir);
 	strcat(szAnnotationSaveFile, szSaveText);
-	CMultiROILaneDetection obj;
+	CMultiROILaneDetection obj;		//constructor
 	obj.nLeftCnt = 0;
 	obj.nRightCnt = 0;
 	if (DB_NUM == CVLAB)
@@ -233,13 +233,13 @@ int main()
 	obj.m_sCameraInfo.fPitch = 4.0 * PI / 180;
 	obj.m_sCameraInfo.fYaw = 0.0 * PI / 180;
 
-	obj.m_sConfig.fLineWidth = (float)2000;
-	obj.m_sConfig.fLineHeight = (float)304.8;
-	obj.m_sConfig.nRansacIteration = 40;
-	obj.m_sConfig.nRansacThreshold = (float)0.2;
+	obj.m_sConfig.fLineWidth = (float)2000;		//not used
+	obj.m_sConfig.fLineHeight = (float)304.8;	//not used
+	obj.m_sConfig.nRansacIteration = 40;	//not used
+	obj.m_sConfig.nRansacThreshold = (float)0.2;	//not used
 	obj.m_sConfig.fVanishPortion = (float) 0.0;
 	obj.m_sConfig.fLowerQuantile = (float) 0.97;
-	obj.m_sConfig.nLocalMaxIgnore = 0;
+	obj.m_sConfig.nLocalMaxIgnore = 0;		//Local maxima boundary reject pixels
 	//obj.m_sConfig.nDetectionThreshold = 6;
 	//obj.m_sConfig.nDetectionThreshold = 4;
 
