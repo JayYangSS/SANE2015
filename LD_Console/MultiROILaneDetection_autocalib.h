@@ -257,12 +257,12 @@ public:
 	int nLeftCnt;
 	int nRightCnt;
 
-	bool bLeftDraw;
-	bool bRightDraw;
+	bool m_bLeftDraw;
+	bool m_bRightDraw;
 private:
 	SVD m_SvdCalc;
-	Mat matFx;
-	Mat matFy;
+	Mat m_MatFx;
+	Mat m_MatFy;
 
 
 public:
@@ -356,7 +356,7 @@ void SetFrameNameBMP(char* szDataName, char* szDataDir,int nFrameNum);
 
 
 CMultiROILaneDetection::CMultiROILaneDetection(){
-	cout << "contructor" << endl;
+	cout << "contructor start" << endl;
 	/*Mat matFx;
 	Mat matFy;*/
 	//create the convoultion kernel
@@ -390,8 +390,8 @@ CMultiROILaneDetection::CMultiROILaneDetection(){
 		-2.200000e-02,
 		-1.000000e-03
 	};
-	matFx = Mat(derivLen, 1, CV_32FC1, derivp).clone();
-	matFy = Mat(1, smoothLen, CV_32FC1, smoothp).clone();
+	m_MatFx = Mat(derivLen, 1, CV_32FC1, derivp).clone();
+	m_MatFy = Mat(1, smoothLen, CV_32FC1, smoothp).clone();
 }
 
 void CMultiROILaneDetection::SetVanishingPoint(){
@@ -752,9 +752,9 @@ void CMultiROILaneDetection::FilterLinesIPM(EROINUMBER nFlag){
 	subtract(m_imgIPM[nFlag],dMean,m_ipmFiltered[nFlag]);
 
 	filter2D(m_ipmFiltered[nFlag],m_ipmFiltered[nFlag],m_ipmFiltered[nFlag].depth(),
-		matFx,Point(-1,-1),0.0,BORDER_REPLICATE);
+		m_MatFx, Point(-1, -1), 0.0, BORDER_REPLICATE);
 	filter2D(m_ipmFiltered[nFlag],m_ipmFiltered[nFlag],m_ipmFiltered[nFlag].depth(),
-		matFy,Point(-1,-1),0.0,BORDER_REPLICATE);
+		m_MatFy, Point(-1, -1), 0.0, BORDER_REPLICATE);
 	//double dStartTick = (double)getTickCount();
 	Mat rowMat;
 	rowMat = Mat(m_ipmFiltered[nFlag]).reshape(0,1); //1row·Î ´©Àû½ÃÅ´
@@ -2149,11 +2149,11 @@ void CMultiROILaneDetection::KalmanTrackingStage(EROINUMBER nFlag){
 	
 	bool bFlag=false;
 	if (nFlag == KALMAN_LEFT){
-		bLeftDraw = false;
+		m_bLeftDraw = false;
 		bFlag = m_bTracking[LEFT_ROI2];
 	}
 	else if (nFlag == KALMAN_RIGHT){
-		bRightDraw = false;
+		m_bRightDraw = false;
 		bFlag = m_bTracking[RIGHT_ROI2];
 	}
 	if (bFlag == false){
@@ -2205,7 +2205,7 @@ void CMultiROILaneDetection::KalmanTrackingStage(EROINUMBER nFlag){
 			m_sLeftTrakingLane.fXcenter = SLineEstimated.fXcenter;
 			m_sLeftTrakingLane.fXderiv = SLineEstimated.fXderiv;
 			//line(m_imgResizeOrigin, ptUvSt, ptUvEnd, Scalar(0, 0, 255), 2);
-			bLeftDraw = true;
+			m_bLeftDraw = true;
 			m_SKalmanLeftLane.SKalmanTrackingLineBefore = m_SKalmanLeftLane.SKalmanTrackingLine;
 		}
 				
@@ -2256,7 +2256,7 @@ void CMultiROILaneDetection::KalmanTrackingStage(EROINUMBER nFlag){
 			m_sRightTrakingLane.fXcenter = SLineEstimated.fXcenter;
 			m_sRightTrakingLane.fXderiv = SLineEstimated.fXderiv;
 			//line(m_imgResizeOrigin, ptUvSt, ptUvEnd, Scalar(0, 0, 255), 2);
-			bRightDraw = true;
+			m_bRightDraw = true;
 			m_SKalmanRightLane.SKalmanTrackingLineBefore = m_SKalmanRightLane.SKalmanTrackingLine;
 		}
 
@@ -2378,8 +2378,8 @@ void CMultiROILaneDetection::TrackingStageGround(EROINUMBER nflag){
 }
 
 void CMultiROILaneDetection::ClearDetectionResult(){
-	bLeftDraw = false;
-	bRightDraw = false;
+	m_bLeftDraw = false;
+	m_bRightDraw = false;
 
 	nLeftCnt = 0;
 	m_leftTracking.clear();

@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="CMultiROILaneDetection">
+    <Position X="12" Y="0.5" Width="3.5" />
+    <Members>
+      <Method Name="ClearDetectionResult" Hidden="true" />
+      <Method Name="ClearResultVector" Hidden="true" />
+      <Method Name="CumSum" Hidden="true" />
+      <Method Name="FitRansacLine" Hidden="true" />
+      <Method Name="FitRobustLine" Hidden="true" />
+      <Method Name="GetLinesBoundingBoxes" Hidden="true" />
+      <Method Name="GetLocalMaxSubPixel" Hidden="true" />
+      <Method Name="GetMaxLineScore" Hidden="true" />
+      <Method Name="GetMaxLineScoreTwo" Hidden="true" />
+      <Method Name="GetNonZeroPoints" Hidden="true" />
+      <Method Name="GetTrackingLineCandidate" Hidden="true" />
+      <Method Name="GetVectorMax" Hidden="true" />
+      <Method Name="GroupBoundingBoxes" Hidden="true" />
+      <Method Name="GroupLines" Hidden="true" />
+      <Method Name="IntersectLineRThetaWithBB" Hidden="true" />
+      <Method Name="IsPointInside" Hidden="true" />
+      <Field Name="m_imgOriginScale" Hidden="true" />
+      <Field Name="m_imgResizeOrigin" Hidden="true" />
+      <Field Name="m_iterGroundLeft" Hidden="true" />
+      <Field Name="m_iterGroundRight" Hidden="true" />
+      <Field Name="m_iterLeft" Hidden="true" />
+      <Field Name="m_iterRight" Hidden="true" />
+      <Field Name="m_matUVGrid" Hidden="true" />
+      <Field Name="m_matXYGrid" Hidden="true" />
+      <Field Name="m_nFrameNum" Hidden="true" />
+      <Field Name="m_sPreScanDB" Hidden="true" />
+      <Field Name="m_sWorldCenterInit" Hidden="true" />
+      <Field Name="nLeftCnt" Hidden="true" />
+      <Field Name="nRightCnt" Hidden="true" />
+      <Method Name="PushBackResult" Hidden="true" />
+      <Method Name="SampleWeighted" Hidden="true" />
+      <Method Name="SetMat" Hidden="true" />
+      <Method Name="SetVanishingPoint" Hidden="true" />
+      <Method Name="StartLanedetection" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>UsQDJjREwJJIACgQZQDAaEMoAIAQYkAkKgoBEQIkE1g=</HashCode>
+      <FileName>MultiROILaneDetection_autocalib.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="lt&lt;T&gt;" Collapsed="true">
+    <Position X="7.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA=</HashCode>
+      <FileName>ranker.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="gt&lt;T&gt;" Collapsed="true">
+    <Position X="5.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA=</HashCode>
+      <FileName>ranker.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ranker&lt;T, C&gt;" Collapsed="true">
+    <Position X="6.25" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABgAAAAAAAAAAAkAAAAAAAAAAAAAAAAEASABAAAAA=</HashCode>
+      <FileName>ranker.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="SFileInformation" Collapsed="true">
+    <Position X="3" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>MultiROILaneDetection_autocalib.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SCameraInformation" Collapsed="true">
+    <Position X="3" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAgAAAAgBAAAAKAAAAAAEAAAAAAMAAEAAAAAAAAA=</HashCode>
+      <FileName>MultiROILaneDetection_autocalib.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SConfiguration" Collapsed="true">
+    <Position X="4.75" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAASAAAIAAQAAAAAAAAAAAAAAAAAAAAAAAEAAACAAAI=</HashCode>
+      <FileName>MultiROILaneDetection_autocalib.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SRoiInformation">
+    <Position X="9.75" Y="3" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAEBACABAAAEAJABQAAAAYAAQyAEAIAAEAAAAAjIwA=</HashCode>
+      <FileName>MultiROILaneDetection_autocalib.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SLine" Collapsed="true">
+    <Position X="6.25" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAgQAAAAAAAAAAAAEAAAAAAAAAIAAIAAQAAAABAAQ=</HashCode>
+      <FileName>MultiROILaneDetection_autocalib.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SWorldLane" Collapsed="true">
+    <Position X="4.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAQAAAAAAAAAAAAEAABAAAAAAAAAIAAAAAAABAIQ=</HashCode>
+      <FileName>MultiROILaneDetection_autocalib.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SKalman" Collapsed="true">
+    <Position X="4.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAEAAAABBQiAAAIAAAAAAAAAAAAAAAQAABAAA=</HashCode>
+      <FileName>MultiROILaneDetection_autocalib.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="SEvaluation" Collapsed="true">
+    <Position X="6.5" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAMAAAAAAAAAACAAgAIAAAAAIICAAA=</HashCode>
+      <FileName>MultiROILaneDetection_autocalib.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Typedef Name="LineType" Collapsed="true">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>MultiROILaneDetection_autocalib.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="uint" Collapsed="true">
+    <Position X="3" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ranker.h</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Enum Name="FRAMETYPE" Collapsed="true">
+    <Position X="4.75" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAACAAAAA=</HashCode>
+      <FileName>MainProc_0624_Tracking_Kalman filter_DEMO_Embedded.cpp</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="DB_INTRINSIC" Collapsed="true">
+    <Position X="4.75" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAEAAAAAAAAAAAAAEAAAAQAAAAAAA=</HashCode>
+      <FileName>MainProc_0624_Tracking_Kalman filter_DEMO_Embedded.cpp</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="DB_CVLAB" Collapsed="true">
+    <Position X="3" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAA=</HashCode>
+      <FileName>MainProc_0624_Tracking_Kalman filter_DEMO_Embedded.cpp</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="DB_ROAD" Collapsed="true">
+    <Position X="6.25" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACA=</HashCode>
+      <FileName>MainProc_0624_Tracking_Kalman filter_DEMO_Embedded.cpp</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="EROINUMBER" Collapsed="true">
+    <Position X="3" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAEAAAAAAKAAAAAAAAAAAAAAAMAAAAAQAACQBwA=</HashCode>
+      <FileName>MultiROILaneDetection_autocalib.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="LineType_" Collapsed="true">
+    <Position X="0.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>MultiROILaneDetection_autocalib.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="맑은 고딕" Size="9" />
+</ClassDiagram>
