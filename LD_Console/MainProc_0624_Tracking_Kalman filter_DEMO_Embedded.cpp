@@ -914,8 +914,8 @@ int main()
 	//////////////////////////////////////////////////////////////////////////
 	//input DB change
 	
-	obj.bLeftDraw = false;
-	obj.bRightDraw = false;
+	obj.m_bLeftDraw = false;
+	obj.m_bRightDraw = false;
 	for (int j = 0; j <= 5; j++){
 		char szEnvironment[20];
 		if (j == 10){
@@ -1319,12 +1319,12 @@ int main()
 
 
 			}
-			if ((obj.bLeftDraw == true) && (obj.bRightDraw == true)){
+			if ((obj.m_bLeftDraw == true) && (obj.m_bRightDraw == true)){
 				if ((fRightGround - fLeftGround) < MIN_WORLD_WIDTH)
 				{
 					obj.ClearDetectionResult();
-					/*obj.bLeftDraw = false;
-					obj.bRightDraw = false;
+					/*obj.m_bLeftDraw = false;
+					obj.m_bRightDraw = false;
 
 					obj.nLeftCnt = 0;
 					obj.m_leftTracking.clear();
@@ -1343,14 +1343,14 @@ int main()
 				}
 
 			}
-			if ((obj.bLeftDraw == true) && (obj.bRightDraw == true)){
+			if ((obj.m_bLeftDraw == true) && (obj.m_bRightDraw == true)){
 
-				if (obj.bLeftDraw){
+				if (obj.m_bLeftDraw){
 					line(obj.m_imgResizeOrigin, obj.m_sLeftTrakingLane.ptUvStartLine, obj.m_sLeftTrakingLane.ptUvEndLine, Scalar(0, 0, 255), 2);
 					putText(obj.m_imgResizeOrigin, ssLeft.str(), obj.m_sLeftTrakingLane.ptUvEndLine,
 						FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
 				}
-				if (obj.bRightDraw){
+				if (obj.m_bRightDraw){
 					line(obj.m_imgResizeOrigin, obj.m_sRightTrakingLane.ptUvStartLine, obj.m_sRightTrakingLane.ptUvEndLine, Scalar(0, 0, 255), 2);
 					putText(obj.m_imgResizeOrigin, ssRight.str(), obj.m_sRightTrakingLane.ptUvEndLine,
 						FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
@@ -1428,7 +1428,7 @@ int main()
 			char szProcTime[20] = "FPS : ";
 			char szMs[10] = "ms";
 			ssTime << szProcTime;
-			ssTime << 1000/dCurrentProcessTime;
+			ssTime << (int)(1000/dCurrentProcessTime);
 			//ssTime << szMs;
 			putText(obj.m_imgResizeOrigin, ssTime.str(), Point(10, 90),
 				FONT_HERSHEY_COMPLEX, 1, Scalar(255, 0, 50), 2, 8, false);
