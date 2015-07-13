@@ -356,10 +356,11 @@ void SetFrameNameBMP(char* szDataName, char* szDataDir,int nFrameNum);
 
 
 CMultiROILaneDetection::CMultiROILaneDetection(){
+	cout << "contructor" << endl;
 	/*Mat matFx;
 	Mat matFy;*/
 	//create the convoultion kernel
-
+	//Filtering LUT
 	int derivLen = 33; //23; 13; 33;
 	int smoothLen = 9; //9; 17;
 
@@ -377,7 +378,7 @@ CMultiROILaneDetection::CMultiROILaneDetection(){
 		1.759328e-04, 2.374101e-05, 2.558828e-06, 2.189405e-07, 1.468714e-08,
 		7.562360e-10, 2.886400e-11, 7.696000e-13, 1.280000e-14, 1.000000e-16
 	};
-
+	
 	float smoothp[] = {
 		-1.000000e-03,
 		-2.200000e-02,
@@ -389,8 +390,8 @@ CMultiROILaneDetection::CMultiROILaneDetection(){
 		-2.200000e-02,
 		-1.000000e-03
 	};
-	matFx = Mat(derivLen, 1, CV_32FC1, derivp);
-	matFy = Mat(1, smoothLen, CV_32FC1, smoothp);
+	matFx = Mat(derivLen, 1, CV_32FC1, derivp).clone();
+	matFy = Mat(1, smoothLen, CV_32FC1, smoothp).clone();
 }
 
 void CMultiROILaneDetection::SetVanishingPoint(){
@@ -708,41 +709,41 @@ void CMultiROILaneDetection::InitialResizeFunction(Size sizeResize){
 void CMultiROILaneDetection::FilterLinesIPM(EROINUMBER nFlag){
 	//define the two kernels
 
-	Mat matFx;
-	Mat matFy;
-	//create the convoultion kernel
+	//Mat matFx;
+	//Mat matFy;
+	////create the convoultion kernel
 
-	int derivLen = 33; //23; 13; 33;
-	int smoothLen = 9; //9; 17;
+	//int derivLen = 33; //23; 13; 33;
+	//int smoothLen = 9; //9; 17;
 
-	//this is for 5-pixels wide
-	float derivp[] = {
-		1.000000e-16, 1.280000e-14, 7.696000e-13, 2.886400e-11, 7.562360e-10, 
-		1.468714e-08, 2.189405e-07, 2.558828e-06, 2.374101e-05, 1.759328e-04, 
-		1.042202e-03, 4.915650e-03, 
-		1.829620e-02, 5.297748e-02, 
-		1.169560e-01, 1.918578e-01, 
-		2.275044e-01, 
-		1.918578e-01, 1.169560e-01, 
-		5.297748e-02, 1.829620e-02, 
-		4.915650e-03, 1.042202e-03, 
-		1.759328e-04, 2.374101e-05, 2.558828e-06, 2.189405e-07, 	1.468714e-08, 
-		7.562360e-10, 2.886400e-11, 7.696000e-13, 1.280000e-14, 1.000000e-16
-	};
+	////this is for 5-pixels wide
+	//float derivp[] = {
+	//	1.000000e-16, 1.280000e-14, 7.696000e-13, 2.886400e-11, 7.562360e-10, 
+	//	1.468714e-08, 2.189405e-07, 2.558828e-06, 2.374101e-05, 1.759328e-04, 
+	//	1.042202e-03, 4.915650e-03, 
+	//	1.829620e-02, 5.297748e-02, 
+	//	1.169560e-01, 1.918578e-01, 
+	//	2.275044e-01, 
+	//	1.918578e-01, 1.169560e-01, 
+	//	5.297748e-02, 1.829620e-02, 
+	//	4.915650e-03, 1.042202e-03, 
+	//	1.759328e-04, 2.374101e-05, 2.558828e-06, 2.189405e-07, 	1.468714e-08, 
+	//	7.562360e-10, 2.886400e-11, 7.696000e-13, 1.280000e-14, 1.000000e-16
+	//};
 
-	float smoothp[] = {
-		-1.000000e-03,
-		-2.200000e-02,
-		-1.480000e-01, 
-		-1.940000e-01, 
-		7.300000e-01, 
-		-1.940000e-01, 
-		-1.480000e-01,
-		-2.200000e-02,
-		-1.000000e-03
-	};
-	matFx=Mat(derivLen,1,CV_32FC1,derivp);
-	matFy=Mat(1,smoothLen,CV_32FC1,smoothp);
+	//float smoothp[] = {
+	//	-1.000000e-03,
+	//	-2.200000e-02,
+	//	-1.480000e-01, 
+	//	-1.940000e-01, 
+	//	7.300000e-01, 
+	//	-1.940000e-01, 
+	//	-1.480000e-01,
+	//	-2.200000e-02,
+	//	-1.000000e-03
+	//};
+	//matFx=Mat(derivLen,1,CV_32FC1,derivp);
+	//matFy=Mat(1,smoothLen,CV_32FC1,smoothp);
 	//if ((nFlag == LEFT_ROI3) || (nFlag == RIGHT_ROI3))
 	//	resize(matFx, matFx, Size(1, matFx.rows * 2));
 
