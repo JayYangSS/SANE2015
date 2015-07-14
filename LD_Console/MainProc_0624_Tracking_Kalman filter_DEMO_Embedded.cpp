@@ -1,6 +1,5 @@
-//Plan A
+//plan a
 
-//Plan merge
 #include "highgui.h"
 #include "cv.h"
 #include "opencv2/opencv.hpp"
