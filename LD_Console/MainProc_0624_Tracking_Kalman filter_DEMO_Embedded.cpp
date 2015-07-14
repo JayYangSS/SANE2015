@@ -1,3 +1,5 @@
+//Plan A
+
 #include "highgui.h"
 #include "cv.h"
 #include "opencv2/opencv.hpp"
