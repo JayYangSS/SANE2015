@@ -1,4 +1,4 @@
-//Plan A
+//Master
 
 #include "highgui.h"
 #include "cv.h"
