@@ -79,6 +79,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Daimler_DB_proposal.cpp" />
+    <ClCompile Include="DistMeasure.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DistMeasure.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
