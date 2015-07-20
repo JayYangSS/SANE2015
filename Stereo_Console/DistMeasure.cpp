@@ -200,7 +200,6 @@ int CDistMeasure::CalcDistRoi_stereo(Rect_<int>& rectRoi, double& dDistance, int
 int CDistMeasure::CalcDistRoi_FVLM(Rect_<int>& rectRoi, double& dDistance, int nflag)
 {
 	CalcDistRoi_mono(rectRoi, dDistance);
-	cout << dDistance << endl;
 	if (dDistance > m_dBoundDist)
 		CalcDistRoi_stereo(rectRoi, dDistance, STEREOBM);
 	if (dDistance > m_dMaxDist)
@@ -226,7 +225,7 @@ int CDistMeasure::DispToHist(double& dDistance)
 
 	/// Compute the histograms:
 	calcHist(&m_imgDisp8, 1, 0, Mat(), hist, 1, &histSize, &histRange, uniform, accumulate);
-	hist.at<float>(0, 1) = 0;
+	hist.at<float>(0) = 0;
 	double maxVal = 0, minVal = 0;
 	minMaxLoc(hist, &minVal, &maxVal, 0, 0);
 	Mat histImg(256, 256, CV_8U, Scalar(255));
