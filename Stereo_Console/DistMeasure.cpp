@@ -33,8 +33,17 @@ void CDistMeasure::help()
 	cout << "And you can control the each other parameters. Good Luck" << endl;
 }
 //set up parameters
+void CDistMeasure::SetImage(Mat& imgLeft, Mat& imgRight, vector<Rect_<int> >& vecrectRoi)
+{
+	m_imgLeftInput = imgLeft.clone();
+	m_imgRightInput = imgRight.clone();
+	cvtColor(m_imgLeftInput, m_imgGT, CV_GRAY2BGR);
+	m_sizeSrc = m_imgLeftInput.size();
+
+	m_vecrectRoi = vecrectRoi;
+}
 void CDistMeasure::SetParam(Mat& imgLeft, Mat& imgRight, vector<Rect_<int> >& vecrectRoi, double dBaseLine, double dFocalLength,
-	int nVanishingY, int dPitchDeg,
+	int nVanishingY, double dPitchDeg,
 	int nNumOfDisp, int nWindowSize, int nStereoAlg, int nDistAlg,	//number of disparity=48, stereo alg=SAD block matching, dist alg=FVLM
 	double dBoundDist, double dMaxDist //unit : meters
 	)
@@ -45,6 +54,26 @@ void CDistMeasure::SetParam(Mat& imgLeft, Mat& imgRight, vector<Rect_<int> >& ve
 	m_sizeSrc = m_imgLeftInput.size();
 
 	m_vecrectRoi = vecrectRoi;
+	m_dBaseLine = dBaseLine;
+	m_dFocalLength = dFocalLength;
+	m_nVanishingY = nVanishingY;
+	m_dPitchDeg = dPitchDeg;
+
+	m_nNumberOfDisp = nNumOfDisp;
+	m_nWindowSize = nWindowSize;
+	m_nStereoAlg = nStereoAlg;
+	m_nDistAlg = nDistAlg;
+	m_dBoundDist = dBoundDist;
+	m_dMaxDist = dMaxDist;
+	m_flgVideo = false;
+	m_flgDisplay = true;
+}
+void CDistMeasure::SetParam(double dBaseLine, double dFocalLength,
+	int nVanishingY, double dPitchDeg,
+	int nNumOfDisp, int nWindowSize, int nStereoAlg, int nDistAlg,	//number of disparity=48, stereo alg=SAD block matching, dist alg=FVLM
+	double dBoundDist, double dMaxDist //unit : meters
+	)
+{
 	m_dBaseLine = dBaseLine;
 	m_dFocalLength = dFocalLength;
 	m_nVanishingY = nVanishingY;
@@ -76,17 +105,18 @@ int CDistMeasure::CalcDistImg(int nflag) // Flag seq : FVLM, MONO, STEREOBM, STE
 
 		m_vecdDistance.push_back(dDistTemp);
 
+		cout << "#" << i << " Distance : " << dDistTemp << "m" << endl;
+
 		if (m_flgDisplay) {
 			rectangle(m_imgGT, m_vecrectRoi[i], CV_RGB(0, 255, 0), 2);
 			Display();
 		}
-
 	}
 	return 0;
 }
 int CDistMeasure::CalcDistRoi_mono(Rect_<int>& rectRoi, double& dDistance)
 {
-	dDistance = 1.17*tan((76.8 + 0.047125*(m_imgLeftInput.rows - (rectRoi.y + rectRoi.height)))*PI / 180);
+	dDistance = 1.17*tan((78.69 + m_dPitchDeg + 0.047125*(m_imgLeftInput.rows - (rectRoi.y + rectRoi.height)))*PI / 180);
 	return 0;
 }
 int CDistMeasure::CalcDistRoi_stereo(Rect_<int>& rectRoi, double& dDistance, int nflag)
@@ -170,8 +200,9 @@ int CDistMeasure::CalcDistRoi_stereo(Rect_<int>& rectRoi, double& dDistance, int
 int CDistMeasure::CalcDistRoi_FVLM(Rect_<int>& rectRoi, double& dDistance, int nflag)
 {
 	CalcDistRoi_mono(rectRoi, dDistance);
+	cout << dDistance << endl;
 	if (dDistance > m_dBoundDist)
-		CalcDistRoi_stereo(rectRoi, dDistance, nflag);
+		CalcDistRoi_stereo(rectRoi, dDistance, STEREOBM);
 	if (dDistance > m_dMaxDist)
 		dDistance = m_dMaxDist;
 
@@ -201,7 +232,7 @@ int CDistMeasure::DispToHist(double& dDistance)
 	Mat histImg(256, 256, CV_8U, Scalar(255));
 
 	int hpt = static_cast<int>(0.9 * 256);//(5*256);//(10*256);
-	int max = 0;
+	float max = 0;
 	int disp_of_object = 0;
 	float nhist_aver = 0;
 
@@ -239,10 +270,10 @@ void CDistMeasure::Display()
 	imshow("imgLeft", m_imgLeftInput);
 	imshow("imgRight", m_imgRightInput);
 	imshow("imgGT", m_imgGT);
-	imshow("imgRoiLeft", m_imgRoiLeftTemp);
-	imshow("imgRoiRight", m_imgRoiRightTemp);
-	imshow("imgDisp8", m_imgDisp8);
-	imshow("imgHist", m_imgHist);
+	//imshow("imgRoiLeft", m_imgRoiLeftTemp);
+	//imshow("imgRoiRight", m_imgRoiRightTemp);
+	//imshow("imgDisp8", m_imgDisp8);
+	//imshow("imgHist", m_imgHist);
 	if (m_flgVideo == false) {
 		if (waitKey(0) == 't') m_flgVideo = !m_flgVideo;
 	}

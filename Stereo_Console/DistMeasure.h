@@ -6,6 +6,7 @@
 *  Copyright 2015 CVLAB at Inha. All rights reserved.
 *
 */
+#pragma once
 
 #include<iostream>
 #include<opencv2\opencv.hpp>
@@ -19,7 +20,7 @@ using namespace cv;
 #define PI 3.141592
 
 class CDistMeasure{
-	//variable
+	
 private:
 	//input
 	Mat m_imgLeftInput; //retified image
@@ -42,12 +43,12 @@ public:
 	enum { FVLM, MONO, STEREOBM, STEREOSGBM };
 
 	double m_dBaseLine;
-	double m_dFocalLength;
+	double m_dFocalLength; //re
 	double m_dBoundDist;
 	double m_dMaxDist;
 	int m_nNumberOfDisp;	//must be multiple of 16
 	int m_nWindowSize;		//odd number
-	int m_nDistAlg;
+	int m_nDistAlg;// Flag seq : FVLM, MONO, STEREOBM, STEREOSGBM
 	Size m_sizeSrc;
 	bool m_flgVideo;		//dispaly flag
 	bool m_flgDisplay;
@@ -58,9 +59,14 @@ public:
 	//funtion
 	CDistMeasure();
 	void help();
-	void SetParam();
+	void SetImage(Mat& imgLeft, Mat& imgRight, vector<Rect_<int> >& vecrectRoi);
 	void SetParam(Mat& imgLeft, Mat& imgRight, vector<Rect_<int> >& vecrectRoi, double dBaseLine, double dFocalLength,
-		int nVanishingY = 0, int dPitchDeg = 0,
+		int nVanishingY = 0, double dPitchDeg = 0,
+		int nNumOfDisp = 48, int nWindowSize = 13, int nStereoAlg = 0, int nDistAlg = 0,	//number of disparity=48, stereo alg=SAD block matching, dist alg=FVLM
+		double dBoundDist = 20, double dMaxDist = 50 //unit : meters
+		);
+	void SetParam(double dBaseLine, double dFocalLength,
+		int nVanishingY = 0, double dPitchDeg = 0,
 		int nNumOfDisp = 48, int nWindowSize = 13, int nStereoAlg = 0, int nDistAlg = 0,	//number of disparity=48, stereo alg=SAD block matching, dist alg=FVLM
 		double dBoundDist = 20, double dMaxDist = 50 //unit : meters
 		);

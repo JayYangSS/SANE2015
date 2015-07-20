@@ -21,6 +21,9 @@
     <ClCompile Include="DistMeasure.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="DMclass_test_Daimler.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DistMeasure.h">

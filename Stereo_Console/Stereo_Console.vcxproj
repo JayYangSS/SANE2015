@@ -78,8 +78,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Daimler_DB_proposal.cpp" />
+    <ClCompile Include="Daimler_DB_proposal.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="DistMeasure.cpp" />
+    <ClCompile Include="DMclass_test_Daimler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DistMeasure.h" />
