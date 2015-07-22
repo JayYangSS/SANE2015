@@ -1,4 +1,12 @@
-﻿
+﻿/*
+*  General obstacle detection.cpp
+*  Make sense obstacle 3D position & ground constraint
+*
+*  Created by T.K.Woo on July/23/2015.
+*  Copyright 2015 CVLAB at Inha. All rights reserved.
+*
+*/
+
 // #include "disparity.hpp"
 #include <opencv2/opencv.hpp>
 #include <iostream>

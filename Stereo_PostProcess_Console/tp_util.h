@@ -1,4 +1,11 @@
-
+/*
+*  tp_util.h
+*  Make sense obstacle 3D position & ground constraint
+*  using ransac line fitting and disparity segmentation
+*  Created by T.K.Woo on July/23/2015.
+*  Copyright 2015 CVLAB at Inha. All rights reserved.
+*
+*/
 #ifndef __TP_UTIL_HPP__
 #define __TP_UTIL_HPP__
 

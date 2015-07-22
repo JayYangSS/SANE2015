@@ -1,3 +1,11 @@
+/*
+*  tp_util.cpp
+*  Make sense obstacle 3D position & ground constraint
+*  using ransac line fitting and disparity segmentation
+*  Created by T.K.Woo on July/23/2015.
+*  Copyright 2015 CVLAB at Inha. All rights reserved.
+*
+*/
 #include "tp_util.h"
 
 #include <iostream>
