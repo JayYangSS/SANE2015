@@ -99,7 +99,7 @@ int main()
 	//char szPrescanDB_dir[200] = "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_1/2015-04-13-14h-20m-45s_straight_";
 	if (DB_NUM == AMOL)
 	{
-		strcpy(szPrescanDB_dir, "H:/[DB]amol/S3C1_CAM0_IMG/S3C1_CAM0_IMG/S3C1_");
+		strcpy(szPrescanDB_dir, "H:/[DB]amol/S3C1_CAM0_IMG/S3C1_CAM0_IMG/S3C1_"); //ssgun
 	}
 	if (DB_NUM == CVLAB)
 	{
@@ -801,7 +801,7 @@ int main()
 	rectangle(obj.m_imgResizeOrigin, Rect(rectRightTop.x - rectRightTop.width / 2, rectRightTop.y - rectRightTop.height / 2, rectRightTop.width, rectRightTop.height), Scalar(255, 0, 0), 2);
 	rectangle(obj.m_imgResizeOrigin, Rect(rectRightBottom.x - rectRightBottom.width / 2, rectRightBottom.y - rectRightBottom.height / 2, rectRightBottom.width, rectRightBottom.height), Scalar(255, 0, 0), 2);
 
-
+	//
 	imshow("origin", obj.m_imgResizeOrigin);
 	waitKey(0);
 	float fWidthScale = IPM_WIDTH_SCALE;
