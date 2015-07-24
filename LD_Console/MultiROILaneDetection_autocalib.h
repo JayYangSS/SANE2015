@@ -445,6 +445,11 @@ void CMultiROILaneDetection::SetVanishingPoint(){
 }
 //pointer need
 
+/*LYW_0724*/
+// (u,v) --> (x,y) 나오게끔. h는 사전에 미리 셋팅.
+// Input : row의 개수는 1 이상만 넣어주면 됨. col : 반드시 2개.
+// Input/Output matrix의 dim은 같아야함.
+// 
 void CMultiROILaneDetection::TransformImage2Ground(const Mat &matInPoints,Mat &matOutPoints){
 	//	cout<<*matInPoints<<endl;
 	//	cout<<"확인1\n"<<endl;
@@ -456,6 +461,7 @@ void CMultiROILaneDetection::TransformImage2Ground(const Mat &matInPoints,Mat &m
 
 	//copy inPoints to first two rows
 
+	//call by reference
 	Mat matInPoints2=matInPoints4.rowRange(0,2);
 	Mat matInPoints3=matInPoints4.rowRange(0,3);	
 	Mat matInPointsr3=matInPoints4.row(2);
@@ -556,7 +562,8 @@ void CMultiROILaneDetection::TransformGround2Image(const Mat &matInPoints,Mat &m
 	matInPoints2.copyTo(matOutPoints);
 }
 
-void CMultiROILaneDetection::SetRoiIpmCofig(EROINUMBER nFlag ){
+//[LYW_0724] : LUT를 만드는 함수
+void CMultiROILaneDetection::SetRoiIpmCofig(EROINUMBER nFlag ){ 
 	m_bTracking[nFlag] = false;
 	SetVanishingPoint();
 	Point_<float> ptVp = m_sCameraInfo.ptVanishingPoint;
@@ -781,7 +788,7 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 	int maxLineLoc = 0;
 
 	matSumLinesp.create(1,matImage.cols,CV_32FC1);
-	reduce(matImage,matSumLinesp,0,CV_REDUCE_SUM);
+	reduce(matImage,matSumLinesp,0,CV_REDUCE_SUM); //reshape비슷한데, 1-row압축 reshape와 차이는 몰라
 	matSumLines = Mat(matSumLinesp).reshape(0,matImage.cols);
 
 	//max location for a detected line
@@ -888,7 +895,7 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 	sumLinesMaxLoc.clear();
 }
 void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
-	vector<SLine> lines = m_lanes[nFlag];
+	vector<SLine> lines = m_lanes[nFlag]; // [LYW_0724] : line fitting해야할 후보들, m_laneScore와 짝을 이룬다. (같은 index에 score가 저장되어 있음)
 	vector<float> lineScores = m_laneScore[nFlag];
 	/*cout<<m_lanes[nFlag].at(1).ptStartLine<<endl;
 	cout<<lines.at(1).ptStartLine<<endl;
@@ -979,7 +986,7 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 	m_lanes[nFlag].clear();
 	m_laneScore[nFlag].clear();
 	
-	if(newScores.size()>2&&nFlag==AUTOCALIB){
+	if(newScores.size()>2&&nFlag==AUTOCALIB){ // [LYW_0724] : 라인2개찾았는지 검사
 		//int nFirst,nSecond;
 		int nFirstIdx,nSecondIdx;
 		if(newScores[0]>newScores[1]){
@@ -1002,8 +1009,8 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 		m_laneScore[nFlag].push_back(newScores[nFirstIdx]);
 		m_lanes[nFlag].push_back(newLines[nSecondIdx]);
 		m_laneScore[nFlag].push_back(newScores[nSecondIdx]);
-	}else{
-		m_lanes[nFlag] = newLines;
+	}else{ // [LYW_0724] : Auto Calib가 아닌 일반적인 detection단계에서 찾은 차선을 다 넣어주는거야! 이 부분 때문에 다차선검출이 가능할 수 있어!!
+		m_lanes[nFlag] = newLines;  
 		m_laneScore[nFlag] = newScores;
 	}
 
@@ -1014,7 +1021,7 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 	newLines.clear();
 	newScores.clear();
 }
-void CMultiROILaneDetection::IPM2ImLines(EROINUMBER nFlag){
+void CMultiROILaneDetection::IPM2ImLines(EROINUMBER nFlag){ // 
 
 	if(m_lanes[nFlag].size()!=0){
 		//PointImIPM2World
