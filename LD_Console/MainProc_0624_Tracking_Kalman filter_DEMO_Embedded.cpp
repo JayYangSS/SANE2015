@@ -49,7 +49,7 @@ enum DB_INTRINSIC{
 	PRESCAN,
 	AMOL	//AMOL 제공 DB (Only Urban)
 };
-#define INTRINSIC_DB CVLAB
+#define INTRINSIC_DB PRESCAN
 enum DB_CVLAB{
 	CV1,//4월 CVLAB DB
 	CV2,//3월 CVLAB DB
@@ -85,6 +85,10 @@ int main()
 		g_nResizeFacor = 1;
 	}
 	if (DB_NUM == CVLAB)
+	{
+		g_nResizeFacor = 2;
+	}
+	if (DB_NUM == PRESCAN)
 	{
 		g_nResizeFacor = 2;
 	}
@@ -140,6 +144,9 @@ int main()
 		}
 			
 			
+	}
+	else if (DB_NUM == PRESCAN){
+		strcpy(szPrescanDB_dir, "H:/[DB]AutoCalibration/Pitch_4_Yaw_0/Pitch_4_Yaw_0_");
 	}
 	//////////////////////////////////////////////////////////////////////////
 	//test DB
@@ -229,6 +236,13 @@ int main()
 		obj.m_sCameraInfo.sizeFocalLength.height = (float)656;
 		obj.m_sCameraInfo.ptOpticalCenter.x = (float)320;
 		obj.m_sCameraInfo.ptOpticalCenter.y = (float)240;
+		obj.m_sCameraInfo.fHeight = (float)1250;
+	}
+	if (DB_NUM == PRESCAN){
+		obj.m_sCameraInfo.sizeFocalLength.width = (float)656;
+		obj.m_sCameraInfo.sizeFocalLength.height = (float)656;
+		obj.m_sCameraInfo.ptOpticalCenter.x = (float)320;
+		obj.m_sCameraInfo.ptOpticalCenter.y = (float)180;
 		obj.m_sCameraInfo.fHeight = (float)1250;
 	}
 	obj.m_sCameraInfo.fPitch = 4.0 * PI / 180;
@@ -445,6 +459,13 @@ int main()
 		obj.m_sRoiInfo[AUTOCALIB].nTop = 185 + 30 + 30 + 30;
 		obj.m_sRoiInfo[AUTOCALIB].nBottom = 220 + 30 + 60 + 60;
 	}
+	if (DB_NUM == PRESCAN)
+	{		
+			obj.m_sRoiInfo[AUTOCALIB].nLeft = AUTOX;
+			obj.m_sRoiInfo[AUTOCALIB].nRight = AUTOX + AUTOWIDTH;
+			obj.m_sRoiInfo[AUTOCALIB].nTop = AUTOY-10-10-10;
+			obj.m_sRoiInfo[AUTOCALIB].nBottom = AUTOY + AUTOHEIGHT-30-10-10;
+	}
 	
 	obj.m_sRoiInfo[AUTOCALIB].sizeRoi.width = obj.m_sRoiInfo[AUTOCALIB].nRight - obj.m_sRoiInfo[AUTOCALIB].nLeft;
 	obj.m_sRoiInfo[AUTOCALIB].sizeRoi.height = obj.m_sRoiInfo[AUTOCALIB].nBottom - obj.m_sRoiInfo[AUTOCALIB].nTop;
@@ -614,7 +635,7 @@ int main()
 //	for (float pitch = 1; pitch<7.5; pitch += 1){
 //		for (int yaw = -2; yaw <= 2; yaw++){
 	//for (float pitch = 0; pitch < 3; pitch += 0.3){ //pitch 0이 없을 경우 최초 라인 1개 밖에 못찾음 에러 미해결
-	for (float pitch = 0; pitch < 1; pitch += 0.3){
+	for (float pitch = 0; pitch < 5; pitch += 0.3){
 		for (int yaw = -1; yaw <= 1; yaw++){
 			double dStartTickTest_AutoCalib = (double)getTickCount();
 			obj.m_sCameraInfo.fPitch = (float)pitch * PI / 180;
@@ -689,8 +710,8 @@ int main()
 			}
 			fout << endl;
 			cout << endl;
-
-			imshow(string(namePitchYaw), imgSum);
+			ShowImageNormalize(namePitchYaw, imgSum);
+			//imshow(string(namePitchYaw), imgSum);
 			waitKey(1);
 
 
