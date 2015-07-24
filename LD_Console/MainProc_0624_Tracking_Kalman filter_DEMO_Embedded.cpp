@@ -1,3 +1,4 @@
+//Master
 #include "highgui.h"
 #include "cv.h"
 #include "opencv2/opencv.hpp"
@@ -48,7 +49,7 @@ enum DB_INTRINSIC{
 	PRESCAN,
 	AMOL	//AMOL 제공 DB (Only Urban)
 };
-#define INTRINSIC_DB CVLAB
+#define INTRINSIC_DB PRESCAN
 enum DB_CVLAB{
 	CV1,//4월 CVLAB DB
 	CV2,//3월 CVLAB DB
@@ -87,6 +88,10 @@ int main()
 	{
 		g_nResizeFacor = 2;
 	}
+	if (DB_NUM == PRESCAN)
+	{
+		g_nResizeFacor = 2;
+	}
 	//test
 	//end test
 	nFlagInputFrameType = 0;
@@ -99,7 +104,7 @@ int main()
 	//char szPrescanDB_dir[200] = "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_1/2015-04-13-14h-20m-45s_straight_";
 	if (DB_NUM == AMOL)
 	{
-		strcpy(szPrescanDB_dir, "H:/[DB]amol/S3C1_CAM0_IMG/S3C1_CAM0_IMG/S3C1_"); //ssgun
+		strcpy(szPrescanDB_dir, "H:/[DB]amol/S3C1_CAM0_IMG/S3C1_CAM0_IMG/S3C1_");
 	}
 	if (DB_NUM == CVLAB)
 	{
@@ -139,6 +144,9 @@ int main()
 		}
 			
 			
+	}
+	else if (DB_NUM == PRESCAN){
+		strcpy(szPrescanDB_dir, "H:/[DB]AutoCalibration/Pitch_4_Yaw_0/Pitch_4_Yaw_0_");
 	}
 	//////////////////////////////////////////////////////////////////////////
 	//test DB
@@ -228,6 +236,13 @@ int main()
 		obj.m_sCameraInfo.sizeFocalLength.height = (float)656;
 		obj.m_sCameraInfo.ptOpticalCenter.x = (float)320;
 		obj.m_sCameraInfo.ptOpticalCenter.y = (float)240;
+		obj.m_sCameraInfo.fHeight = (float)1250;
+	}
+	if (DB_NUM == PRESCAN){
+		obj.m_sCameraInfo.sizeFocalLength.width = (float)656;
+		obj.m_sCameraInfo.sizeFocalLength.height = (float)656;
+		obj.m_sCameraInfo.ptOpticalCenter.x = (float)320;
+		obj.m_sCameraInfo.ptOpticalCenter.y = (float)180;
 		obj.m_sCameraInfo.fHeight = (float)1250;
 	}
 	obj.m_sCameraInfo.fPitch = 4.0 * PI / 180;
@@ -444,6 +459,13 @@ int main()
 		obj.m_sRoiInfo[AUTOCALIB].nTop = 185 + 30 + 30 + 30;
 		obj.m_sRoiInfo[AUTOCALIB].nBottom = 220 + 30 + 60 + 60;
 	}
+	if (DB_NUM == PRESCAN)
+	{		
+			obj.m_sRoiInfo[AUTOCALIB].nLeft = AUTOX;
+			obj.m_sRoiInfo[AUTOCALIB].nRight = AUTOX + AUTOWIDTH;
+			obj.m_sRoiInfo[AUTOCALIB].nTop = AUTOY-10-10-10;
+			obj.m_sRoiInfo[AUTOCALIB].nBottom = AUTOY + AUTOHEIGHT-30-10-10;
+	}
 	
 	obj.m_sRoiInfo[AUTOCALIB].sizeRoi.width = obj.m_sRoiInfo[AUTOCALIB].nRight - obj.m_sRoiInfo[AUTOCALIB].nLeft;
 	obj.m_sRoiInfo[AUTOCALIB].sizeRoi.height = obj.m_sRoiInfo[AUTOCALIB].nBottom - obj.m_sRoiInfo[AUTOCALIB].nTop;
@@ -613,7 +635,7 @@ int main()
 //	for (float pitch = 1; pitch<7.5; pitch += 1){
 //		for (int yaw = -2; yaw <= 2; yaw++){
 	//for (float pitch = 0; pitch < 3; pitch += 0.3){ //pitch 0이 없을 경우 최초 라인 1개 밖에 못찾음 에러 미해결
-	for (float pitch = 0; pitch < 1; pitch += 0.3){
+	for (float pitch = 0; pitch < 5; pitch += 0.3){
 		for (int yaw = -1; yaw <= 1; yaw++){
 			double dStartTickTest_AutoCalib = (double)getTickCount();
 			obj.m_sCameraInfo.fPitch = (float)pitch * PI / 180;
@@ -688,8 +710,8 @@ int main()
 			}
 			fout << endl;
 			cout << endl;
-
-			imshow(string(namePitchYaw), imgSum);
+			ShowImageNormalize(namePitchYaw, imgSum);
+			//imshow(string(namePitchYaw), imgSum);
 			waitKey(1);
 
 
@@ -801,7 +823,7 @@ int main()
 	rectangle(obj.m_imgResizeOrigin, Rect(rectRightTop.x - rectRightTop.width / 2, rectRightTop.y - rectRightTop.height / 2, rectRightTop.width, rectRightTop.height), Scalar(255, 0, 0), 2);
 	rectangle(obj.m_imgResizeOrigin, Rect(rectRightBottom.x - rectRightBottom.width / 2, rectRightBottom.y - rectRightBottom.height / 2, rectRightBottom.width, rectRightBottom.height), Scalar(255, 0, 0), 2);
 
-	//
+
 	imshow("origin", obj.m_imgResizeOrigin);
 	waitKey(0);
 	float fWidthScale = IPM_WIDTH_SCALE;
@@ -914,8 +936,8 @@ int main()
 	//////////////////////////////////////////////////////////////////////////
 	//input DB change
 	
-	obj.bLeftDraw = false;
-	obj.bRightDraw = false;
+	obj.m_bLeftDraw = false;
+	obj.m_bRightDraw = false;
 	for (int j = 0; j <= 5; j++){
 		char szEnvironment[20];
 		if (j == 10){
@@ -1319,12 +1341,12 @@ int main()
 
 
 			}
-			if ((obj.bLeftDraw == true) && (obj.bRightDraw == true)){
+			if ((obj.m_bLeftDraw == true) && (obj.m_bRightDraw == true)){
 				if ((fRightGround - fLeftGround) < MIN_WORLD_WIDTH)
 				{
 					obj.ClearDetectionResult();
-					/*obj.bLeftDraw = false;
-					obj.bRightDraw = false;
+					/*obj.m_bLeftDraw = false;
+					obj.m_bRightDraw = false;
 
 					obj.nLeftCnt = 0;
 					obj.m_leftTracking.clear();
@@ -1343,14 +1365,14 @@ int main()
 				}
 
 			}
-			if ((obj.bLeftDraw == true) && (obj.bRightDraw == true)){
+			if ((obj.m_bLeftDraw == true) && (obj.m_bRightDraw == true)){
 
-				if (obj.bLeftDraw){
+				if (obj.m_bLeftDraw){
 					line(obj.m_imgResizeOrigin, obj.m_sLeftTrakingLane.ptUvStartLine, obj.m_sLeftTrakingLane.ptUvEndLine, Scalar(0, 0, 255), 2);
 					putText(obj.m_imgResizeOrigin, ssLeft.str(), obj.m_sLeftTrakingLane.ptUvEndLine,
 						FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
 				}
-				if (obj.bRightDraw){
+				if (obj.m_bRightDraw){
 					line(obj.m_imgResizeOrigin, obj.m_sRightTrakingLane.ptUvStartLine, obj.m_sRightTrakingLane.ptUvEndLine, Scalar(0, 0, 255), 2);
 					putText(obj.m_imgResizeOrigin, ssRight.str(), obj.m_sRightTrakingLane.ptUvEndLine,
 						FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
@@ -1428,7 +1450,7 @@ int main()
 			char szProcTime[20] = "FPS : ";
 			char szMs[10] = "ms";
 			ssTime << szProcTime;
-			ssTime << 1000/dCurrentProcessTime;
+			ssTime << (int)(1000/dCurrentProcessTime);
 			//ssTime << szMs;
 			putText(obj.m_imgResizeOrigin, ssTime.str(), Point(10, 90),
 				FONT_HERSHEY_COMPLEX, 1, Scalar(255, 0, 50), 2, 8, false);

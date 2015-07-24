@@ -1,4 +1,5 @@
 // hello git world
+// tkwoo 2015.07.07
 
 #include <opencv2/opencv.hpp>
 #include <iostream>
@@ -25,14 +26,14 @@ int calDist_mono(Mat &imgLeftInput, Rect_<int> &rRoi, double* dDistance, double 
 int main()
 {
 	//////////////////////////////////// file load ////////////////////////////////////////////
-	string strDBFilePath = "./공인DB/documentation/GroundTruth/"; // *.db file loading
+	string strDBFilePath = "F:/00.workspace/2014-2연구실/sane/StereoVision_sane/StereoVision_sane/DB2015/공인DB/documentation/GroundTruth/"; // *.db file loading
 	string strDBFileName = "GroundTruth2D_part1_stereo.db";
 	string str3dDBFileName = "GroundTruth3D_part1_stereo.db";
 
 	//string strLeftImagePath = "./공인DB/TestData_c0_part2/TestData/c0/"; // image file path
 	//string strRightImagePath = "./공인DB/TestData_c1_part2/TestData/c1/"; // image file path
-	string strLeftImagePath = "./공인DB/TestData_c0_part1/TestData/c0/"; // image file path
-	string strRightImagePath = "./공인DB/TestData_c1_part1/TestData/c1/";
+	string strLeftImagePath = "F:/00.workspace/2014-2연구실/sane/StereoVision_sane/StereoVision_sane/DB2015/공인DB/TestData_c0_part1/TestData/c0/"; // image file path
+	string strRightImagePath = "F:/00.workspace/2014-2연구실/sane/StereoVision_sane/StereoVision_sane/DB2015/공인DB/TestData_c1_part1/TestData/c1/";
 
 	FILE *fp = fopen((strDBFilePath+strDBFileName).c_str(),"rt");
 	FILE *fp3D = fopen((strDBFilePath+str3dDBFileName).c_str(),"rt");

@@ -1,3 +1,4 @@
+//master header
 #pragma once
 #include "highgui.h"
 #include "cv.h"
@@ -257,12 +258,12 @@ public:
 	int nLeftCnt;
 	int nRightCnt;
 
-	bool bLeftDraw;
-	bool bRightDraw;
+	bool m_bLeftDraw;
+	bool m_bRightDraw;
 private:
 	SVD m_SvdCalc;
-	Mat matFx;
-	Mat matFy;
+	Mat m_MatFx;
+	Mat m_MatFy;
 
 
 public:
@@ -356,10 +357,11 @@ void SetFrameNameBMP(char* szDataName, char* szDataDir,int nFrameNum);
 
 
 CMultiROILaneDetection::CMultiROILaneDetection(){
+	cout << "contructor start" << endl;
 	/*Mat matFx;
 	Mat matFy;*/
 	//create the convoultion kernel
-
+	//Filtering LUT
 	int derivLen = 33; //23; 13; 33;
 	int smoothLen = 9; //9; 17;
 
@@ -377,7 +379,7 @@ CMultiROILaneDetection::CMultiROILaneDetection(){
 		1.759328e-04, 2.374101e-05, 2.558828e-06, 2.189405e-07, 1.468714e-08,
 		7.562360e-10, 2.886400e-11, 7.696000e-13, 1.280000e-14, 1.000000e-16
 	};
-
+	
 	float smoothp[] = {
 		-1.000000e-03,
 		-2.200000e-02,
@@ -389,8 +391,8 @@ CMultiROILaneDetection::CMultiROILaneDetection(){
 		-2.200000e-02,
 		-1.000000e-03
 	};
-	matFx = Mat(derivLen, 1, CV_32FC1, derivp);
-	matFy = Mat(1, smoothLen, CV_32FC1, smoothp);
+	m_MatFx = Mat(derivLen, 1, CV_32FC1, derivp).clone();
+	m_MatFy = Mat(1, smoothLen, CV_32FC1, smoothp).clone();
 }
 
 void CMultiROILaneDetection::SetVanishingPoint(){
@@ -708,41 +710,41 @@ void CMultiROILaneDetection::InitialResizeFunction(Size sizeResize){
 void CMultiROILaneDetection::FilterLinesIPM(EROINUMBER nFlag){
 	//define the two kernels
 
-	Mat matFx;
-	Mat matFy;
-	//create the convoultion kernel
+	//Mat matFx;
+	//Mat matFy;
+	////create the convoultion kernel
 
-	int derivLen = 33; //23; 13; 33;
-	int smoothLen = 9; //9; 17;
+	//int derivLen = 33; //23; 13; 33;
+	//int smoothLen = 9; //9; 17;
 
-	//this is for 5-pixels wide
-	float derivp[] = {
-		1.000000e-16, 1.280000e-14, 7.696000e-13, 2.886400e-11, 7.562360e-10, 
-		1.468714e-08, 2.189405e-07, 2.558828e-06, 2.374101e-05, 1.759328e-04, 
-		1.042202e-03, 4.915650e-03, 
-		1.829620e-02, 5.297748e-02, 
-		1.169560e-01, 1.918578e-01, 
-		2.275044e-01, 
-		1.918578e-01, 1.169560e-01, 
-		5.297748e-02, 1.829620e-02, 
-		4.915650e-03, 1.042202e-03, 
-		1.759328e-04, 2.374101e-05, 2.558828e-06, 2.189405e-07, 	1.468714e-08, 
-		7.562360e-10, 2.886400e-11, 7.696000e-13, 1.280000e-14, 1.000000e-16
-	};
+	////this is for 5-pixels wide
+	//float derivp[] = {
+	//	1.000000e-16, 1.280000e-14, 7.696000e-13, 2.886400e-11, 7.562360e-10, 
+	//	1.468714e-08, 2.189405e-07, 2.558828e-06, 2.374101e-05, 1.759328e-04, 
+	//	1.042202e-03, 4.915650e-03, 
+	//	1.829620e-02, 5.297748e-02, 
+	//	1.169560e-01, 1.918578e-01, 
+	//	2.275044e-01, 
+	//	1.918578e-01, 1.169560e-01, 
+	//	5.297748e-02, 1.829620e-02, 
+	//	4.915650e-03, 1.042202e-03, 
+	//	1.759328e-04, 2.374101e-05, 2.558828e-06, 2.189405e-07, 	1.468714e-08, 
+	//	7.562360e-10, 2.886400e-11, 7.696000e-13, 1.280000e-14, 1.000000e-16
+	//};
 
-	float smoothp[] = {
-		-1.000000e-03,
-		-2.200000e-02,
-		-1.480000e-01, 
-		-1.940000e-01, 
-		7.300000e-01, 
-		-1.940000e-01, 
-		-1.480000e-01,
-		-2.200000e-02,
-		-1.000000e-03
-	};
-	matFx=Mat(derivLen,1,CV_32FC1,derivp);
-	matFy=Mat(1,smoothLen,CV_32FC1,smoothp);
+	//float smoothp[] = {
+	//	-1.000000e-03,
+	//	-2.200000e-02,
+	//	-1.480000e-01, 
+	//	-1.940000e-01, 
+	//	7.300000e-01, 
+	//	-1.940000e-01, 
+	//	-1.480000e-01,
+	//	-2.200000e-02,
+	//	-1.000000e-03
+	//};
+	//matFx=Mat(derivLen,1,CV_32FC1,derivp);
+	//matFy=Mat(1,smoothLen,CV_32FC1,smoothp);
 	//if ((nFlag == LEFT_ROI3) || (nFlag == RIGHT_ROI3))
 	//	resize(matFx, matFx, Size(1, matFx.rows * 2));
 
@@ -751,9 +753,9 @@ void CMultiROILaneDetection::FilterLinesIPM(EROINUMBER nFlag){
 	subtract(m_imgIPM[nFlag],dMean,m_ipmFiltered[nFlag]);
 
 	filter2D(m_ipmFiltered[nFlag],m_ipmFiltered[nFlag],m_ipmFiltered[nFlag].depth(),
-		matFx,Point(-1,-1),0.0,BORDER_REPLICATE);
+		m_MatFx, Point(-1, -1), 0.0, BORDER_REPLICATE);
 	filter2D(m_ipmFiltered[nFlag],m_ipmFiltered[nFlag],m_ipmFiltered[nFlag].depth(),
-		matFy,Point(-1,-1),0.0,BORDER_REPLICATE);
+		m_MatFy, Point(-1, -1), 0.0, BORDER_REPLICATE);
 	//double dStartTick = (double)getTickCount();
 	Mat rowMat;
 	rowMat = Mat(m_ipmFiltered[nFlag]).reshape(0,1); //1row·Î ´©Àû½ÃÅ´
@@ -2148,11 +2150,11 @@ void CMultiROILaneDetection::KalmanTrackingStage(EROINUMBER nFlag){
 	
 	bool bFlag=false;
 	if (nFlag == KALMAN_LEFT){
-		bLeftDraw = false;
+		m_bLeftDraw = false;
 		bFlag = m_bTracking[LEFT_ROI2];
 	}
 	else if (nFlag == KALMAN_RIGHT){
-		bRightDraw = false;
+		m_bRightDraw = false;
 		bFlag = m_bTracking[RIGHT_ROI2];
 	}
 	if (bFlag == false){
@@ -2204,7 +2206,7 @@ void CMultiROILaneDetection::KalmanTrackingStage(EROINUMBER nFlag){
 			m_sLeftTrakingLane.fXcenter = SLineEstimated.fXcenter;
 			m_sLeftTrakingLane.fXderiv = SLineEstimated.fXderiv;
 			//line(m_imgResizeOrigin, ptUvSt, ptUvEnd, Scalar(0, 0, 255), 2);
-			bLeftDraw = true;
+			m_bLeftDraw = true;
 			m_SKalmanLeftLane.SKalmanTrackingLineBefore = m_SKalmanLeftLane.SKalmanTrackingLine;
 		}
 				
@@ -2255,7 +2257,7 @@ void CMultiROILaneDetection::KalmanTrackingStage(EROINUMBER nFlag){
 			m_sRightTrakingLane.fXcenter = SLineEstimated.fXcenter;
 			m_sRightTrakingLane.fXderiv = SLineEstimated.fXderiv;
 			//line(m_imgResizeOrigin, ptUvSt, ptUvEnd, Scalar(0, 0, 255), 2);
-			bRightDraw = true;
+			m_bRightDraw = true;
 			m_SKalmanRightLane.SKalmanTrackingLineBefore = m_SKalmanRightLane.SKalmanTrackingLine;
 		}
 
@@ -2377,8 +2379,8 @@ void CMultiROILaneDetection::TrackingStageGround(EROINUMBER nflag){
 }
 
 void CMultiROILaneDetection::ClearDetectionResult(){
-	bLeftDraw = false;
-	bRightDraw = false;
+	m_bLeftDraw = false;
+	m_bRightDraw = false;
 
 	nLeftCnt = 0;
 	m_leftTracking.clear();
