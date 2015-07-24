@@ -80,15 +80,15 @@ int INIT_ROADINFO = DB_ROADINFO;
 int main()
 {
 	//g_nResizeFacor = RESIZEFACTOR;
-	if (DB_NUM == AMOL)
+	if (DB_NUM == AMOL) // VGA
 	{
 		g_nResizeFacor = 1;
 	}
-	if (DB_NUM == CVLAB)
+	if (DB_NUM == CVLAB) //HD
 	{
 		g_nResizeFacor = 2;
 	}
-	if (DB_NUM == PRESCAN)
+	if (DB_NUM == PRESCAN) //HD
 	{
 		g_nResizeFacor = 2;
 	}
@@ -146,7 +146,7 @@ int main()
 			
 	}
 	else if (DB_NUM == PRESCAN){
-		strcpy(szPrescanDB_dir, "H:/[DB]AutoCalibration/Pitch_4_Yaw_0/Pitch_4_Yaw_0_");
+		strcpy(szPrescanDB_dir, "./[DB]AutoCalibration/Pitch_0_Yaw_0/Pitch_0_Yaw_0_");
 	}
 	//////////////////////////////////////////////////////////////////////////
 	//test DB
@@ -463,7 +463,7 @@ int main()
 	{		
 			obj.m_sRoiInfo[AUTOCALIB].nLeft = AUTOX;
 			obj.m_sRoiInfo[AUTOCALIB].nRight = AUTOX + AUTOWIDTH;
-			obj.m_sRoiInfo[AUTOCALIB].nTop = AUTOY-10-10-10;
+			obj.m_sRoiInfo[AUTOCALIB].nTop = AUTOY-10;
 			obj.m_sRoiInfo[AUTOCALIB].nBottom = AUTOY + AUTOHEIGHT-30-10-10;
 	}
 	
@@ -482,7 +482,7 @@ int main()
 	obj.m_sRoiInfo[AUTOCALIB].nGetEndPoint = 0;
 	obj.m_sRoiInfo[AUTOCALIB].nGroupThreshold = 10;
 	obj.m_sRoiInfo[AUTOCALIB].fOverlapThreshold = 0.3;
-
+	//건드릴 필요 없는 파라미터
 	obj.m_sRoiInfo[AUTOCALIB].nRansacNumSamples = 2;	//Ransac
 	obj.m_sRoiInfo[AUTOCALIB].nRansacNumIterations = 40;
 	obj.m_sRoiInfo[AUTOCALIB].nRansacNumGoodFit = 10;
@@ -490,7 +490,7 @@ int main()
 	obj.m_sRoiInfo[AUTOCALIB].nRansacScoreThreshold = 0;
 	obj.m_sRoiInfo[AUTOCALIB].nRansacLineWindow = 15;
 
-
+	//[LYW]Auto calibrarion start
 	double dTickTestTotal = 0;
 	int testIteration = 1;
 	//	for(int i=0;i<testIteration;i++){
@@ -519,6 +519,8 @@ int main()
 	cout << endl << endl << "##########		ROI setting & IPM Calibration time total  " << dTickTestTotal / testIteration / getTickFrequency()*1000.0 << " msec		###########" << endl << endl << endl;
 	///end
 	//////////////////////////////////////////////////////////////////////////
+	
+	
 	//Auto Calibration data structure
 	Vector <Mat> vecIpmFiltered;
 	Vector < vector <Mat> > vecIpmArray;
@@ -529,7 +531,13 @@ int main()
 	//End Auto Calibration data structure
 	//////////////////////////////////////////////////////////////////////////
 	//int nStartNum = 1;
+
+
+
+
+
 	//main loof start
+	//[LYW_0724]: 90프레임 누적
 	for (int i = FIRSTFRAMENUM; obj.m_nFrameNum<nTotalFrame; obj.m_nFrameNum++, i++){
 
 		//frame read
@@ -612,6 +620,7 @@ int main()
 		obj.m_laneScore[LEFT_ROI3].clear();
 		obj.m_lanesResult[LEFT_ROI3].clear();*/
 	}
+	//show 90fr 확인용
 	for (int i = 0; i<originImg.size(); i++){
 		Mat imgOriginTemp = originImgClr[i].clone();
 		rectangle(imgOriginTemp, Rect(obj.m_sRoiInfo[AUTOCALIB].nLeft, obj.m_sRoiInfo[AUTOCALIB].nTop, obj.m_sRoiInfo[AUTOCALIB].sizeRoi.width, obj.m_sRoiInfo[AUTOCALIB].sizeRoi.height),
@@ -640,7 +649,7 @@ int main()
 			double dStartTickTest_AutoCalib = (double)getTickCount();
 			obj.m_sCameraInfo.fPitch = (float)pitch * PI / 180;
 			obj.m_sCameraInfo.fYaw = (float)yaw * PI / 180;
-			obj.SetRoiIpmCofig(AUTOCALIB);
+			obj.SetRoiIpmCofig(AUTOCALIB); //
 
 
 			//			obj.InitialResizeFunction(sizeResizeImg);
@@ -667,7 +676,11 @@ int main()
 			dTickTestTotal += (dEndTickTest_AutoCalib - dStartTickTest_AutoCalib);
 			imgSum/=originImg.size();
 			Mat rowMat;
-			rowMat = Mat(imgSum).reshape(0, 1);
+			rowMat = Mat(imgSum).reshape(0, 1); // 1-row로 압축
+			
+			
+			
+			
 			//get the quantile
 			float fQval;
 			fQval = quantile((float*)&rowMat.data[0], rowMat.cols, obj.m_sConfig.fLowerQuantile);
@@ -710,7 +723,7 @@ int main()
 			}
 			fout << endl;
 			cout << endl;
-			ShowImageNormalize(namePitchYaw, imgSum);
+			ShowImageNormalize(namePitchYaw, imgSum); // [LYW_0724] : 확인용
 			//imshow(string(namePitchYaw), imgSum);
 			waitKey(1);
 
@@ -734,6 +747,9 @@ int main()
 		cout << " Auto calibration Fail, plz check intrinsic parameter " << AutoCalibLane.size()<< endl;
 		return 0;
 	}
+
+
+	//[LYW_0724] : Adaptive ROI setting start
 	//////////////////////////////////////////////////////////////////////////
 	//center line initial by auto calibration
 	//////////////////////////////////////////////////////////////////////////
@@ -757,11 +773,13 @@ int main()
 	//cout << obj.m_sCameraInfo.fGroundTop << endl;
 	//cout << obj.m_sCameraInfo.fGroundBottom << endl;
 
-	for (unsigned int i = 0; i < AutoCalibLane.size(); i++)
+	for (unsigned int i = 0; i < AutoCalibLane.size(); i++){
 		line(obj.m_imgResizeOrigin,
-		Point((int)AutoCalibLane[i].ptStartLine.x, (int)AutoCalibLane[i].ptStartLine.y),
-		Point((int)AutoCalibLane[i].ptEndLine.x, (int)AutoCalibLane[i].ptEndLine.y),
-		Scalar(0, 255, 0), 2);
+			Point((int)AutoCalibLane[i].ptStartLine.x, (int)AutoCalibLane[i].ptStartLine.y),
+			Point((int)AutoCalibLane[i].ptEndLine.x, (int)AutoCalibLane[i].ptEndLine.y),
+			Scalar(0, 255, 0), 2);
+	}// [LYW_0724] : 화면에 라인 2개 그려주기
+		
 	imshow("origin", obj.m_imgResizeOrigin);
 	waitKey(0);
 	obj.m_lanesResult[AUTOCALIB].clear();
@@ -792,6 +810,7 @@ int main()
 		vecRight = LineDivNum(AutoCalibLane[0].ptStartLine, AutoCalibLane[0].ptEndLine, nDivNum);
 		vecLeft = LineDivNum(AutoCalibLane[1].ptStartLine, AutoCalibLane[1].ptEndLine, nDivNum);
 	}
+	//[LYW_0724] : 4등분하는 점 5개 그려주기
 	for (int i = 0; i < vecLeft.size(); i++){
 		circle(obj.m_imgResizeOrigin, vecLeft[i], 2, Scalar(0, 0, 255), 2);
 	}
@@ -826,9 +845,16 @@ int main()
 
 	imshow("origin", obj.m_imgResizeOrigin);
 	waitKey(0);
-	float fWidthScale = IPM_WIDTH_SCALE;
+	float fWidthScale = IPM_WIDTH_SCALE; //[LYW_0724] : 계산해야할 IPM이미지의 사이즈를 변경해주는 역할. 임베디드에서 계산양을 줄이기 위해 조절할 수도 있음
 	float fHeightScale = IPM_HEIGHT_SCALE;
+	
+
+	//////////////////////////end of Auto Calibration & adaptive ROI setting //////////////////////////////////////////////////////////////
+
+
+	//[LYW_0724] : obj에 본격적으로 ROI정보 넣어주기
 	//////////////////////////////////////////////////////////////////////////
+	
 	//LEFT_ROI2
 	obj.m_sRoiInfo[LEFT_ROI2].nLeft = rectLeftTop.x - rectLeftTop.width / 2;
 	obj.m_sRoiInfo[LEFT_ROI2].nRight = rectLeftTop.x + rectLeftTop.width / 2;
@@ -896,7 +922,7 @@ int main()
 	
 
 
-	
+	//[LYW_0724] : LUT만들기
 	obj.SetRoiIpmCofig(LEFT_ROI2);
 	obj.SetRoiIpmCofig(LEFT_ROI3);
 	obj.SetRoiIpmCofig(RIGHT_ROI2);
@@ -907,7 +933,7 @@ int main()
 	ptVanEnd.x = obj.m_imgResizeOrigin.cols - 1;
 	ptVanEnd.y = obj.m_sCameraInfo.ptVanishingPoint.y;
 
-	//GROUND
+	//GROUND 승준이가 테스트하기 위해 만들었데. ROI하나 더 만들어봐서 테스트해보싶었데. 사실 별로 상관 없는 영역.
 	obj.m_sRoiInfo[GROUND].nLeft = 0;
 	obj.m_sRoiInfo[GROUND].nRight = 640;
 	//obj.m_sRoiInfo[GROUND].nTop = rectRightTop.y - rectRightTop.height / 2-20;
@@ -979,10 +1005,17 @@ int main()
 			obj.m_imgOrigin = imread(string(obj.m_sPreScanDB.szDataName));
 			if (obj.m_imgOrigin.empty())
 				break;
+			
+		 
 			obj.InitialResizeFunction(sizeResizeImg);
 
 			double dStartTick = (double)getTickCount();
 
+			
+			
+			
+			//detection start
+			//[LYW]드디어 시작!!!
 			obj.StartLanedetection(LEFT_ROI2);
 			obj.StartLanedetection(LEFT_ROI3);
 			obj.StartLanedetection(RIGHT_ROI2);
@@ -1466,7 +1499,7 @@ int main()
 			if (cTemp == 'z'){
 				i-=2;
 			}
-		}
+		}// end of 하나의 frame에서 detection & tracking 다
 		obj.ClearDetectionResult();
 
 
