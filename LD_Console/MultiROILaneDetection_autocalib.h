@@ -1013,7 +1013,7 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 		m_lanes[nFlag] = newLines;  
 		m_laneScore[nFlag] = newScores;
 	}
-
+ 
 	
 
 	//clean
