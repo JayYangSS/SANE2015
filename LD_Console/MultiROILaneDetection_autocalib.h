@@ -641,6 +641,8 @@ void CMultiROILaneDetection::SetRoiIpmCofig(EROINUMBER nFlag ){
 	
 
 }
+
+//[LYW] : IPM이미지 만드는 함수
 void CMultiROILaneDetection::GetIPM( EROINUMBER nFlag){
 
 
@@ -714,6 +716,9 @@ void CMultiROILaneDetection::InitialResizeFunction(Size sizeResize){
 	m_imgResizeOrigin.convertTo(m_imgOriginScale,CV_32FC1,1.0/255);
 	cvtColor(m_imgOriginScale,m_imgResizeScaleGray,CV_RGB2GRAY);
 }
+
+
+// [LYW] : Line kernel filtering하기
 void CMultiROILaneDetection::FilterLinesIPM(EROINUMBER nFlag){
 	//define the two kernels
 
