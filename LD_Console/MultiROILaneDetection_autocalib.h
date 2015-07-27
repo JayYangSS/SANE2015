@@ -299,6 +299,7 @@ public:
 	void KalmanSetting(SKalman &SKalmanInput, EROINUMBER nflag);
 	void TrackingStageGround(EROINUMBER nflag);
 	void ClearDetectionResult();
+	void TrackingContinue();
 private:
 	void SetVanishingPoint();
 
@@ -2400,6 +2401,177 @@ void CMultiROILaneDetection::ClearDetectionResult(){
 	m_bTracking[LEFT_ROI2] = false;
 	m_bTracking[LEFT_ROI3] = false;
 	m_SKalmanRightLane.cntNum = 0;
+}
+
+void CMultiROILaneDetection::TrackingContinue(){
+	//Left ROI tracking continue 판별식
+	if ((m_lanesGroundResult[LEFT_ROI2].size() == 0) && (m_lanesGroundResult[LEFT_ROI3].size() == 0)){
+		nLeftCnt += TRACKING_ERASE_LEVEL;
+		if (nLeftCnt >= TRACKINGERASE){
+			nLeftCnt = 0;
+			m_leftTracking.clear();
+			m_leftGroundTracking.clear();
+			m_bTracking[LEFT_ROI2] = false;
+			m_bTracking[LEFT_ROI3] = false;
+			m_SKalmanLeftLane.cntNum = 0;
+		}
+		m_SKalmanLeftLane.cntErase += TRACKING_ERASE_LEVEL;
+		if (m_SKalmanLeftLane.cntErase >= TRACKINGERASE){
+			m_SKalmanLeftLane.cntErase = 0;
+			nLeftCnt = 0;
+			m_leftTracking.clear();
+			m_leftGroundTracking.clear();
+			m_bTracking[LEFT_ROI2] = false;
+			m_bTracking[LEFT_ROI3] = false;
+		}
+	}
+	else
+	{
+		(nLeftCnt >= 0) ? (((nLeftCnt -= TRACKING_ERASE_LEVEL) == 0) ? nLeftCnt = 0 : nLeftCnt -= TRACKING_ERASE_LEVEL) : nLeftCnt = 0;
+		(m_SKalmanLeftLane.cntErase >= 0) ?
+			(((m_SKalmanLeftLane.cntErase -= TRACKING_ERASE_LEVEL) == 0) ?
+			m_SKalmanLeftLane.cntErase = 0 : m_SKalmanLeftLane.cntErase -= TRACKING_ERASE_LEVEL) : m_SKalmanLeftLane.cntErase = 0;
+	}
+
+
+	//Right ROI tracking continue 판별식
+	if ((m_lanesGroundResult[RIGHT_ROI2].size() == 0) && (m_lanesGroundResult[RIGHT_ROI3].size() == 0)){
+		nRightCnt += TRACKING_ERASE_LEVEL;
+		if (nRightCnt >= TRACKINGERASE){
+			nRightCnt = 0;
+			m_rightTracking.clear();
+			m_rightGroundTracking.clear();
+			m_bTracking[RIGHT_ROI2] = false;
+			m_bTracking[RIGHT_ROI3] = false;
+			m_SKalmanRightLane.cntNum = 0;
+		}
+		m_SKalmanRightLane.cntErase += TRACKING_ERASE_LEVEL;
+		if (m_SKalmanRightLane.cntErase >= TRACKINGERASE){
+			m_SKalmanRightLane.cntErase = 0;
+			nRightCnt = 0;
+			m_rightTracking.clear();
+			m_rightGroundTracking.clear();
+			m_bTracking[LEFT_ROI2] = false;
+			m_bTracking[LEFT_ROI3] = false;
+		}
+	}
+	else{
+		(nRightCnt >= 0) ? ((nRightCnt -= TRACKING_ERASE_LEVEL) == 0 ? nRightCnt = 0 : (nRightCnt -= TRACKING_ERASE_LEVEL)) : nRightCnt = 0;
+		(m_SKalmanRightLane.cntErase >= 0) ?
+			(((m_SKalmanRightLane.cntErase -= TRACKING_ERASE_LEVEL) == 0) ?
+			m_SKalmanRightLane.cntErase = 0 : m_SKalmanRightLane.cntErase -= TRACKING_ERASE_LEVEL) : m_SKalmanRightLane.cntErase = 0;
+	}
+
+	//Left Tracking 결과 
+	if (m_leftGroundTracking.size() > TRACKING_FLAG_NUM)
+		//if kalman tracking threshold true
+	{
+		m_bTracking[LEFT_ROI2] = true;
+		m_bTracking[LEFT_ROI3] = true;
+
+		//////////////////////////////////////////////////////////////////////////
+		//Moving Average Filter
+		Point_<double> ptStart = Point_<double>(0, 0);
+		Point_<double> ptEnd = Point_<double>(0, 0);
+		SLine SGroundLeftLine;
+		SGroundLeftLine.fXcenter = 0;
+		SGroundLeftLine.fXderiv = 0;
+		for (int i = 0; i < m_leftGroundTracking.size(); i++){
+			ptStart += m_leftGroundTracking[i].ptStartLine;
+			ptEnd += m_leftGroundTracking[i].ptEndLine;
+			SGroundLeftLine.fXcenter += m_leftGroundTracking[i].fXcenter;
+			SGroundLeftLine.fXderiv += m_leftGroundTracking[i].fXderiv;
+		}
+		int nSize = m_leftGroundTracking.size();
+
+		ptStart.x /= nSize;
+		ptStart.y /= nSize;
+		ptEnd.x /= nSize;
+		ptEnd.y /= nSize;
+
+		SGroundLeftLine.fXcenter /= nSize;
+		SGroundLeftLine.fXderiv /= nSize;
+
+		m_sLeftTrakingLane.fXcenter = SGroundLeftLine.fXcenter;
+		m_sLeftTrakingLane.fXderiv = SGroundLeftLine.fXderiv;
+		m_sLeftTrakingLane.fYtop = ptStart.y;
+		m_sLeftTrakingLane.fYBottom = ptEnd.y;
+		m_sLeftTrakingLane.ptStartLane = ptStart;
+		m_sLeftTrakingLane.ptEndLane = ptEnd;
+		ptStart.x = (ptStart.y - ptEnd.y) / 2 * m_sLeftTrakingLane.fXderiv + m_sLeftTrakingLane.fXcenter;
+		ptEnd.x = (ptEnd.y - ptStart.y) / 2 * m_sLeftTrakingLane.fXderiv + m_sLeftTrakingLane.fXcenter;
+
+		Point ptUvSt = TransformPointGround2Image(ptStart);
+		Point ptUvEnd = TransformPointGround2Image(ptEnd);
+		m_sLeftTrakingLane.ptUvStartLine = ptUvSt;
+		m_sLeftTrakingLane.ptUvEndLine = ptUvEnd;
+
+		//20150524
+		SLine SLineResult;
+		SLineResult.fXcenter = m_sLeftTrakingLane.fXcenter;
+		SLineResult.fXderiv = m_sLeftTrakingLane.fXderiv;
+		SLineResult.ptStartLine = m_sLeftTrakingLane.ptStartLane;
+		SLineResult.ptEndLine = m_sLeftTrakingLane.ptEndLane;
+
+		m_SKalmanLeftLane.SKalmanTrackingLine = SLineResult;
+	}
+
+	//Right Tracking 결과 
+	if (m_rightGroundTracking.size() > TRACKING_FLAG_NUM)
+		//if kalman tracking threshold true
+	{
+		m_bTracking[RIGHT_ROI2] = true;
+		m_bTracking[RIGHT_ROI3] = true;
+
+		//////////////////////////////////////////////////////////////////////////
+		//Moving Average Filter
+		Point_<double> ptStart = Point_<double>(0, 0);
+		Point_<double> ptEnd = Point_<double>(0, 0);
+		SLine SGroundRightLine;
+		SGroundRightLine.fXcenter = 0;
+		SGroundRightLine.fXderiv = 0;
+		for (int i = 0; i < m_rightGroundTracking.size(); i++){
+			ptStart += m_rightGroundTracking[i].ptStartLine;
+			ptEnd += m_rightGroundTracking[i].ptEndLine;
+			SGroundRightLine.fXcenter += m_rightGroundTracking[i].fXcenter;
+			SGroundRightLine.fXderiv += m_rightGroundTracking[i].fXderiv;
+		}
+		int nSize = m_rightGroundTracking.size();
+
+		ptStart.x /= nSize;
+		ptStart.y /= nSize;
+		ptEnd.x /= nSize;
+		ptEnd.y /= nSize;
+
+		SGroundRightLine.fXcenter /= nSize;
+		SGroundRightLine.fXderiv /= nSize;
+
+		m_sRightTrakingLane.fXcenter = SGroundRightLine.fXcenter;
+		m_sRightTrakingLane.fXderiv = SGroundRightLine.fXderiv;
+		m_sRightTrakingLane.fYtop = ptStart.y;
+		m_sRightTrakingLane.fYBottom = ptEnd.y;
+		m_sRightTrakingLane.ptStartLane = ptStart;
+		m_sRightTrakingLane.ptEndLane = ptEnd;
+		ptStart.x = (ptStart.y - ptEnd.y) / 2 * m_sRightTrakingLane.fXderiv + m_sRightTrakingLane.fXcenter;
+		ptEnd.x = (ptEnd.y - ptStart.y) / 2 * m_sRightTrakingLane.fXderiv + m_sRightTrakingLane.fXcenter;
+
+		Point ptUvSt = TransformPointGround2Image(ptStart);
+		Point ptUvEnd = TransformPointGround2Image(ptEnd);
+		m_sRightTrakingLane.ptUvStartLine = ptUvSt;
+		m_sRightTrakingLane.ptUvEndLine = ptUvEnd;
+
+		//20150524
+		SLine SLineResult;
+		SLineResult.fXcenter = m_sRightTrakingLane.fXcenter;
+		SLineResult.fXderiv = m_sRightTrakingLane.fXderiv;
+		SLineResult.ptStartLine = m_sRightTrakingLane.ptStartLane;
+		SLineResult.ptEndLine = m_sRightTrakingLane.ptEndLane;
+
+		m_SKalmanRightLane.SKalmanTrackingLine = SLineResult;
+
+
+	}
+
 }
 // my function
 void SetFrameName(char* szDataName, char* szDataDir,int nFrameNum){
