@@ -49,7 +49,8 @@ enum DB_INTRINSIC{
 	PRESCAN,
 	AMOL	//AMOL 제공 DB (Only Urban)
 };
-#define INTRINSIC_DB PRESCAN
+//#define INTRINSIC_DB PRESCAN
+#define INTRINSIC_DB CVLAB
 enum DB_CVLAB{
 	CV1,//4월 CVLAB DB
 	CV2,//3월 CVLAB DB
@@ -161,9 +162,12 @@ int main()
 	//char szTestDir[200] = "H:/[DB]amol/S2C7_CAM0_IMG/S2C7_CAM0_IMG/S2C7_";
 	//char szTestDir[200] = "H:/[DB]amol/S3C1_CAM0_IMG/S3C1_CAM0_IMG/S3C1_";
 	//char szTestDir[200] = "H:/[DB]amol/S3C2_CAM0_IMG/S3C2_CAM0_IMG/S3C2_";
-	char szTestDir[200] = "H:/[DB]amol/S3C3_CAM0_IMG/S3C3_CAM0_IMG/S3C3_";
+	//char szTestDir[200] = "H:/[DB]amol/S3C3_CAM0_IMG/S3C3_CAM0_IMG/S3C3_";
 	//char szTestDir[200] = "H:/[DB]amol/S3C4_CAM0_IMG/S3C4_CAM0_IMG/S3C4_";
 	//char szTestDir[200] = "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_1/2015-04-13-14h-20m-45s_straight_";
+	//////////////////////////////////////////////////////////////////////////
+	char szTestDir[200] = "./[DB]AutoCalibration/Pitch_0_Yaw_0/Pitch_0_Yaw_0_";
+	strcpy(szTestDir, szPrescanDB_dir);
 	//////////////////////////////////////////////////////////////////////////
 	if (DB_NUM == AMOL)
 	{
@@ -802,6 +806,7 @@ int main()
 	vector<Point> vecLeft;
 	vector<Point> vecRight;
 	int nDivNum = 5;
+	//Auto calibration과정에서 검출한 결과 차선인 AutoCalibLane을 vector<Point>로 균등 분할 함수 (4등분)
 	if (AutoCalibLane[0].ptStartLine.x < AutoCalibLane[1].ptStartLine.x){
 		vecLeft = LineDivNum(AutoCalibLane[0].ptStartLine, AutoCalibLane[0].ptEndLine, nDivNum);
 		vecRight = LineDivNum(AutoCalibLane[1].ptStartLine, AutoCalibLane[1].ptEndLine, nDivNum);
@@ -817,10 +822,11 @@ int main()
 	for (int i = 0; i < vecRight.size(); i++){
 		circle(obj.m_imgResizeOrigin, vecRight[i], 2, Scalar(0, 0, 255), 2);
 	}
-	rectLeftTop.width = vecRight[1].x - vecLeft[1].x;
-	rectLeftTop.height = vecLeft[2].y - vecLeft[0].y;
-	rectLeftTop.x = vecLeft[1].x;
-	rectLeftTop.y = vecLeft[1].y;
+	//auto calibration결과 차선 두개를 중심으로 초기 ROI adaptive하게 설정
+	rectLeftTop.width = vecRight[1].x - vecLeft[1].x;		//left차선의 상단과 right차선의 상단의 x좌표 차이를 left top ROI의 width로 지정
+	rectLeftTop.height = vecLeft[2].y - vecLeft[0].y;		//left top ROI의 height는 검출 차선 height의 1/2로 균등하게 지정
+	rectLeftTop.x = vecLeft[1].x;							//left top point.x
+	rectLeftTop.y = vecLeft[1].y;							//left top point.y
 
 	rectLeftBottom.width = vecRight[3].x - vecLeft[3].x;
 	rectLeftBottom.height = vecLeft[4].y - vecLeft[2].y;
@@ -964,7 +970,13 @@ int main()
 	
 	obj.m_bLeftDraw = false;
 	obj.m_bRightDraw = false;
-	for (int j = 0; j <= 5; j++){
+	int jMax = 5;
+	if (DB_NUM == PRESCAN){
+		jMax = 0;
+	}
+
+		
+	for (int j = 0; j <= jMax; j++){
 		char szEnvironment[20];
 		if (j == 10){
 			strcpy(szEnvironment, "Purity, Urban road");
@@ -997,7 +1009,7 @@ int main()
 			strcpy(szTestDir, "./[DB]FreeScaleDemo/Rainy/Urban/Straight_3/2015-04-13-17h-37m-00s_");		// RUS 평가 완료
 		}
 		strcpy(obj.m_sPreScanDB.szDataDir, szTestDir);
-
+		if (j!=2)
 		for (int i = FIRSTFRAMENUM;; i++){
 			/*obj.m_imgResizeScaleGray = originImg[i];
 			obj.m_imgResizeOrigin = originImgClr[i];*/
@@ -1037,269 +1049,23 @@ int main()
 
 			//TrackingStageGround(obj, LEFT_ROI2);
 			//TrackingStageGround(obj, LEFT_ROI3);
+			//Left,Right 검출 결과 추적 맴버 변수로 변환
+
 			obj.TrackingStageGround(LEFT_ROI2);
 			obj.TrackingStageGround(LEFT_ROI3);
 			obj.TrackingStageGround(RIGHT_ROI2);
 			obj.TrackingStageGround(RIGHT_ROI3);
+			
+			
+			////Tracking continue 판별식
+			obj.TrackingContinue();
 
-			if ((obj.m_lanesGroundResult[LEFT_ROI2].size() == 0) && (obj.m_lanesGroundResult[LEFT_ROI3].size() == 0)){
-				obj.nLeftCnt += TRACKING_ERASE_LEVEL;
-				if (obj.nLeftCnt >= TRACKINGERASE){
-					obj.nLeftCnt = 0;
-					obj.m_leftTracking.clear();
-					obj.m_leftGroundTracking.clear();
-					obj.m_bTracking[LEFT_ROI2] = false;
-					obj.m_bTracking[LEFT_ROI3] = false;
-					obj.m_SKalmanLeftLane.cntNum = 0;
-				}
-				obj.m_SKalmanLeftLane.cntErase += TRACKING_ERASE_LEVEL;
-				if (obj.m_SKalmanLeftLane.cntErase >= TRACKINGERASE){
-					obj.m_SKalmanLeftLane.cntErase = 0;
-					obj.nLeftCnt = 0;
-					obj.m_leftTracking.clear();
-					obj.m_leftGroundTracking.clear();
-					obj.m_bTracking[LEFT_ROI2] = false;
-					obj.m_bTracking[LEFT_ROI3] = false;
-				}
-			}
-			else
-			{
-				(obj.nLeftCnt >= 0) ? (((obj.nLeftCnt -= TRACKING_ERASE_LEVEL) == 0) ? obj.nLeftCnt = 0 : obj.nLeftCnt -= TRACKING_ERASE_LEVEL) : obj.nLeftCnt = 0;
-				(obj.m_SKalmanLeftLane.cntErase >= 0) ?
-					(((obj.m_SKalmanLeftLane.cntErase -= TRACKING_ERASE_LEVEL) == 0) ?
-					obj.m_SKalmanLeftLane.cntErase = 0 : obj.m_SKalmanLeftLane.cntErase -= TRACKING_ERASE_LEVEL) : obj.m_SKalmanLeftLane.cntErase = 0;
-			}
-
-			if ((obj.m_lanesGroundResult[RIGHT_ROI2].size() == 0) && (obj.m_lanesGroundResult[RIGHT_ROI3].size() == 0)){
-				obj.nRightCnt += TRACKING_ERASE_LEVEL;
-				if (obj.nRightCnt >= TRACKINGERASE){
-					obj.nRightCnt = 0;
-					obj.m_rightTracking.clear();
-					obj.m_rightGroundTracking.clear();
-					obj.m_bTracking[RIGHT_ROI2] = false;
-					obj.m_bTracking[RIGHT_ROI3] = false;
-					obj.m_SKalmanRightLane.cntNum = 0;
-				}
-				obj.m_SKalmanRightLane.cntErase += TRACKING_ERASE_LEVEL;
-				if (obj.m_SKalmanRightLane.cntErase >= TRACKINGERASE){
-					obj.m_SKalmanRightLane.cntErase = 0;
-					obj.nRightCnt = 0;
-					obj.m_rightTracking.clear();
-					obj.m_rightGroundTracking.clear();
-					obj.m_bTracking[LEFT_ROI2] = false;
-					obj.m_bTracking[LEFT_ROI3] = false;
-				}
-			}
-			else{
-				(obj.nRightCnt >= 0) ? ((obj.nRightCnt -= TRACKING_ERASE_LEVEL) == 0 ? obj.nRightCnt = 0 : (obj.nRightCnt -= TRACKING_ERASE_LEVEL)) : obj.nRightCnt = 0;
-				(obj.m_SKalmanRightLane.cntErase >= 0) ?
-					(((obj.m_SKalmanRightLane.cntErase -= TRACKING_ERASE_LEVEL) == 0) ?
-					obj.m_SKalmanRightLane.cntErase = 0 : obj.m_SKalmanRightLane.cntErase -= TRACKING_ERASE_LEVEL) : obj.m_SKalmanRightLane.cntErase = 0;
-			}
-
-			////if ((obj.m_lanesResult[LEFT_ROI2].size() == 0) && (obj.m_lanesResult[LEFT_ROI3].size() == 0)){
-			//if ((obj.m_lanesGroundResult[LEFT_ROI2].size() == 0) && (obj.m_lanesGroundResult[LEFT_ROI3].size() == 0)){
-			//	obj.nLeftCnt += TRACKING_ERASE_LEVEL;
-			//	if (obj.nLeftCnt >= TRACKINGERASE){
-			//		obj.nLeftCnt = 0;
-			//		obj.m_leftTracking.clear();
-			//		obj.m_leftGroundTracking.clear();
-			//		obj.m_bTracking[LEFT_ROI2] = false;
-			//		obj.m_bTracking[LEFT_ROI3] = false;
-			//		obj.m_SKalmanLeftLane.cntNum = 0;
-			//	}
-			//	obj.m_SKalmanLeftLane.cntErase += TRACKING_ERASE_LEVEL;
-			//	if (obj.m_SKalmanLeftLane.cntErase >= TRACKINGERASE){
-			//		obj.m_SKalmanLeftLane.cntErase = 0;
-			//		obj.nLeftCnt = 0;
-			//		obj.m_leftTracking.clear();
-			//		obj.m_leftGroundTracking.clear();
-			//		obj.m_bTracking[LEFT_ROI2] = false;
-			//		obj.m_bTracking[LEFT_ROI3] = false;
-			//	}
-			//}else
-			//{
-			//	(obj.nLeftCnt >= 0) ? (((obj.nLeftCnt -= TRACKING_ERASE_LEVEL) == 0) ? obj.nLeftCnt = 0 : obj.nLeftCnt -= TRACKING_ERASE_LEVEL) : obj.nLeftCnt = 0;
-			//	(obj.m_SKalmanLeftLane.cntErase >= 0) ? 
-			//		(((obj.m_SKalmanLeftLane.cntErase -= TRACKING_ERASE_LEVEL) == 0) ? 
-			//		obj.m_SKalmanLeftLane.cntErase = 0 : obj.m_SKalmanLeftLane.cntErase -= TRACKING_ERASE_LEVEL) : obj.m_SKalmanLeftLane.cntErase = 0;
-			//}
-			//if ((obj.m_lanesResult[RIGHT_ROI2].size() == 0) && (obj.m_lanesResult[RIGHT_ROI3].size() == 0)){
-			//	obj.nRightCnt += TRACKING_ERASE_LEVEL;
-			//	if (obj.nRightCnt >= TRACKINGERASE){
-			//		obj.nRightCnt = 0;
-			//		obj.m_rightTracking.clear();
-			//		obj.m_rightGroundTracking.clear();
-			//		obj.m_bTracking[RIGHT_ROI2] = false;
-			//		obj.m_bTracking[RIGHT_ROI3] = false;
-			//	}
-			//}
-			//else
-			//	(obj.nRightCnt >= 0) ? ((obj.nRightCnt -= TRACKING_ERASE_LEVEL) == 0 ? obj.nRightCnt = 0 : (obj.nRightCnt -= TRACKING_ERASE_LEVEL)) : obj.nRightCnt = 0;
-
-			//
-			if (obj.m_leftGroundTracking.size() > TRACKING_FLAG_NUM)
-				//if kalman tracking threshold true
-			{
-				obj.m_bTracking[LEFT_ROI2] = true;
-				obj.m_bTracking[LEFT_ROI3] = true;
-
-				//////////////////////////////////////////////////////////////////////////
-				//Moving Average Filter
-				Point_<double> ptStart = Point_<double>(0, 0);
-				Point_<double> ptEnd = Point_<double>(0, 0);
-				SLine SGroundLeftLine;
-				SGroundLeftLine.fXcenter = 0;
-				SGroundLeftLine.fXderiv = 0;
-				for (int i = 0; i < obj.m_leftGroundTracking.size(); i++){
-					ptStart += obj.m_leftGroundTracking[i].ptStartLine;
-					ptEnd += obj.m_leftGroundTracking[i].ptEndLine;
-					SGroundLeftLine.fXcenter += obj.m_leftGroundTracking[i].fXcenter;
-					SGroundLeftLine.fXderiv += obj.m_leftGroundTracking[i].fXderiv;
-				}
-				int nSize = obj.m_leftGroundTracking.size();
-
-				ptStart.x /= nSize;
-				ptStart.y /= nSize;
-				ptEnd.x /= nSize;
-				ptEnd.y /= nSize;
-
-				SGroundLeftLine.fXcenter /= nSize;
-				SGroundLeftLine.fXderiv /= nSize;
-
-				obj.m_sLeftTrakingLane.fXcenter = SGroundLeftLine.fXcenter;
-				obj.m_sLeftTrakingLane.fXderiv = SGroundLeftLine.fXderiv;
-				obj.m_sLeftTrakingLane.fYtop = ptStart.y;
-				obj.m_sLeftTrakingLane.fYBottom = ptEnd.y;
-				obj.m_sLeftTrakingLane.ptStartLane = ptStart;
-				obj.m_sLeftTrakingLane.ptEndLane = ptEnd;
-				ptStart.x = (ptStart.y - ptEnd.y) / 2 * obj.m_sLeftTrakingLane.fXderiv + obj.m_sLeftTrakingLane.fXcenter;
-				ptEnd.x = (ptEnd.y - ptStart.y) / 2 * obj.m_sLeftTrakingLane.fXderiv + obj.m_sLeftTrakingLane.fXcenter;
-
-				Point ptUvSt = obj.TransformPointGround2Image(ptStart);
-				Point ptUvEnd = obj.TransformPointGround2Image(ptEnd);
-				obj.m_sLeftTrakingLane.ptUvStartLine = ptUvSt;
-				obj.m_sLeftTrakingLane.ptUvEndLine = ptUvEnd;
-
-				//20150524
-				SLine SLineResult;
-				SLineResult.fXcenter = obj.m_sLeftTrakingLane.fXcenter;
-				SLineResult.fXderiv = obj.m_sLeftTrakingLane.fXderiv;
-				SLineResult.ptStartLine = obj.m_sLeftTrakingLane.ptStartLane;
-				SLineResult.ptEndLine = obj.m_sLeftTrakingLane.ptEndLane;
-
-				obj.m_SKalmanLeftLane.SKalmanTrackingLine = SLineResult;
-
-
-			}
 
 
 			obj.KalmanTrackingStage(KALMAN_LEFT);
-
-
-			if (obj.m_rightGroundTracking.size() > TRACKING_FLAG_NUM)
-				//if kalman tracking threshold true
-			{
-				obj.m_bTracking[RIGHT_ROI2] = true;
-				obj.m_bTracking[RIGHT_ROI3] = true;
-
-				//////////////////////////////////////////////////////////////////////////
-				//Moving Average Filter
-				Point_<double> ptStart = Point_<double>(0, 0);
-				Point_<double> ptEnd = Point_<double>(0, 0);
-				SLine SGroundRightLine;
-				SGroundRightLine.fXcenter = 0;
-				SGroundRightLine.fXderiv = 0;
-				for (int i = 0; i < obj.m_rightGroundTracking.size(); i++){
-					ptStart += obj.m_rightGroundTracking[i].ptStartLine;
-					ptEnd += obj.m_rightGroundTracking[i].ptEndLine;
-					SGroundRightLine.fXcenter += obj.m_rightGroundTracking[i].fXcenter;
-					SGroundRightLine.fXderiv += obj.m_rightGroundTracking[i].fXderiv;
-				}
-				int nSize = obj.m_rightGroundTracking.size();
-
-				ptStart.x /= nSize;
-				ptStart.y /= nSize;
-				ptEnd.x /= nSize;
-				ptEnd.y /= nSize;
-
-				SGroundRightLine.fXcenter /= nSize;
-				SGroundRightLine.fXderiv /= nSize;
-
-				obj.m_sRightTrakingLane.fXcenter = SGroundRightLine.fXcenter;
-				obj.m_sRightTrakingLane.fXderiv = SGroundRightLine.fXderiv;
-				obj.m_sRightTrakingLane.fYtop = ptStart.y;
-				obj.m_sRightTrakingLane.fYBottom = ptEnd.y;
-				obj.m_sRightTrakingLane.ptStartLane = ptStart;
-				obj.m_sRightTrakingLane.ptEndLane = ptEnd;
-				ptStart.x = (ptStart.y - ptEnd.y) / 2 * obj.m_sRightTrakingLane.fXderiv + obj.m_sRightTrakingLane.fXcenter;
-				ptEnd.x = (ptEnd.y - ptStart.y) / 2 * obj.m_sRightTrakingLane.fXderiv + obj.m_sRightTrakingLane.fXcenter;
-
-				Point ptUvSt = obj.TransformPointGround2Image(ptStart);
-				Point ptUvEnd = obj.TransformPointGround2Image(ptEnd);
-				obj.m_sRightTrakingLane.ptUvStartLine = ptUvSt;
-				obj.m_sRightTrakingLane.ptUvEndLine = ptUvEnd;
-
-				//20150524
-				SLine SLineResult;
-				SLineResult.fXcenter = obj.m_sRightTrakingLane.fXcenter;
-				SLineResult.fXderiv = obj.m_sRightTrakingLane.fXderiv;
-				SLineResult.ptStartLine = obj.m_sRightTrakingLane.ptStartLane;
-				SLineResult.ptEndLine = obj.m_sRightTrakingLane.ptEndLane;
-
-				obj.m_SKalmanRightLane.SKalmanTrackingLine = SLineResult;
-
-
-			}
-
-
 			obj.KalmanTrackingStage(KALMAN_RIGHT);
 
-			//if (obj.m_rightTracking.size() > TRACKING_FLAG_NUM)
-			//{
-			//	obj.m_bTracking[RIGHT_ROI2] = true;
-			//	obj.m_bTracking[RIGHT_ROI3] = true;
-
-			//	Point_<double> ptStart = Point_<double>(0, 0);
-			//	Point_<double> ptEnd = Point_<double>(0, 0);
-			//	for (int i = 0; i < obj.m_rightTracking.size(); i++){
-			//		ptStart += obj.m_rightTracking[i].ptStartLine;
-			//		ptEnd += obj.m_rightTracking[i].ptEndLine;
-			//	}
-			//	ptStart.x /= obj.m_rightTracking.size();
-			//	ptStart.y /= obj.m_rightTracking.size();
-			//	ptEnd.x /= obj.m_rightTracking.size();
-			//	ptEnd.y /= obj.m_rightTracking.size();
-
-			//	obj.m_sRightTrakingLane.ptUvStartLine = ptStart;
-			//	obj.m_sRightTrakingLane.ptUvEndLine = ptEnd;
-
-			//	
-			//	float fArrLine[] = {
-			//		ptStart.x, ptEnd.x,
-			//		ptStart.y, ptEnd.y
-
-			//	};
-
-			//	Mat matUvLine(2, 2, CV_32FC1, fArrLine);
-			//	Mat matXyLine(2, 2, CV_32FC1);
-			//	Point_<float> ptXylineSt;
-			//	Point_<float> ptXylineEnd;
-			//	obj.TransformImage2Ground(matUvLine, matXyLine);
-			//	ptXylineSt.x = matXyLine.at<float>(0, 0);
-			//	ptXylineSt.y = matXyLine.at<float>(1, 0);
-			//	ptXylineEnd.x = matXyLine.at<float>(0, 1);
-			//	ptXylineEnd.y = matXyLine.at<float>(1, 1);
-
-			//	obj.m_sRightTrakingLane.fXcenter = (ptXylineSt.x + ptXylineEnd.x) / 2;
-			//	obj.m_sRightTrakingLane.fXderiv = ptXylineSt.x - ptXylineEnd.x;
-			//	//cout << "Right tracking  X : " << obj.m_sRightTrakingLane.fXcenter << " deriv : " << obj.m_sRightTrakingLane.fXderiv << endl;
-			//	
-			//	//////////////////////////////////////////////////////////////////////////
-			//	//Kalman Tracking#########################################################
-			//}
-
-
+		
 			//###########end of Image processing & Tracking processing################
 			//////////////////////////////////////////////////////////////////////////
 			double dEndTick = (double)getTickCount();
