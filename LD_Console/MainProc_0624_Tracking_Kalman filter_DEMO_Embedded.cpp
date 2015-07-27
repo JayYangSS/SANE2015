@@ -1055,7 +1055,7 @@ int main()
 			obj.TrackingStageGround(RIGHT_ROI2);
 			obj.TrackingStageGround(RIGHT_ROI3);
 			
-			
+			///////dddd
 			////Tracking continue ÆÇº°½Ä
 			obj.TrackingContinue();
 
