@@ -768,10 +768,10 @@ void CMultiROILaneDetection::FilterLinesIPM(EROINUMBER nFlag){
 	rowMat = Mat(m_ipmFiltered[nFlag]).reshape(0,1); //1row로 누적시킴
 	//get the quantile
 	float fQval;
-	fQval = quantile((float*) &rowMat.data[0], rowMat.cols, m_sConfig.fLowerQuantile);
-
+	fQval = quantile((float*) &rowMat.data[0], rowMat.cols, m_sConfig.fLowerQuantile);		//Quantile 97%
+																							//필터링 결과 영상에서 threshold value를 Quantile함수를 이용하여 결정
+	threshold(m_ipmFiltered[nFlag],m_filteredThreshold[nFlag],fQval,NULL,THRESH_TOZERO);	//Threshold 미만 value를 zero로, 나머지 그대로
 	//ThresholdLower(imgSubImage,imgSubImage, fQtileThreshold);
-	threshold(m_ipmFiltered[nFlag],m_filteredThreshold[nFlag],fQval,NULL,THRESH_TOZERO);
 	//double dEndTick = (double)getTickCount();
 	//cout<<"reshape & quantile & threshold time  "<<(dEndTick-dStartTick) / getTickFrequency()*1000.0<<" msec"<<endl;
 
@@ -812,7 +812,7 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 	vector <double> sumLinesMax;
 	int nMaxLoc;
 	double nMax;
-
+	//필터 결과 영상을 누적시키고 노이즈 제거 이후 후보군에 대해서 누적값의 순위를 결정하여 벡터라이즈화
 	GetVectorMax(matSumLines, nMax, nMaxLoc, m_sConfig.nLocalMaxIgnore);
 
 	float *pfMatSumLinesData = (float*)matSumLines.data;
@@ -858,14 +858,11 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 			(double)pfMatSumLinesData[matSumLines.cols*sumLinesMaxLoc[i]+0],
 			(double)pfMatSumLinesData[matSumLines.cols*MIN(sumLinesMaxLoc[i]+1,maxLineLoc)+0]
 		);
-
 		maxLocAcc += sumLinesMaxLoc[i];
 		maxLocAcc = MIN(MAX(0, maxLocAcc), maxLineLoc);
 		//TODO: get line extent
-
 		//put the extracted line
 		SLine line;
-
 		line.ptStartLine.x = (double)maxLocAcc + 0.5;//sumLinesMaxLoc[i]+.5;
 		line.ptStartLine.y = 0.5;
 		line.ptEndLine.x = line.ptStartLine.x;
@@ -874,7 +871,8 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 		(m_lanes[nFlag]).push_back(line);
 		//		if (lineScores)
 		(m_laneScore[nFlag]).push_back(sumLinesMax[i]);
-	}//for
+	}
+	//for
 	//cout<<"nFlag"<<nFlag<<endl;
 	//for(int i=0;i<m_laneScore[nFlag].size();i++)
 	//	cout<<m_laneScore[nFlag].at(i)<<","<<endl;
