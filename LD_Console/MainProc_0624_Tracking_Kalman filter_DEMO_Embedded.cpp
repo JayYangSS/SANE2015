@@ -49,7 +49,8 @@ enum DB_INTRINSIC{
 	PRESCAN,
 	AMOL	//AMOL 제공 DB (Only Urban)
 };
-#define INTRINSIC_DB PRESCAN
+//#define INTRINSIC_DB PRESCAN
+#define INTRINSIC_DB CVLAB
 enum DB_CVLAB{
 	CV1,//4월 CVLAB DB
 	CV2,//3월 CVLAB DB
@@ -161,9 +162,12 @@ int main()
 	//char szTestDir[200] = "H:/[DB]amol/S2C7_CAM0_IMG/S2C7_CAM0_IMG/S2C7_";
 	//char szTestDir[200] = "H:/[DB]amol/S3C1_CAM0_IMG/S3C1_CAM0_IMG/S3C1_";
 	//char szTestDir[200] = "H:/[DB]amol/S3C2_CAM0_IMG/S3C2_CAM0_IMG/S3C2_";
-	char szTestDir[200] = "H:/[DB]amol/S3C3_CAM0_IMG/S3C3_CAM0_IMG/S3C3_";
+	//char szTestDir[200] = "H:/[DB]amol/S3C3_CAM0_IMG/S3C3_CAM0_IMG/S3C3_";
 	//char szTestDir[200] = "H:/[DB]amol/S3C4_CAM0_IMG/S3C4_CAM0_IMG/S3C4_";
 	//char szTestDir[200] = "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_1/2015-04-13-14h-20m-45s_straight_";
+	//////////////////////////////////////////////////////////////////////////
+	char szTestDir[200] = "./[DB]AutoCalibration/Pitch_0_Yaw_0/Pitch_0_Yaw_0_";
+	strcpy(szTestDir, szPrescanDB_dir);
 	//////////////////////////////////////////////////////////////////////////
 	if (DB_NUM == AMOL)
 	{
@@ -802,6 +806,7 @@ int main()
 	vector<Point> vecLeft;
 	vector<Point> vecRight;
 	int nDivNum = 5;
+	//Auto calibration과정에서 검출한 결과 차선인 AutoCalibLane을 vector<Point>로 균등 분할 함수 (4등분)
 	if (AutoCalibLane[0].ptStartLine.x < AutoCalibLane[1].ptStartLine.x){
 		vecLeft = LineDivNum(AutoCalibLane[0].ptStartLine, AutoCalibLane[0].ptEndLine, nDivNum);
 		vecRight = LineDivNum(AutoCalibLane[1].ptStartLine, AutoCalibLane[1].ptEndLine, nDivNum);
@@ -817,10 +822,11 @@ int main()
 	for (int i = 0; i < vecRight.size(); i++){
 		circle(obj.m_imgResizeOrigin, vecRight[i], 2, Scalar(0, 0, 255), 2);
 	}
-	rectLeftTop.width = vecRight[1].x - vecLeft[1].x;
-	rectLeftTop.height = vecLeft[2].y - vecLeft[0].y;
-	rectLeftTop.x = vecLeft[1].x;
-	rectLeftTop.y = vecLeft[1].y;
+	//auto calibration결과 차선 두개를 중심으로 초기 ROI adaptive하게 설정
+	rectLeftTop.width = vecRight[1].x - vecLeft[1].x;		//left차선의 상단과 right차선의 상단의 x좌표 차이를 left top ROI의 width로 지정
+	rectLeftTop.height = vecLeft[2].y - vecLeft[0].y;		//left top ROI의 height는 검출 차선 height의 1/2로 균등하게 지정
+	rectLeftTop.x = vecLeft[1].x;							//left top point.x
+	rectLeftTop.y = vecLeft[1].y;							//left top point.y
 
 	rectLeftBottom.width = vecRight[3].x - vecLeft[3].x;
 	rectLeftBottom.height = vecLeft[4].y - vecLeft[2].y;
@@ -964,7 +970,13 @@ int main()
 	
 	obj.m_bLeftDraw = false;
 	obj.m_bRightDraw = false;
-	for (int j = 0; j <= 5; j++){
+	int jMax = 5;
+	if (DB_NUM == PRESCAN){
+		jMax = 0;
+	}
+
+		
+	for (int j = 0; j <= jMax; j++){
 		char szEnvironment[20];
 		if (j == 10){
 			strcpy(szEnvironment, "Purity, Urban road");
