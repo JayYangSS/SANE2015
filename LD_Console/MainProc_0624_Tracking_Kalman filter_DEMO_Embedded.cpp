@@ -57,13 +57,14 @@ enum DB_CVLAB{
 	CV3,
 	CV4
 };
-#define DB_CVINIT CV1
+#define DB_CVINIT CV1        
 
 enum DB_ROAD{
 	URBAN,
 	EXPRESSWAY
 };
 #define DB_ROADINFO URBAN
+//#define DB_ROADINFO EXPRESSWAY
 
 string g_strOriginalWindow = "OriginalImg";
 
@@ -122,7 +123,7 @@ int main()
 			if (INIT_ROADINFO == EXPRESSWAY)
 			{
 				//고속도로 4월
-				strcpy(szPrescanDB_dir, "H:/[DB]CVLAB_Lane/Cloudy/Expressway/Straight_1/2015-04-13-14h-50m-44s_F_normal_");
+				strcpy(szPrescanDB_dir, "./[DB]CVLAB_Lane/Cloudy/Expressway/Straight_1/2015-04-13-14h-50m-44s_F_normal_");
 			}			
 		}
 		if (INIT_CV == CV2){
@@ -176,47 +177,45 @@ int main()
 	}
 	if (DB_NUM == CVLAB)
 	{
-		strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Purity/Urban/Straight_1/2015-04-13-09h-07m-32s_F_normal_");  // PUS 평가 완료
-		
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_1/2015-04-13-14h-20m-45s_straight_");
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_2/2015-04-13-14h-20m-45s_straight_2_");  // for demo
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_3/2015-04-13-14h-20m-45s_straight_3_");		// CUS 평가 완료
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_4/2015-04-13-14h-20m-45s_straight_4_");
+		if (DB_ROADINFO == URBAN){
+			strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Purity/Urban/Straight_1/2015-04-13-09h-07m-32s_F_normal_");  // PUS 평가 완료
 
-		
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/BackLight/Urban/Straight_1/2015-03-02-09h-40-00s_");//3월 //평가불가
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/BackLight/Urban/Straight_2/2015-04-23-09h-17m-10s_F_event_");//4월		// BUS 평가 완료
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_1/2015-04-13-14h-20m-45s_straight_");
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_2/2015-04-13-14h-20m-45s_straight_2_");  // for demo
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_3/2015-04-13-14h-20m-45s_straight_3_");		// CUS 평가 완료
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_4/2015-04-13-14h-20m-45s_straight_4_");
 
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Rainy/Urban/Straight_1/2015-04-13-17h-37m-00s_");		// RUS 평가 완료
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Rainy/Urban/Straight_2/2015-04-13-18h-43m-00s_");		// RUS 평가 완료
 
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Night/Urban/Straight_1/2015-04-17-20h-26m-47s_night_straight_1_");	// NUS1 평가 완료
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Night/Urban/Straight_2/2015-04-17-20h-29m-51s_night_straight_2_");		// NUS2 평가 완료
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/BackLight/Urban/Straight_1/2015-03-02-09h-40-00s_");//3월 //평가불가
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/BackLight/Urban/Straight_2/2015-04-23-09h-17m-10s_F_event_");//4월		// BUS 평가 완료
 
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Rainy/Urban/Straight_1/2015-04-13-17h-37m-00s_");		// RUS 평가 완료
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Rainy/Urban/Straight_2/2015-04-13-18h-43m-00s_");		// RUS 평가 완료
+
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Night/Urban/Straight_1/2015-04-17-20h-26m-47s_night_straight_1_");	// NUS1 평가 완료
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Night/Urban/Straight_2/2015-04-17-20h-29m-51s_night_straight_2_");		// NUS2 평가 완료
+		}
 		
 		
-		
-		
-		//////////////////////////////////////////////////////////////////////////
-		//Expressway
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Purity/Expressway/Straight_1/2015-03-07-16h-48m-15s_F_event_");		// PES 평가 완료
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Purity/Expressway/Departure_1/2015-03-11-15h-11m-21s_F_event_");
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Expressway/Straight_1/2015-04-13-14h-50m-44s_F_normal_");	// CES 평가 완료
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Expressway/Departure_1/2015-04-13-14h-37m-02s_F_normal_");
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Backlight/Expressway/Straight_1/2015-04-16-17h-41m-50s_F_event_");
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Backlight/Expressway/Straight_3/2015-04-16-17h-41m-50s_F_event_");		// BES 평가 완료
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Backlight/Expressway/Departure_1/2015-03-11-16h-27m-22s_F_event_");
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Rainy/Expressway/Straight_1/2015-04-13-18h-33m-21s_F_event_");		// RES 평가완료
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Rainy/Expressway/Departure_1/2015-04-13-18h-33m-21s_F_event_");
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Night/Expressway/Straight_1/2015-04-11-23h-50m-32s_F_event_");		//NES 평가완료
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Night/Expressway/Departure_1/2015-04-11-23h-50m-32s_F_event_");
-		
-		//Demo
-		//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Rainy/Expressway/Demo_1/Demo_");
-		
-		
-		
-		
+		if (DB_ROADINFO == EXPRESSWAY){
+			//////////////////////////////////////////////////////////////////////////
+			//Expressway
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Purity/Expressway/Straight_1/2015-03-07-16h-48m-15s_F_event_");		// PES 평가 완료
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Purity/Expressway/Departure_1/2015-03-11-15h-11m-21s_F_event_");
+			strcpy(szTestDir, "./[DB]CVLAB_Lane/Cloudy/Expressway/Straight_1/2015-04-13-14h-50m-44s_F_normal_");	// CES 평가 완료
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Expressway/Departure_1/2015-04-13-14h-37m-02s_F_normal_");
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Backlight/Expressway/Straight_1/2015-04-16-17h-41m-50s_F_event_");
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Backlight/Expressway/Straight_3/2015-04-16-17h-41m-50s_F_event_");		// BES 평가 완료
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Backlight/Expressway/Departure_1/2015-03-11-16h-27m-22s_F_event_");
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Rainy/Expressway/Straight_1/2015-04-13-18h-33m-21s_F_event_");		// RES 평가완료
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Rainy/Expressway/Departure_1/2015-04-13-18h-33m-21s_F_event_");
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Night/Expressway/Straight_1/2015-04-11-23h-50m-32s_F_event_");		//NES 평가완료
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Night/Expressway/Departure_1/2015-04-11-23h-50m-32s_F_event_");
+
+			//Demo
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Rainy/Expressway/Demo_1/Demo_");
+		}
+			
 	}
 	char szAnnotationSaveFile[200];
 	char szSaveText[20] = "0_SaveText.txt";
@@ -971,7 +970,7 @@ int main()
 	obj.m_bLeftDraw = false;
 	obj.m_bRightDraw = false;
 	int jMax = 5;
-	if (DB_NUM == PRESCAN){
+	if (DB_NUM == PRESCAN || DB_ROADINFO==EXPRESSWAY){
 		jMax = 0;
 	}
 
@@ -1065,6 +1064,35 @@ int main()
 			obj.KalmanTrackingStage(KALMAN_LEFT);
 			obj.KalmanTrackingStage(KALMAN_RIGHT);
 
+			
+
+			if ((obj.m_bLeftDraw == true) && (obj.m_bRightDraw == true)){
+				float fRightGround = obj.m_sRightTrakingLane.fXcenter / 1000;
+				float fLeftGround = obj.m_sLeftTrakingLane.fXcenter / 1000;
+				if ((fRightGround - fLeftGround) < MIN_WORLD_WIDTH)
+				{
+					obj.ClearDetectionResult();
+					/*obj.m_bLeftDraw = false;
+					obj.m_bRightDraw = false;
+
+					obj.nLeftCnt = 0;
+					obj.m_leftTracking.clear();
+					obj.m_leftGroundTracking.clear();
+					obj.m_bTracking[LEFT_ROI2] = false;
+					obj.m_bTracking[LEFT_ROI3] = false;
+					obj.m_SKalmanLeftLane.cntNum = 0;
+
+					obj.nLeftCnt = 0;
+					obj.m_leftTracking.clear();
+					obj.m_leftGroundTracking.clear();
+					obj.m_bTracking[LEFT_ROI2] = false;
+					obj.m_bTracking[LEFT_ROI3] = false;
+					obj.m_SKalmanRightLane.cntNum = 0;*/
+
+				}
+
+			}
+
 		
 			//###########end of Image processing & Tracking processing################
 			//////////////////////////////////////////////////////////////////////////
@@ -1093,79 +1121,20 @@ int main()
 			stringstream ssLeft, ssRight;
 			float fLeftGround, fRightGround;
 
+			//Lateral Distance show Left,Right
 			if (obj.m_bTracking[LEFT_ROI2] && obj.m_bTracking[LEFT_ROI3]){
-				//tracking line draw
-				//line(obj.m_imgResizeOrigin, obj.m_sLeftTrakingLane.ptStartLane, obj.m_sLeftTrakingLane.ptEndLane, Scalar(0, 255, 0), 2);
-
-				Mat matMat = Mat(2, 1, CV_32FC1);
-				float* pfMat = (float*)matMat.data;
-				pfMat[0] = obj.m_sLeftTrakingLane.fXcenter + obj.m_sLeftTrakingLane.fXderiv / 2;
-				pfMat[1] = obj.m_sLeftTrakingLane.fYtop;
-				obj.TransformGround2Image(matMat, matMat);
-				Point ptTemp = Point(pfMat[0], pfMat[1]);
-				//circle(obj.m_imgResizeOrigin, ptTemp, 2, Scalar(255, 0, 0), 2);
-
 				int ssTemp = obj.m_sLeftTrakingLane.fXcenter / 1000 * 100;
 				fLeftGround = float(ssTemp) / 100;
 				ssLeft << fLeftGround;
-
-				//			ss.str();
-				//	line(obj.m_imgResizeOrigin, obj.m_sLeftTrakingLane.ptUvStartLine, obj.m_sLeftTrakingLane.ptUvEndLine, Scalar(0, 255, 255), 1.5);
-
-
-
-
 			}
-
 			if (obj.m_bTracking[RIGHT_ROI2] && obj.m_bTracking[RIGHT_ROI3]){
-				//tracking line draw
-				//line(obj.m_imgResizeOrigin, obj.m_sLeftTrakingLane.ptStartLane, obj.m_sLeftTrakingLane.ptEndLane, Scalar(0, 255, 0), 2);
-
-				Mat matMat = Mat(2, 1, CV_32FC1);
-				float* pfMat = (float*)matMat.data;
-				pfMat[0] = obj.m_sRightTrakingLane.fXcenter + obj.m_sRightTrakingLane.fXderiv / 2;
-				pfMat[1] = obj.m_sRightTrakingLane.fYtop;
-				obj.TransformGround2Image(matMat, matMat);
-				Point ptTemp = Point(pfMat[0], pfMat[1]);
-				//circle(obj.m_imgResizeOrigin, ptTemp, 2, Scalar(255, 0, 0), 2);
-
 				int ssTemp = obj.m_sRightTrakingLane.fXcenter / 1000 * 100;
 				fRightGround = float(ssTemp) / 100;
 				ssRight << fRightGround;
-
-				//			ss.str();
-				//	line(obj.m_imgResizeOrigin, obj.m_sLeftTrakingLane.ptUvStartLine, obj.m_sLeftTrakingLane.ptUvEndLine, Scalar(0, 255, 255), 1.5);
-
-
-
-
 			}
+
+			//Lane Draw & Lateral Distance Draw
 			if ((obj.m_bLeftDraw == true) && (obj.m_bRightDraw == true)){
-				if ((fRightGround - fLeftGround) < MIN_WORLD_WIDTH)
-				{
-					obj.ClearDetectionResult();
-					/*obj.m_bLeftDraw = false;
-					obj.m_bRightDraw = false;
-
-					obj.nLeftCnt = 0;
-					obj.m_leftTracking.clear();
-					obj.m_leftGroundTracking.clear();
-					obj.m_bTracking[LEFT_ROI2] = false;
-					obj.m_bTracking[LEFT_ROI3] = false;
-					obj.m_SKalmanLeftLane.cntNum = 0;
-
-					obj.nLeftCnt = 0;
-					obj.m_leftTracking.clear();
-					obj.m_leftGroundTracking.clear();
-					obj.m_bTracking[LEFT_ROI2] = false;
-					obj.m_bTracking[LEFT_ROI3] = false;
-					obj.m_SKalmanRightLane.cntNum = 0;*/
-
-				}
-
-			}
-			if ((obj.m_bLeftDraw == true) && (obj.m_bRightDraw == true)){
-
 				if (obj.m_bLeftDraw){
 					line(obj.m_imgResizeOrigin, obj.m_sLeftTrakingLane.ptUvStartLine, obj.m_sLeftTrakingLane.ptUvEndLine, Scalar(0, 0, 255), 2);
 					putText(obj.m_imgResizeOrigin, ssLeft.str(), obj.m_sLeftTrakingLane.ptUvEndLine,
@@ -1176,7 +1145,6 @@ int main()
 					putText(obj.m_imgResizeOrigin, ssRight.str(), obj.m_sRightTrakingLane.ptUvEndLine,
 						FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
 				}
-
 			}
 
 

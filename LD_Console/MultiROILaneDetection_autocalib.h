@@ -1162,11 +1162,11 @@ void CMultiROILaneDetection::GetTrackingLineCandidate(EROINUMBER nFlag){
 	vector<SWorldLane> vecWorldLane;
 	SLine sLineTemp;
 	SWorldLane sWorldLaneTemp;
-	for (int i = 0; i < m_lanes[nFlag].size(); i++){
-		sLineTemp.ptStartLine.x = m_lanes[nFlag].at(i).ptStartLine.x / m_sRoiInfo[nFlag].dXScale;
-		sLineTemp.ptStartLine.x += m_sRoiInfo[nFlag].dXLimit[0];
-		sLineTemp.ptStartLine.y = m_lanes[nFlag].at(i).ptStartLine.y / m_sRoiInfo[nFlag].dYScale;
-		sLineTemp.ptStartLine.y = m_sRoiInfo[nFlag].dYLimit[1] - m_lanes[nFlag].at(i).ptStartLine.y;
+	for (int i = 0; i < m_lanes[nFlag].size(); i++){//m_lanes는 각각의 ROI에 대한 line fitting 결과임
+		sLineTemp.ptStartLine.x = m_lanes[nFlag].at(i).ptStartLine.x / m_sRoiInfo[nFlag].dXScale; //IPM image 2 World 변환을 위한 계산
+		sLineTemp.ptStartLine.x += m_sRoiInfo[nFlag].dXLimit[0]; //IPM image 2 World 변환을 위한 계산
+		sLineTemp.ptStartLine.y = m_lanes[nFlag].at(i).ptStartLine.y / m_sRoiInfo[nFlag].dYScale; //IPM image 2 World 변환을 위한 계산
+		sLineTemp.ptStartLine.y = m_sRoiInfo[nFlag].dYLimit[1] - m_lanes[nFlag].at(i).ptStartLine.y; //IPM image 2 World 변환을 위한 계산
 
 		sLineTemp.ptEndLine.x = m_lanes[nFlag].at(i).ptEndLine.x / m_sRoiInfo[nFlag].dXScale;
 		sLineTemp.ptEndLine.x += m_sRoiInfo[nFlag].dXLimit[0];
@@ -1185,7 +1185,7 @@ void CMultiROILaneDetection::GetTrackingLineCandidate(EROINUMBER nFlag){
 	int nMaxIter = 0;
 	float fMinDist = MINCOMP;
 	float fTempComp;
-	if ((nFlag == LEFT_ROI2) || (nFlag == LEFT_ROI3)){
+	if ((nFlag == LEFT_ROI2) || (nFlag == LEFT_ROI3)){//ROI 내에서 검출된 여러 라인을 추적한 차선과의 거리를 비교하여 가장 가까운 라인을 남김
 		for (int i = 0; i < vecWorldLane.size(); i++){
 			fTempComp = abs(m_sLeftTrakingLane.fXcenter-vecWorldLane.at(i).fXcenter);
 			if (fTempComp < fMinDist){
@@ -2175,7 +2175,7 @@ void CMultiROILaneDetection::KalmanTrackingStage(EROINUMBER nFlag){
 	//cout << "Kalman stage" << endl;
 	if (nFlag == KALMAN_LEFT)
 	{
-		if (m_SKalmanLeftLane.cntNum == 0)
+		if (m_SKalmanLeftLane.cntNum == 0)//kalman setting 첫 프레임인지 판별
 		{
 			m_SKalmanLeftLane.SKalmanTrackingLineBefore = m_SKalmanLeftLane.SKalmanTrackingLine;
 			//cout << "Left Kalman Start" << endl;
@@ -2183,14 +2183,16 @@ void CMultiROILaneDetection::KalmanTrackingStage(EROINUMBER nFlag){
 		}
 		else
 		{
+			//prediction은 이전 frame을 가지고 predict()수행
+			//predict()결과에 현재 frame의 x,deriv를 이용해서 검사하기 : correct()
 			Mat matPrediction = m_SKalmanLeftLane.KF.predict();
 			SLine SLinePredict;
 			SLinePredict.fXcenter = matPrediction.at<float>(0);
 			SLinePredict.fXderiv = matPrediction.at<float>(1);
 			m_SKalmanLeftLane.matMeasurement.at<float>(0) = m_SKalmanLeftLane.SKalmanTrackingLine.fXcenter;
 			m_SKalmanLeftLane.matMeasurement.at<float>(1) = m_SKalmanLeftLane.SKalmanTrackingLine.fXderiv;
-			m_SKalmanLeftLane.matMeasurement.at<float>(2) = 0;
-			m_SKalmanLeftLane.matMeasurement.at<float>(3) = 0;
+			m_SKalmanLeftLane.matMeasurement.at<float>(2) = 0; //x의 속도값
+			m_SKalmanLeftLane.matMeasurement.at<float>(3) = 0; //deriv의 속도값
 			//m_SKalmanLeftLane.KF.measurementMatrix.at<float>(4) = 0;
 			//m_SKalmanLeftLane.KF.measurementMatrix.at<float>(5) = 0;
 			Mat matEstimated = m_SKalmanLeftLane.KF.correct(m_SKalmanLeftLane.matMeasurement);
@@ -2218,11 +2220,13 @@ void CMultiROILaneDetection::KalmanTrackingStage(EROINUMBER nFlag){
 			m_sLeftTrakingLane.fXderiv = SLineEstimated.fXderiv;
 			//line(m_imgResizeOrigin, ptUvSt, ptUvEnd, Scalar(0, 0, 255), 2);
 			m_bLeftDraw = true;
+			//tracking continue 함수에서 사용
 			m_SKalmanLeftLane.SKalmanTrackingLineBefore = m_SKalmanLeftLane.SKalmanTrackingLine;
 		}
 				
 		//cout << "cntNum : " << m_SKalmanLeftLane.cntNum << endl;
 		m_SKalmanLeftLane.cntNum++;
+		//tracking continue 함수에서 사용
 	}
 
 	if (nFlag == KALMAN_RIGHT){
@@ -2410,9 +2414,11 @@ void CMultiROILaneDetection::ClearDetectionResult(){
 
 void CMultiROILaneDetection::TrackingContinue(){
 	//Left ROI tracking continue 판별식
+	//검출이 안될 경우 Erase cnt를 증가시킴
 	if ((m_lanesGroundResult[LEFT_ROI2].size() == 0) && (m_lanesGroundResult[LEFT_ROI3].size() == 0)){
 		nLeftCnt += TRACKING_ERASE_LEVEL;
-		if (nLeftCnt >= TRACKINGERASE){
+
+		if (nLeftCnt >= TRACKINGERASE){//Erase cnt가 TRACKINGERASE보다 클경우 tracking stage 종료
 			nLeftCnt = 0;
 			m_leftTracking.clear();
 			m_leftGroundTracking.clear();
@@ -2430,7 +2436,7 @@ void CMultiROILaneDetection::TrackingContinue(){
 			m_bTracking[LEFT_ROI3] = false;
 		}
 	}
-	else
+	else //검출이 될 경우 Erase cnt를 감소시킴
 	{
 		(nLeftCnt >= 0) ? (((nLeftCnt -= TRACKING_ERASE_LEVEL) == 0) ? nLeftCnt = 0 : nLeftCnt -= TRACKING_ERASE_LEVEL) : nLeftCnt = 0;
 		(m_SKalmanLeftLane.cntErase >= 0) ?
