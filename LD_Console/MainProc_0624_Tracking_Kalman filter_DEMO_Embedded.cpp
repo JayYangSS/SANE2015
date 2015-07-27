@@ -1048,18 +1048,15 @@ int main()
 
 			//TrackingStageGround(obj, LEFT_ROI2);
 			//TrackingStageGround(obj, LEFT_ROI3);
+			
 			//Left,Right 검출 결과 추적 맴버 변수로 변환
-
 			obj.TrackingStageGround(LEFT_ROI2);
 			obj.TrackingStageGround(LEFT_ROI3);
 			obj.TrackingStageGround(RIGHT_ROI2);
 			obj.TrackingStageGround(RIGHT_ROI3);
-			
-			
-			////Tracking continue 판별식
+						
+			//Tracking continue 판별식
 			obj.TrackingContinue();
-
-
 
 			obj.KalmanTrackingStage(KALMAN_LEFT);
 			obj.KalmanTrackingStage(KALMAN_RIGHT);
@@ -1072,23 +1069,6 @@ int main()
 				if ((fRightGround - fLeftGround) < MIN_WORLD_WIDTH)
 				{
 					obj.ClearDetectionResult();
-					/*obj.m_bLeftDraw = false;
-					obj.m_bRightDraw = false;
-
-					obj.nLeftCnt = 0;
-					obj.m_leftTracking.clear();
-					obj.m_leftGroundTracking.clear();
-					obj.m_bTracking[LEFT_ROI2] = false;
-					obj.m_bTracking[LEFT_ROI3] = false;
-					obj.m_SKalmanLeftLane.cntNum = 0;
-
-					obj.nLeftCnt = 0;
-					obj.m_leftTracking.clear();
-					obj.m_leftGroundTracking.clear();
-					obj.m_bTracking[LEFT_ROI2] = false;
-					obj.m_bTracking[LEFT_ROI3] = false;
-					obj.m_SKalmanRightLane.cntNum = 0;*/
-
 				}
 
 			}
@@ -1136,12 +1116,14 @@ int main()
 			//Lane Draw & Lateral Distance Draw
 			if ((obj.m_bLeftDraw == true) && (obj.m_bRightDraw == true)){
 				if (obj.m_bLeftDraw){
-					line(obj.m_imgResizeOrigin, obj.m_sLeftTrakingLane.ptUvStartLine, obj.m_sLeftTrakingLane.ptUvEndLine, Scalar(0, 0, 255), 2);
+					line(obj.m_imgResizeOrigin, obj.m_sLeftTrakingLane.ptUvStartLine,
+						obj.m_sLeftTrakingLane.ptUvEndLine, Scalar(0, 0, 255), 2);
 					putText(obj.m_imgResizeOrigin, ssLeft.str(), obj.m_sLeftTrakingLane.ptUvEndLine,
 						FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
 				}
 				if (obj.m_bRightDraw){
-					line(obj.m_imgResizeOrigin, obj.m_sRightTrakingLane.ptUvStartLine, obj.m_sRightTrakingLane.ptUvEndLine, Scalar(0, 0, 255), 2);
+					line(obj.m_imgResizeOrigin, obj.m_sRightTrakingLane.ptUvStartLine,
+						obj.m_sRightTrakingLane.ptUvEndLine, Scalar(0, 0, 255), 2);
 					putText(obj.m_imgResizeOrigin, ssRight.str(), obj.m_sRightTrakingLane.ptUvEndLine,
 						FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
 				}
