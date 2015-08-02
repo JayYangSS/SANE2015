@@ -36,7 +36,7 @@ enum EROINUMBER{
 	LEFT_ROI1,
 	LEFT_ROI2,
 	LEFT_ROI3,
-	RIGHT_ROI0,
+	LEFT_ROI4,
 	RIGHT_ROI1,
 	RIGHT_ROI2,
 	RIGHT_ROI3,
@@ -2617,19 +2617,19 @@ void ScaleMat(const Mat &inMat, Mat &outMat){
 void ShowResults(CMultiROILaneDetection &obj, EROINUMBER nflag){
 	int nNum = nflag;
 	//Draw lane IPM
-	/*for(unsigned int i = 0; i < obj.m_lanes[nflag].size(); i++)
+	for(unsigned int i = 0; i < obj.m_lanes[nflag].size(); i++)
 		line(obj.m_imgIPM[nflag],
 		Point(obj.m_lanes[nflag][i].ptStartLine.x,obj.m_lanes[nflag][i].ptStartLine.y),
 		Point(obj.m_lanes[nflag][i].ptEndLine.x,obj.m_lanes[nflag][i].ptEndLine.y),
-		Scalar(0,0,255),2);*/
+		Scalar(0,0,255),2);
 
 	rectangle(obj.m_imgResizeOrigin,obj.m_sRoiInfo[nflag].ptRoi,obj.m_sRoiInfo[nflag].ptRoiEnd,Scalar(255,0,0),2);
 	//Draw lane Orignin
-	/*for(unsigned int i=0; i< obj.m_lanesResult[nflag].size();i++)
+	for(unsigned int i=0; i< obj.m_lanesResult[nflag].size();i++)
 		line(obj.m_imgResizeOrigin,
 		Point((int)obj.m_lanesResult[nflag][i].ptStartLine.x,(int)obj.m_lanesResult[nflag][i].ptStartLine.y),
 		Point((int)obj.m_lanesResult[nflag][i].ptEndLine.x,(int)obj.m_lanesResult[nflag][i].ptEndLine.y),
-		Scalar(0,0,255),2);*/
+		Scalar(0,0,255),2);
 	char strImg[20] ;
 	//sprintf(strImgIpm,)
 	sprintf(strImg,"IPM%d",nNum);

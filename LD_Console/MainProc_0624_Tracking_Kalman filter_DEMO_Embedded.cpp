@@ -63,8 +63,8 @@ enum DB_ROAD{
 	URBAN,
 	EXPRESSWAY
 };
-#define DB_ROADINFO URBAN
-//#define DB_ROADINFO EXPRESSWAY
+//#define DB_ROADINFO URBAN
+#define DB_ROADINFO EXPRESSWAY
 
 string g_strOriginalWindow = "OriginalImg";
 
@@ -802,6 +802,10 @@ int main()
 	Rect_<int> rectLeftTop, rectLeftBottom;
 	Rect_<int> rectRightTop, rectRightBottom;
 
+	//20150728 MultiLane
+	Rect_<int> rectRightTop2;
+	Rect_<int> rectLeftTop2;
+
 	vector<Point> vecLeft;
 	vector<Point> vecRight;
 	int nDivNum = 5;
@@ -847,6 +851,21 @@ int main()
 	rectangle(obj.m_imgResizeOrigin, Rect(rectRightTop.x - rectRightTop.width / 2, rectRightTop.y - rectRightTop.height / 2, rectRightTop.width, rectRightTop.height), Scalar(255, 0, 0), 2);
 	rectangle(obj.m_imgResizeOrigin, Rect(rectRightBottom.x - rectRightBottom.width / 2, rectRightBottom.y - rectRightBottom.height / 2, rectRightBottom.width, rectRightBottom.height), Scalar(255, 0, 0), 2);
 
+	//20150728 MultiLane
+	rectLeftTop2.width = (vecRight[1].x - vecLeft[1].x);		//left차선의 상단과 right차선의 상단의 x좌표 차이를 left top ROI의 width로 지정
+	rectLeftTop2.height = vecLeft[2].y - vecLeft[0].y;		//left top ROI의 height는 검출 차선 height의 1/2로 균등하게 지정
+	rectLeftTop2.x = vecLeft[1].x - rectLeftTop2.width;							//left top point.x
+	rectLeftTop2.y = vecLeft[1].y;							//left top point.y
+	rectangle(obj.m_imgResizeOrigin, Rect(rectLeftTop2.x - rectLeftTop2.width / 2, rectLeftTop2.y - rectLeftTop2.height / 2, rectLeftTop2.width, rectLeftTop2.height), Scalar(255, 0, 0), 2);
+
+	rectRightTop2.width = (vecRight[1].x - vecLeft[1].x);
+	rectRightTop2.height = vecRight[2].y - vecRight[0].y;
+	rectRightTop2.x = vecRight[1].x+rectRightTop2.width;
+	rectRightTop2.y = vecRight[1].y;
+	rectangle(obj.m_imgResizeOrigin, Rect(rectRightTop2.x - rectRightTop2.width / 2, rectRightTop2.y - rectRightTop2.height / 2, rectRightTop2.width, rectRightTop2.height), Scalar(255, 0, 0), 2);
+
+	
+	
 
 	imshow("origin", obj.m_imgResizeOrigin);
 	waitKey(0);
@@ -924,6 +943,62 @@ int main()
 	obj.m_sRoiInfo[RIGHT_ROI3].sizeIPM.height =
 		(obj.m_sRoiInfo[RIGHT_ROI3].nBottom - obj.m_sRoiInfo[RIGHT_ROI3].nTop)*fHeightScale;
 
+	//20150728 MultiLane
+	//LEFT_ROI4
+	obj.m_sRoiInfo[LEFT_ROI4].nLeft = rectLeftTop2.x - rectLeftTop2.width / 2;
+	obj.m_sRoiInfo[LEFT_ROI4].nRight = rectLeftTop2.x + rectLeftTop2.width / 2;
+	obj.m_sRoiInfo[LEFT_ROI4].nTop = rectLeftTop2.y - rectLeftTop2.height / 2;
+	obj.m_sRoiInfo[LEFT_ROI4].nBottom = rectLeftTop2.y + rectLeftTop2.height / 2;
+	obj.m_sRoiInfo[LEFT_ROI4].sizeRoi.width = obj.m_sRoiInfo[LEFT_ROI4].nRight - obj.m_sRoiInfo[LEFT_ROI4].nLeft;
+	obj.m_sRoiInfo[LEFT_ROI4].sizeRoi.height = obj.m_sRoiInfo[LEFT_ROI4].nBottom - obj.m_sRoiInfo[LEFT_ROI4].nTop;
+	obj.m_sRoiInfo[LEFT_ROI4].ptRoi.x = obj.m_sRoiInfo[LEFT_ROI4].nLeft;
+	obj.m_sRoiInfo[LEFT_ROI4].ptRoi.y = obj.m_sRoiInfo[LEFT_ROI4].nTop;
+	obj.m_sRoiInfo[LEFT_ROI4].ptRoiEnd.x = obj.m_sRoiInfo[LEFT_ROI4].ptRoi.x + obj.m_sRoiInfo[LEFT_ROI4].sizeRoi.width;
+	obj.m_sRoiInfo[LEFT_ROI4].ptRoiEnd.y = obj.m_sRoiInfo[LEFT_ROI4].ptRoi.y + obj.m_sRoiInfo[LEFT_ROI4].sizeRoi.height;
+	obj.m_sRoiInfo[LEFT_ROI4].sizeIPM.width =
+		(obj.m_sRoiInfo[LEFT_ROI4].nRight - obj.m_sRoiInfo[LEFT_ROI4].nLeft)*fWidthScale;
+	obj.m_sRoiInfo[LEFT_ROI4].sizeIPM.height =
+		(obj.m_sRoiInfo[LEFT_ROI4].nBottom - obj.m_sRoiInfo[LEFT_ROI4].nTop)*fHeightScale;
+
+	obj.m_sRoiInfo[LEFT_ROI4].nDetectionThreshold = 2;
+	obj.m_sRoiInfo[LEFT_ROI4].nGetEndPoint = 0;
+	obj.m_sRoiInfo[LEFT_ROI4].nGroupThreshold = 10;
+	obj.m_sRoiInfo[LEFT_ROI4].fOverlapThreshold = 0.3;
+
+	obj.m_sRoiInfo[LEFT_ROI4].nRansacNumSamples = 2;	//Ransac
+	obj.m_sRoiInfo[LEFT_ROI4].nRansacNumIterations = 40;
+	obj.m_sRoiInfo[LEFT_ROI4].nRansacNumGoodFit = 10;
+	obj.m_sRoiInfo[LEFT_ROI4].fRansacThreshold = 0.2;
+	obj.m_sRoiInfo[LEFT_ROI4].nRansacScoreThreshold = 0;
+	obj.m_sRoiInfo[LEFT_ROI4].nRansacLineWindow = 15;
+
+	//RIGHT_ROI4
+	obj.m_sRoiInfo[RIGHT_ROI4].nLeft = rectRightTop2.x - rectRightTop2.width / 2;
+	obj.m_sRoiInfo[RIGHT_ROI4].nRight = rectRightTop2.x + rectRightTop2.width / 2;
+	obj.m_sRoiInfo[RIGHT_ROI4].nTop = rectRightTop2.y - rectRightTop2.height / 2;
+	obj.m_sRoiInfo[RIGHT_ROI4].nBottom = rectRightTop2.y + rectRightTop2.height / 2;
+	obj.m_sRoiInfo[RIGHT_ROI4].sizeRoi.width = obj.m_sRoiInfo[RIGHT_ROI4].nRight - obj.m_sRoiInfo[RIGHT_ROI4].nLeft;
+	obj.m_sRoiInfo[RIGHT_ROI4].sizeRoi.height = obj.m_sRoiInfo[RIGHT_ROI4].nBottom - obj.m_sRoiInfo[RIGHT_ROI4].nTop;
+	obj.m_sRoiInfo[RIGHT_ROI4].ptRoi.x = obj.m_sRoiInfo[RIGHT_ROI4].nLeft;
+	obj.m_sRoiInfo[RIGHT_ROI4].ptRoi.y = obj.m_sRoiInfo[RIGHT_ROI4].nTop;
+	obj.m_sRoiInfo[RIGHT_ROI4].ptRoiEnd.x = obj.m_sRoiInfo[RIGHT_ROI4].ptRoi.x + obj.m_sRoiInfo[RIGHT_ROI4].sizeRoi.width;
+	obj.m_sRoiInfo[RIGHT_ROI4].ptRoiEnd.y = obj.m_sRoiInfo[RIGHT_ROI4].ptRoi.y + obj.m_sRoiInfo[RIGHT_ROI4].sizeRoi.height;
+	obj.m_sRoiInfo[RIGHT_ROI4].sizeIPM.width =
+		(obj.m_sRoiInfo[RIGHT_ROI4].nRight - obj.m_sRoiInfo[RIGHT_ROI4].nLeft)*fWidthScale;
+	obj.m_sRoiInfo[RIGHT_ROI4].sizeIPM.height =
+		(obj.m_sRoiInfo[RIGHT_ROI4].nBottom - obj.m_sRoiInfo[RIGHT_ROI4].nTop)*fHeightScale;
+
+	obj.m_sRoiInfo[RIGHT_ROI4].nDetectionThreshold = 2;
+	obj.m_sRoiInfo[RIGHT_ROI4].nGetEndPoint = 0;
+	obj.m_sRoiInfo[RIGHT_ROI4].nGroupThreshold = 10;
+	obj.m_sRoiInfo[RIGHT_ROI4].fOverlapThreshold = 0.3;
+
+	obj.m_sRoiInfo[RIGHT_ROI4].nRansacNumSamples = 2;	//Ransac
+	obj.m_sRoiInfo[RIGHT_ROI4].nRansacNumIterations = 40;
+	obj.m_sRoiInfo[RIGHT_ROI4].nRansacNumGoodFit = 10;
+	obj.m_sRoiInfo[RIGHT_ROI4].fRansacThreshold = 0.2;
+	obj.m_sRoiInfo[RIGHT_ROI4].nRansacScoreThreshold = 0;
+	obj.m_sRoiInfo[RIGHT_ROI4].nRansacLineWindow = 15;
 	
 
 
@@ -932,6 +1007,11 @@ int main()
 	obj.SetRoiIpmCofig(LEFT_ROI3);
 	obj.SetRoiIpmCofig(RIGHT_ROI2);
 	obj.SetRoiIpmCofig(RIGHT_ROI3);
+
+	//20150728 MultiLane
+	obj.SetRoiIpmCofig(LEFT_ROI4);
+	obj.SetRoiIpmCofig(RIGHT_ROI4);
+
 	Point ptVanSt, ptVanEnd;
 	ptVanSt.x = 0;
 	ptVanSt.y = obj.m_sCameraInfo.ptVanishingPoint.y;
@@ -1032,6 +1112,10 @@ int main()
 			obj.StartLanedetection(RIGHT_ROI2);
 			obj.StartLanedetection(RIGHT_ROI3);
 
+			//20150728 MultiLane
+			obj.StartLanedetection(LEFT_ROI4);
+			obj.StartLanedetection(RIGHT_ROI4);
+
 
 
 			//////////////////////////////////////////////////////////////////////////
@@ -1080,7 +1164,7 @@ int main()
 			double dTrackingEnd = (double)getTickCount();
 			double dCurrentProcessTime = (dEndTick - dStartTick) / getTickFrequency()*1000.0;
 
-		//	cout << "processing time  " << dCurrentProcessTime << " msec" << endl;
+			cout << "processing time  " << dCurrentProcessTime << " msec" << endl;
 			//cout << "	Tracking time " << (dTrackingEnd - dTrackingSt) / getTickFrequency()*1000.0 << " msec" << endl;
 			d_totalProcessTime += (dEndTick - dStartTick) / getTickFrequency()*1000.0;
 			nCntProcess++;
@@ -1098,6 +1182,13 @@ int main()
 			obj.ClearResultVector(LEFT_ROI3);
 			obj.ClearResultVector(RIGHT_ROI2);
 			obj.ClearResultVector(RIGHT_ROI3);
+
+			//20150728 MultiLane
+			ShowResults(obj, LEFT_ROI4);
+			obj.ClearResultVector(LEFT_ROI4);
+			ShowResults(obj, RIGHT_ROI4);
+			obj.ClearResultVector(RIGHT_ROI4);
+
 			stringstream ssLeft, ssRight;
 			float fLeftGround, fRightGround;
 
