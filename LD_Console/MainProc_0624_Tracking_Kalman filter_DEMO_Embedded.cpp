@@ -118,13 +118,13 @@ int main()
 				//strcpy(szPrescanDB_dir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_2/2015-04-13-14h-20m-45s_straight_2_");
 				strcpy(szPrescanDB_dir, "./[DB]FreeScaleDemo/Cloudy/Urban/Straight_2/2015-04-13-14h-20m-45s_straight_2_");
 				//strcpy(szPrescanDB_dir, "D:/02.project/MultiROILaneDetectionVS2013/MultiROILaneDetectionVS2013/[DB]FreeScaleDemo/Cloudy/Urban/Straight_2/2015-04-13-14h-20m-45s_straight_2_");
-			
+
 			}
 			if (INIT_ROADINFO == EXPRESSWAY)
 			{
 				//고속도로 4월
 				strcpy(szPrescanDB_dir, "./[DB]CVLAB_Lane/Cloudy/Expressway/Straight_1/2015-04-13-14h-50m-44s_F_normal_");
-			}			
+			}
 		}
 		if (INIT_CV == CV2){
 			if (INIT_ROADINFO == URBAN){
@@ -141,11 +141,11 @@ int main()
 				strcpy(szPrescanDB_dir, "H:/[DB]CVLAB_Lane/Purity/Expressway/Straight_1/2015-03-07-16h-48m-15s_F_event_");
 				//strcpy(szPrescanDB_dir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_2/2015-04-13-14h-20m-45s_straight_2_");
 			}
-			
-			
+
+
 		}
-			
-			
+
+
 	}
 	else if (DB_NUM == PRESCAN){
 		strcpy(szPrescanDB_dir, "./[DB]AutoCalibration/Pitch_0_Yaw_0/Pitch_0_Yaw_0_");
@@ -195,8 +195,8 @@ int main()
 			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Night/Urban/Straight_1/2015-04-17-20h-26m-47s_night_straight_1_");	// NUS1 평가 완료
 			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Night/Urban/Straight_2/2015-04-17-20h-29m-51s_night_straight_2_");		// NUS2 평가 완료
 		}
-		
-		
+
+
 		if (DB_ROADINFO == EXPRESSWAY){
 			//////////////////////////////////////////////////////////////////////////
 			//Expressway
@@ -215,7 +215,7 @@ int main()
 			//Demo
 			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Rainy/Expressway/Demo_1/Demo_");
 		}
-			
+
 	}
 	char szAnnotationSaveFile[200];
 	char szSaveText[20] = "0_SaveText.txt";
@@ -269,7 +269,7 @@ int main()
 	Size sizeResizeImg;
 	//fileInformation_t preScanDB_t2;
 	strcpy(obj.m_sPreScanDB.szDataDir, szPrescanDB_dir);
-	
+
 	unsigned int nTotalFrame = 90;
 
 	obj.m_nFrameNum = FIRSTFRAMENUM;
@@ -281,10 +281,10 @@ int main()
 		printf("error, empty Images...");
 		return -1;
 	}
-		
+
 	///end
 
-	
+
 	sizeOrigImg.width = obj.m_imgOrigin.cols;
 	sizeOrigImg.height = obj.m_imgOrigin.rows;
 	sizeResizeImg = Size(sizeOrigImg.width / g_nResizeFacor, sizeOrigImg.height / g_nResizeFacor);
@@ -451,7 +451,7 @@ int main()
 			obj.m_sRoiInfo[AUTOCALIB].nTop = CV2Y;
 			obj.m_sRoiInfo[AUTOCALIB].nBottom = CV2Y + CV2HEIGHT;
 		}
-		
+
 	}
 	//////////////////////////////////////////////////////////////////////////
 	//Amol
@@ -463,13 +463,13 @@ int main()
 		obj.m_sRoiInfo[AUTOCALIB].nBottom = 220 + 30 + 60 + 60;
 	}
 	if (DB_NUM == PRESCAN)
-	{		
-			obj.m_sRoiInfo[AUTOCALIB].nLeft = AUTOX;
-			obj.m_sRoiInfo[AUTOCALIB].nRight = AUTOX + AUTOWIDTH;
-			obj.m_sRoiInfo[AUTOCALIB].nTop = AUTOY-10;
-			obj.m_sRoiInfo[AUTOCALIB].nBottom = AUTOY + AUTOHEIGHT-30-10-10;
+	{
+		obj.m_sRoiInfo[AUTOCALIB].nLeft = AUTOX;
+		obj.m_sRoiInfo[AUTOCALIB].nRight = AUTOX + AUTOWIDTH;
+		obj.m_sRoiInfo[AUTOCALIB].nTop = AUTOY - 10;
+		obj.m_sRoiInfo[AUTOCALIB].nBottom = AUTOY + AUTOHEIGHT - 30 - 10 - 10;
 	}
-	
+
 	obj.m_sRoiInfo[AUTOCALIB].sizeRoi.width = obj.m_sRoiInfo[AUTOCALIB].nRight - obj.m_sRoiInfo[AUTOCALIB].nLeft;
 	obj.m_sRoiInfo[AUTOCALIB].sizeRoi.height = obj.m_sRoiInfo[AUTOCALIB].nBottom - obj.m_sRoiInfo[AUTOCALIB].nTop;
 	obj.m_sRoiInfo[AUTOCALIB].ptRoi.x = obj.m_sRoiInfo[AUTOCALIB].nLeft;
@@ -480,7 +480,7 @@ int main()
 	obj.m_sRoiInfo[AUTOCALIB].sizeIPM.width = //213;
 		(obj.m_sRoiInfo[AUTOCALIB].nRight - obj.m_sRoiInfo[AUTOCALIB].nLeft);
 	obj.m_sRoiInfo[AUTOCALIB].sizeIPM.height =// 80;
-		(obj.m_sRoiInfo[AUTOCALIB].nBottom - obj.m_sRoiInfo[AUTOCALIB].nTop+50);
+		(obj.m_sRoiInfo[AUTOCALIB].nBottom - obj.m_sRoiInfo[AUTOCALIB].nTop + 50);
 	obj.m_sRoiInfo[AUTOCALIB].nDetectionThreshold = 3;
 	obj.m_sRoiInfo[AUTOCALIB].nGetEndPoint = 0;
 	obj.m_sRoiInfo[AUTOCALIB].nGroupThreshold = 10;
@@ -522,8 +522,8 @@ int main()
 	cout << endl << endl << "##########		ROI setting & IPM Calibration time total  " << dTickTestTotal / testIteration / getTickFrequency()*1000.0 << " msec		###########" << endl << endl << endl;
 	///end
 	//////////////////////////////////////////////////////////////////////////
-	
-	
+
+
 	//Auto Calibration data structure
 	Vector <Mat> vecIpmFiltered;
 	Vector < vector <Mat> > vecIpmArray;
@@ -547,13 +547,13 @@ int main()
 		if (obj.m_nFrameNum != FIRSTFRAMENUM){
 			SetFrameName(obj.m_sPreScanDB.szDataName, obj.m_sPreScanDB.szDataDir, obj.m_nFrameNum);
 			obj.m_imgOrigin = imread(string(obj.m_sPreScanDB.szDataName));
-			
+
 			if (obj.m_imgOrigin.empty())
 			{
 				printf("empty\n");
 				break;
 			}
-				
+
 			obj.InitialResizeFunction(sizeResizeImg);
 			//resize(obj.m_imgOrigin,obj.m_imgResizeOrigin,sizeResizeImg);
 		}///end		
@@ -644,8 +644,8 @@ int main()
 	double dMaxScore = -99;
 	double dCompareScore = 0;
 	vector <SLine> AutoCalibLane;
-//	for (float pitch = 1; pitch<7.5; pitch += 1){
-//		for (int yaw = -2; yaw <= 2; yaw++){
+	//	for (float pitch = 1; pitch<7.5; pitch += 1){
+	//		for (int yaw = -2; yaw <= 2; yaw++){
 	//for (float pitch = 0; pitch < 3; pitch += 0.3){ //pitch 0이 없을 경우 최초 라인 1개 밖에 못찾음 에러 미해결
 	for (float pitch = 0; pitch < 5; pitch += 0.3){
 		for (int yaw = -1; yaw <= 1; yaw++){
@@ -673,17 +673,17 @@ int main()
 				imgSum += obj.m_ipmFiltered[AUTOCALIB].clone();
 				//imgSum += obj.m_filteredThreshold[AUTOCALIB].clone();
 				//if (i!=0)
-					//imgSum /= (2);
+				//imgSum /= (2);
 			}
 			double dEndTickTest_AutoCalib = (double)getTickCount();
 			dTickTestTotal += (dEndTickTest_AutoCalib - dStartTickTest_AutoCalib);
-			imgSum/=originImg.size();
+			imgSum /= originImg.size();
 			Mat rowMat;
 			rowMat = Mat(imgSum).reshape(0, 1); // 1-row로 압축
-			
-			
-			
-			
+
+
+
+
 			//get the quantile
 			float fQval;
 			fQval = quantile((float*)&rowMat.data[0], rowMat.cols, obj.m_sConfig.fLowerQuantile);
@@ -722,7 +722,7 @@ int main()
 					AutoCalibLane.push_back(obj.m_lanesResult[AUTOCALIB][0]);
 					AutoCalibLane.push_back(obj.m_lanesResult[AUTOCALIB][1]);
 				}
-				
+
 			}
 			fout << endl;
 			cout << endl;
@@ -747,7 +747,7 @@ int main()
 	//ShowResults(obj, AUTOCALIB);
 	if (AutoCalibLane.size() != 2)
 	{
-		cout << " Auto calibration Fail, plz check intrinsic parameter " << AutoCalibLane.size()<< endl;
+		cout << " Auto calibration Fail, plz check intrinsic parameter " << AutoCalibLane.size() << endl;
 		return 0;
 	}
 
@@ -761,12 +761,12 @@ int main()
 	obj.m_sCameraInfo.fYaw = (float)fMaxYaw * PI / 180;
 	obj.SetRoiIpmCofig(AUTOCALIB);
 
-	obj.m_sImgCenter.ptStartLine.x =( AutoCalibLane[0].ptStartLine.x + AutoCalibLane[1].ptStartLine.x) / 2;
+	obj.m_sImgCenter.ptStartLine.x = (AutoCalibLane[0].ptStartLine.x + AutoCalibLane[1].ptStartLine.x) / 2;
 	obj.m_sImgCenter.ptStartLine.y = (AutoCalibLane[0].ptStartLine.y + AutoCalibLane[1].ptStartLine.y) / 2;
 	obj.m_sImgCenter.ptEndLine.x = (AutoCalibLane[0].ptEndLine.x + AutoCalibLane[1].ptEndLine.x) / 2;
 	obj.m_sImgCenter.ptEndLine.y = (AutoCalibLane[0].ptEndLine.y + AutoCalibLane[1].ptEndLine.y) / 2;
 
-	obj.m_sWorldCenterInit.ptStartLane=obj.TransformPointImage2Ground(obj.m_sImgCenter.ptStartLine);
+	obj.m_sWorldCenterInit.ptStartLane = obj.TransformPointImage2Ground(obj.m_sImgCenter.ptStartLine);
 	obj.m_sWorldCenterInit.ptEndLane = obj.TransformPointImage2Ground(obj.m_sImgCenter.ptEndLine);
 	obj.m_sWorldCenterInit.fXcenter = (obj.m_sWorldCenterInit.ptStartLane.x + obj.m_sWorldCenterInit.ptEndLane.x) / 2;
 	obj.m_sWorldCenterInit.fXderiv = obj.m_sWorldCenterInit.ptStartLane.x - obj.m_sWorldCenterInit.ptEndLane.x;
@@ -782,7 +782,7 @@ int main()
 			Point((int)AutoCalibLane[i].ptEndLine.x, (int)AutoCalibLane[i].ptEndLine.y),
 			Scalar(0, 255, 0), 2);
 	}// [LYW_0724] : 화면에 라인 2개 그려주기
-		
+
 	imshow("origin", obj.m_imgResizeOrigin);
 	waitKey(0);
 	obj.m_lanesResult[AUTOCALIB].clear();
@@ -852,14 +852,14 @@ int main()
 	waitKey(0);
 	float fWidthScale = IPM_WIDTH_SCALE; //[LYW_0724] : 계산해야할 IPM이미지의 사이즈를 변경해주는 역할. 임베디드에서 계산양을 줄이기 위해 조절할 수도 있음
 	float fHeightScale = IPM_HEIGHT_SCALE;
-	
+
 
 	//////////////////////////end of Auto Calibration & adaptive ROI setting //////////////////////////////////////////////////////////////
 
 
 	//[LYW_0724] : obj에 본격적으로 ROI정보 넣어주기
 	//////////////////////////////////////////////////////////////////////////
-	
+
 	//LEFT_ROI2
 	obj.m_sRoiInfo[LEFT_ROI2].nLeft = rectLeftTop.x - rectLeftTop.width / 2;
 	obj.m_sRoiInfo[LEFT_ROI2].nRight = rectLeftTop.x + rectLeftTop.width / 2;
@@ -924,7 +924,7 @@ int main()
 	obj.m_sRoiInfo[RIGHT_ROI3].sizeIPM.height =
 		(obj.m_sRoiInfo[RIGHT_ROI3].nBottom - obj.m_sRoiInfo[RIGHT_ROI3].nTop)*fHeightScale;
 
-	
+
 
 
 	//[LYW_0724] : LUT만들기
@@ -952,29 +952,39 @@ int main()
 	obj.m_sRoiInfo[GROUND].ptRoiEnd.x = obj.m_sRoiInfo[GROUND].ptRoi.x + obj.m_sRoiInfo[GROUND].sizeRoi.width;
 	obj.m_sRoiInfo[GROUND].ptRoiEnd.y = obj.m_sRoiInfo[GROUND].ptRoi.y + obj.m_sRoiInfo[GROUND].sizeRoi.height;
 	obj.m_sRoiInfo[GROUND].sizeIPM.width =
-		(obj.m_sRoiInfo[GROUND].nRight - obj.m_sRoiInfo[GROUND].nLeft)/3;
+		(obj.m_sRoiInfo[GROUND].nRight - obj.m_sRoiInfo[GROUND].nLeft) / 3;
 	obj.m_sRoiInfo[GROUND].sizeIPM.height =
-		(obj.m_sRoiInfo[GROUND].nBottom - obj.m_sRoiInfo[GROUND].nTop)/3;
+		(obj.m_sRoiInfo[GROUND].nBottom - obj.m_sRoiInfo[GROUND].nTop) / 3;
 
 
 	obj.SetRoiIpmCofig(GROUND);
 	//for (int i = 0; i<originImg.size(); i++){
 
-	
+
 	FILE *fp = fopen(szAnnotationSaveFile, "rt");
 	SEvaluation structEvaluation;
 
 	//////////////////////////////////////////////////////////////////////////
 	//input DB change
-	
+
 	obj.m_bLeftDraw = false;
 	obj.m_bRightDraw = false;
+
+
+	//tracking 모듈 초기화
+	obj.nCnt[0] = 0;
+	obj.nCnt[1] = 0;
+
+	obj.m_bDraw[0] = false;
+	obj.m_bDraw[1] = false;
+	//tracking 모듈 초기화
+
 	int jMax = 5;
-	if (DB_NUM == PRESCAN || DB_ROADINFO==EXPRESSWAY){
+	if (DB_NUM == PRESCAN || DB_ROADINFO == EXPRESSWAY){
 		jMax = 0;
 	}
 
-		
+
 	for (int j = 0; j <= jMax; j++){
 		char szEnvironment[20];
 		if (j == 10){
@@ -1008,7 +1018,7 @@ int main()
 			strcpy(szTestDir, "./[DB]FreeScaleDemo/Rainy/Urban/Straight_3/2015-04-13-17h-37m-00s_");		// RUS 평가 완료
 		}
 		strcpy(obj.m_sPreScanDB.szDataDir, szTestDir);
-		if (j!=2)
+		if (j != 2)
 		for (int i = FIRSTFRAMENUM;; i++){
 			/*obj.m_imgResizeScaleGray = originImg[i];
 			obj.m_imgResizeOrigin = originImgClr[i];*/
@@ -1016,15 +1026,12 @@ int main()
 			obj.m_imgOrigin = imread(string(obj.m_sPreScanDB.szDataName));
 			if (obj.m_imgOrigin.empty())
 				break;
-			
-		 
+
+
 			obj.InitialResizeFunction(sizeResizeImg);
 
 			double dStartTick = (double)getTickCount();
 
-			
-			
-			
 			//detection start
 			//[LYW]드디어 시작!!!
 			obj.StartLanedetection(LEFT_ROI2);
@@ -1032,55 +1039,72 @@ int main()
 			obj.StartLanedetection(RIGHT_ROI2);
 			obj.StartLanedetection(RIGHT_ROI3);
 
-
-
 			//////////////////////////////////////////////////////////////////////////
 			double dTrackingSt = (double)getTickCount();
 
 			//Clear result Uv Coordinate
-			obj.m_sLeftTrakingLane.ptUvStartLine.x = EMPTY;
-			obj.m_sRightTrakingLane.ptUvStartLine.x = EMPTY;
 
-			//MovingAverageFilter(obj, LEFT_ROI2);
-			//MovingAverageFilter(obj, LEFT_ROI3);
-			//MovingAverageFilter(obj, RIGHT_ROI2);
-			//MovingAverageFilter(obj, RIGHT_ROI3);
+			////tkm before
+			//tracking module
+			obj.m_sTrakingLane[0].ptUvStartLine.x = EMPTY;
+			obj.m_sTrakingLane[1].ptUvStartLine.x = EMPTY;
 
-			//TrackingStageGround(obj, LEFT_ROI2);
-			//TrackingStageGround(obj, LEFT_ROI3);
-			
 			//Left,Right 검출 결과 추적 맴버 변수로 변환
-			obj.TrackingStageGround(LEFT_ROI2);
-			obj.TrackingStageGround(LEFT_ROI3);
-			obj.TrackingStageGround(RIGHT_ROI2);
-			obj.TrackingStageGround(RIGHT_ROI3);
-						
-			//Tracking continue 판별식
-			obj.TrackingContinue();
+	
 
-			obj.KalmanTrackingStage(KALMAN_LEFT);
-			obj.KalmanTrackingStage(KALMAN_RIGHT);
+			////tracking module
+			obj.TrackingStageGround(LEFT_ROI2, 0);
+			obj.TrackingStageGround(LEFT_ROI3, 0);
+			obj.TrackingStageGround(RIGHT_ROI2, 1);
+			obj.TrackingStageGround(RIGHT_ROI3, 1);
 
-			
+			////tkm before		//Tracking continue 판별식
+			/*obj.TrackingContinue();*/
 
-			if ((obj.m_bLeftDraw == true) && (obj.m_bRightDraw == true)){
-				float fRightGround = obj.m_sRightTrakingLane.fXcenter / 1000;
-				float fLeftGround = obj.m_sLeftTrakingLane.fXcenter / 1000;
+			////tracking module
+			obj.TrackingContinue(0);
+			obj.TrackingContinue(1);
+
+			////tracking module
+			if (obj.m_bTrackingFlag[obj.m_sTracking[LEFT_ROI2].nTargetTracker] == false){
+				obj.m_sTracking[LEFT_ROI2].bTracking = false;
+			}
+			if (obj.m_bTrackingFlag[obj.m_sTracking[LEFT_ROI3].nTargetTracker] == false){
+				obj.m_sTracking[LEFT_ROI3].bTracking = false;
+			}
+			if (obj.m_bTrackingFlag[obj.m_sTracking[RIGHT_ROI2].nTargetTracker] == false){
+				obj.m_sTracking[RIGHT_ROI2].bTracking = false;
+			}
+			if (obj.m_bTrackingFlag[obj.m_sTracking[RIGHT_ROI3].nTargetTracker] == false){
+				obj.m_sTracking[RIGHT_ROI3].bTracking = false;
+			}
+
+
+			////tracking module
+			obj.KalmanTrackingStage(0);
+			obj.KalmanTrackingStage(1);
+
+
+
+			//tracking module
+			if ((obj.m_bDraw[0] == true) && (obj.m_bDraw[1] == true)){
+				float fRightGround = obj.m_sTrakingLane[1].fXcenter / 1000;
+				float fLeftGround = obj.m_sTrakingLane[0].fXcenter / 1000;
 				if ((fRightGround - fLeftGround) < MIN_WORLD_WIDTH)
 				{
-					obj.ClearDetectionResult();
+					obj.ClearDetectionResult(0);
+					obj.ClearDetectionResult(1);
 				}
 
 			}
 
-		
 			//###########end of Image processing & Tracking processing################
 			//////////////////////////////////////////////////////////////////////////
 			double dEndTick = (double)getTickCount();
 			double dTrackingEnd = (double)getTickCount();
 			double dCurrentProcessTime = (dEndTick - dStartTick) / getTickFrequency()*1000.0;
 
-		//	cout << "processing time  " << dCurrentProcessTime << " msec" << endl;
+			//	cout << "processing time  " << dCurrentProcessTime << " msec" << endl;
 			//cout << "	Tracking time " << (dTrackingEnd - dTrackingSt) / getTickFrequency()*1000.0 << " msec" << endl;
 			d_totalProcessTime += (dEndTick - dStartTick) / getTickFrequency()*1000.0;
 			nCntProcess++;
@@ -1101,30 +1125,31 @@ int main()
 			stringstream ssLeft, ssRight;
 			float fLeftGround, fRightGround;
 
-			//Lateral Distance show Left,Right
-			if (obj.m_bTracking[LEFT_ROI2] && obj.m_bTracking[LEFT_ROI3]){
-				int ssTemp = obj.m_sLeftTrakingLane.fXcenter / 1000 * 100;
+
+			////tracking module
+			if (obj.m_bTrackingFlag[0]){
+				
+				int ssTemp = obj.m_sTrakingLane[0].fXcenter / 1000 * 100;
 				fLeftGround = float(ssTemp) / 100;
 				ssLeft << fLeftGround;
 			}
-			if (obj.m_bTracking[RIGHT_ROI2] && obj.m_bTracking[RIGHT_ROI3]){
-				int ssTemp = obj.m_sRightTrakingLane.fXcenter / 1000 * 100;
+			if (obj.m_bTrackingFlag[1]){
+				int ssTemp = obj.m_sTrakingLane[1].fXcenter / 1000 * 100;
 				fRightGround = float(ssTemp) / 100;
 				ssRight << fRightGround;
 			}
-
 			//Lane Draw & Lateral Distance Draw
-			if ((obj.m_bLeftDraw == true) && (obj.m_bRightDraw == true)){
-				if (obj.m_bLeftDraw){
-					line(obj.m_imgResizeOrigin, obj.m_sLeftTrakingLane.ptUvStartLine,
-						obj.m_sLeftTrakingLane.ptUvEndLine, Scalar(0, 0, 255), 2);
-					putText(obj.m_imgResizeOrigin, ssLeft.str(), obj.m_sLeftTrakingLane.ptUvEndLine,
+			if ((obj.m_bDraw[0] == true) && (obj.m_bDraw[1] == true)){
+				if (obj.m_bTrackingFlag[0]){
+					line(obj.m_imgResizeOrigin, obj.m_sTrakingLane[0].ptUvStartLine,
+						obj.m_sTrakingLane[0].ptUvEndLine, Scalar(0, 0, 255), 2);
+					putText(obj.m_imgResizeOrigin, ssLeft.str(), obj.m_sTrakingLane[0].ptUvEndLine,
 						FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
 				}
-				if (obj.m_bRightDraw){
-					line(obj.m_imgResizeOrigin, obj.m_sRightTrakingLane.ptUvStartLine,
-						obj.m_sRightTrakingLane.ptUvEndLine, Scalar(0, 0, 255), 2);
-					putText(obj.m_imgResizeOrigin, ssRight.str(), obj.m_sRightTrakingLane.ptUvEndLine,
+				if (obj.m_bTrackingFlag[1]){
+					line(obj.m_imgResizeOrigin, obj.m_sTrakingLane[1].ptUvStartLine,
+						obj.m_sTrakingLane[1].ptUvEndLine, Scalar(0, 0, 255), 2);
+					putText(obj.m_imgResizeOrigin, ssRight.str(), obj.m_sTrakingLane[1].ptUvEndLine,
 						FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
 				}
 			}
@@ -1135,7 +1160,7 @@ int main()
 			int ssTemp = (obj.m_sWorldCenterInit.fXcenter) / 1000 / 2 * 100;
 			ssCenter << float(ssTemp) / 100;
 			/*putText(obj.m_imgResizeOrigin, ssCenter.str(), obj.m_sImgCenter.ptEndLine,
-				FONT_HERSHEY_COMPLEX_SMALL, 1, Scalar(255, 0, 255), 1, 8, false);*/
+			FONT_HERSHEY_COMPLEX_SMALL, 1, Scalar(255, 0, 255), 1, 8, false);*/
 			////////////////////////////////////////////////////////////////////////////
 			////test
 
@@ -1190,8 +1215,8 @@ int main()
 			//
 
 			////////////////////////////////////////////////////////////////////////////
-			
-			putText(obj.m_imgResizeOrigin, szEnvironment, Point(10,50),
+
+			putText(obj.m_imgResizeOrigin, szEnvironment, Point(10, 50),
 				FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 255), 2, 8, false);
 
 
@@ -1199,7 +1224,7 @@ int main()
 			char szProcTime[20] = "FPS : ";
 			char szMs[10] = "ms";
 			ssTime << szProcTime;
-			ssTime << (int)(1000/dCurrentProcessTime);
+			ssTime << (int)(1000 / dCurrentProcessTime);
 			//ssTime << szMs;
 			putText(obj.m_imgResizeOrigin, ssTime.str(), Point(10, 90),
 				FONT_HERSHEY_COMPLEX, 1, Scalar(255, 0, 50), 2, 8, false);
@@ -1211,12 +1236,16 @@ int main()
 			////imshow("IPM_GROUND", obj.m_imgIPM[GROUND]);
 			//ShowResults(obj,AUTOCALIB);
 			////waitKey(20);
-			char cTemp=waitKey(0);
+			char cTemp = waitKey(1);
 			if (cTemp == 'z'){
-				i-=2;
+				i -= 2;
 			}
 		}// end of 하나의 frame에서 detection & tracking 다
-		obj.ClearDetectionResult();
+		//obj.ClearDetectionResult();
+
+		////tracking module
+		obj.ClearDetectionResult(0);
+		obj.ClearDetectionResult(1);
 
 
 	}
@@ -1235,7 +1264,7 @@ int main()
 	cout << "TN : " << structEvaluation.RightTN << endl;
 
 	cout << "Total Evaluation" << endl;
-	
+
 	cout << "TP : " << structEvaluation.LeftTP + structEvaluation.RightTP << endl;
 	cout << "FP : " << structEvaluation.LeftFP + structEvaluation.RightFP << endl;
 	cout << "FN : " << structEvaluation.LeftFN + structEvaluation.RightFN << endl;
