@@ -271,7 +271,7 @@ public:
 
 	void StartLanedetection(EROINUMBER nFlag){
 		GetIPM(nFlag);
-		FilterLinesIPM(nFlag); //input = m_imgIPM, Output1= m_ipmFiltered, Output2= m_ipmFilteredThreshold
+		FilterLinesIPM(nFlag);					//input = m_imgIPM, Output1= m_ipmFiltered, Output2= m_ipmFilteredThreshold
 		GetLinesIPM(nFlag);
 		LineFitting(nFlag);
 		IPM2ImLines(nFlag);
@@ -299,6 +299,7 @@ public:
 	void KalmanSetting(SKalman &SKalmanInput, EROINUMBER nflag);
 	void TrackingStageGround(EROINUMBER nflag);
 	void ClearDetectionResult();
+	void TrackingContinue();
 private:
 	void SetVanishingPoint();
 
@@ -445,6 +446,11 @@ void CMultiROILaneDetection::SetVanishingPoint(){
 }
 //pointer need
 
+/*LYW_0724*/
+// (u,v) --> (x,y) 나오게끔. h는 사전에 미리 셋팅.
+// Input : row의 개수는 1 이상만 넣어주면 됨. col : 반드시 2개.
+// Input/Output matrix의 dim은 같아야함.
+// 
 void CMultiROILaneDetection::TransformImage2Ground(const Mat &matInPoints,Mat &matOutPoints){
 	//	cout<<*matInPoints<<endl;
 	//	cout<<"확인1\n"<<endl;
@@ -456,6 +462,7 @@ void CMultiROILaneDetection::TransformImage2Ground(const Mat &matInPoints,Mat &m
 
 	//copy inPoints to first two rows
 
+	//call by reference
 	Mat matInPoints2=matInPoints4.rowRange(0,2);
 	Mat matInPoints3=matInPoints4.rowRange(0,3);	
 	Mat matInPointsr3=matInPoints4.row(2);
@@ -556,7 +563,8 @@ void CMultiROILaneDetection::TransformGround2Image(const Mat &matInPoints,Mat &m
 	matInPoints2.copyTo(matOutPoints);
 }
 
-void CMultiROILaneDetection::SetRoiIpmCofig(EROINUMBER nFlag ){
+//[LYW_0724] : LUT를 만드는 함수
+void CMultiROILaneDetection::SetRoiIpmCofig(EROINUMBER nFlag ){ 
 	m_bTracking[nFlag] = false;
 	SetVanishingPoint();
 	Point_<float> ptVp = m_sCameraInfo.ptVanishingPoint;
@@ -634,6 +642,8 @@ void CMultiROILaneDetection::SetRoiIpmCofig(EROINUMBER nFlag ){
 	
 
 }
+
+//[LYW] : IPM이미지 만드는 함수
 void CMultiROILaneDetection::GetIPM( EROINUMBER nFlag){
 
 
@@ -707,6 +717,9 @@ void CMultiROILaneDetection::InitialResizeFunction(Size sizeResize){
 	m_imgResizeOrigin.convertTo(m_imgOriginScale,CV_32FC1,1.0/255);
 	cvtColor(m_imgOriginScale,m_imgResizeScaleGray,CV_RGB2GRAY);
 }
+
+
+// [LYW] : Line kernel filtering하기
 void CMultiROILaneDetection::FilterLinesIPM(EROINUMBER nFlag){
 	//define the two kernels
 
@@ -761,10 +774,10 @@ void CMultiROILaneDetection::FilterLinesIPM(EROINUMBER nFlag){
 	rowMat = Mat(m_ipmFiltered[nFlag]).reshape(0,1); //1row로 누적시킴
 	//get the quantile
 	float fQval;
-	fQval = quantile((float*) &rowMat.data[0], rowMat.cols, m_sConfig.fLowerQuantile);
-
+	fQval = quantile((float*) &rowMat.data[0], rowMat.cols, m_sConfig.fLowerQuantile);		//Quantile 97%
+																							//필터링 결과 영상에서 threshold value를 Quantile함수를 이용하여 결정
+	threshold(m_ipmFiltered[nFlag],m_filteredThreshold[nFlag],fQval,NULL,THRESH_TOZERO);	//Threshold 미만 value를 zero로, 나머지 그대로
 	//ThresholdLower(imgSubImage,imgSubImage, fQtileThreshold);
-	threshold(m_ipmFiltered[nFlag],m_filteredThreshold[nFlag],fQval,NULL,THRESH_TOZERO);
 	//double dEndTick = (double)getTickCount();
 	//cout<<"reshape & quantile & threshold time  "<<(dEndTick-dStartTick) / getTickFrequency()*1000.0<<" msec"<<endl;
 
@@ -781,7 +794,7 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 	int maxLineLoc = 0;
 
 	matSumLinesp.create(1,matImage.cols,CV_32FC1);
-	reduce(matImage,matSumLinesp,0,CV_REDUCE_SUM);
+	reduce(matImage,matSumLinesp,0,CV_REDUCE_SUM); //reshape비슷한데, 1-row압축 reshape와 차이는 몰라
 	matSumLines = Mat(matSumLinesp).reshape(0,matImage.cols);
 
 	//max location for a detected line
@@ -805,7 +818,7 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 	vector <double> sumLinesMax;
 	int nMaxLoc;
 	double nMax;
-
+	//필터 결과 영상을 누적시키고 노이즈 제거 이후 후보군에 대해서 누적값의 순위를 결정하여 벡터라이즈화
 	GetVectorMax(matSumLines, nMax, nMaxLoc, m_sConfig.nLocalMaxIgnore);
 
 	float *pfMatSumLinesData = (float*)matSumLines.data;
@@ -851,14 +864,11 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 			(double)pfMatSumLinesData[matSumLines.cols*sumLinesMaxLoc[i]+0],
 			(double)pfMatSumLinesData[matSumLines.cols*MIN(sumLinesMaxLoc[i]+1,maxLineLoc)+0]
 		);
-
 		maxLocAcc += sumLinesMaxLoc[i];
 		maxLocAcc = MIN(MAX(0, maxLocAcc), maxLineLoc);
 		//TODO: get line extent
-
 		//put the extracted line
 		SLine line;
-
 		line.ptStartLine.x = (double)maxLocAcc + 0.5;//sumLinesMaxLoc[i]+.5;
 		line.ptStartLine.y = 0.5;
 		line.ptEndLine.x = line.ptStartLine.x;
@@ -867,7 +877,8 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 		(m_lanes[nFlag]).push_back(line);
 		//		if (lineScores)
 		(m_laneScore[nFlag]).push_back(sumLinesMax[i]);
-	}//for
+	}
+	//for
 	//cout<<"nFlag"<<nFlag<<endl;
 	//for(int i=0;i<m_laneScore[nFlag].size();i++)
 	//	cout<<m_laneScore[nFlag].at(i)<<","<<endl;
@@ -888,7 +899,7 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 	sumLinesMaxLoc.clear();
 }
 void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
-	vector<SLine> lines = m_lanes[nFlag];
+	vector<SLine> lines = m_lanes[nFlag]; // [LYW_0724] : line fitting해야할 후보들, m_laneScore와 짝을 이룬다. (같은 index에 score가 저장되어 있음)
 	vector<float> lineScores = m_laneScore[nFlag];
 	/*cout<<m_lanes[nFlag].at(1).ptStartLine<<endl;
 	cout<<lines.at(1).ptStartLine<<endl;
@@ -979,7 +990,7 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 	m_lanes[nFlag].clear();
 	m_laneScore[nFlag].clear();
 	
-	if(newScores.size()>2&&nFlag==AUTOCALIB){
+	if(newScores.size()>2&&nFlag==AUTOCALIB){ // [LYW_0724] : 라인2개찾았는지 검사
 		//int nFirst,nSecond;
 		int nFirstIdx,nSecondIdx;
 		if(newScores[0]>newScores[1]){
@@ -1002,11 +1013,11 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 		m_laneScore[nFlag].push_back(newScores[nFirstIdx]);
 		m_lanes[nFlag].push_back(newLines[nSecondIdx]);
 		m_laneScore[nFlag].push_back(newScores[nSecondIdx]);
-	}else{
-		m_lanes[nFlag] = newLines;
+	}else{ // [LYW_0724] : Auto Calib가 아닌 일반적인 detection단계에서 찾은 차선을 다 넣어주는거야! 이 부분 때문에 다차선검출이 가능할 수 있어!!
+		m_lanes[nFlag] = newLines;  
 		m_laneScore[nFlag] = newScores;
 	}
-
+ 
 	
 
 	//clean
@@ -1014,7 +1025,7 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 	newLines.clear();
 	newScores.clear();
 }
-void CMultiROILaneDetection::IPM2ImLines(EROINUMBER nFlag){
+void CMultiROILaneDetection::IPM2ImLines(EROINUMBER nFlag){ // 
 
 	if(m_lanes[nFlag].size()!=0){
 		//PointImIPM2World
@@ -1151,11 +1162,11 @@ void CMultiROILaneDetection::GetTrackingLineCandidate(EROINUMBER nFlag){
 	vector<SWorldLane> vecWorldLane;
 	SLine sLineTemp;
 	SWorldLane sWorldLaneTemp;
-	for (int i = 0; i < m_lanes[nFlag].size(); i++){
-		sLineTemp.ptStartLine.x = m_lanes[nFlag].at(i).ptStartLine.x / m_sRoiInfo[nFlag].dXScale;
-		sLineTemp.ptStartLine.x += m_sRoiInfo[nFlag].dXLimit[0];
-		sLineTemp.ptStartLine.y = m_lanes[nFlag].at(i).ptStartLine.y / m_sRoiInfo[nFlag].dYScale;
-		sLineTemp.ptStartLine.y = m_sRoiInfo[nFlag].dYLimit[1] - m_lanes[nFlag].at(i).ptStartLine.y;
+	for (int i = 0; i < m_lanes[nFlag].size(); i++){//m_lanes는 각각의 ROI에 대한 line fitting 결과임
+		sLineTemp.ptStartLine.x = m_lanes[nFlag].at(i).ptStartLine.x / m_sRoiInfo[nFlag].dXScale; //IPM image 2 World 변환을 위한 계산
+		sLineTemp.ptStartLine.x += m_sRoiInfo[nFlag].dXLimit[0]; //IPM image 2 World 변환을 위한 계산
+		sLineTemp.ptStartLine.y = m_lanes[nFlag].at(i).ptStartLine.y / m_sRoiInfo[nFlag].dYScale; //IPM image 2 World 변환을 위한 계산
+		sLineTemp.ptStartLine.y = m_sRoiInfo[nFlag].dYLimit[1] - m_lanes[nFlag].at(i).ptStartLine.y; //IPM image 2 World 변환을 위한 계산
 
 		sLineTemp.ptEndLine.x = m_lanes[nFlag].at(i).ptEndLine.x / m_sRoiInfo[nFlag].dXScale;
 		sLineTemp.ptEndLine.x += m_sRoiInfo[nFlag].dXLimit[0];
@@ -1174,7 +1185,7 @@ void CMultiROILaneDetection::GetTrackingLineCandidate(EROINUMBER nFlag){
 	int nMaxIter = 0;
 	float fMinDist = MINCOMP;
 	float fTempComp;
-	if ((nFlag == LEFT_ROI2) || (nFlag == LEFT_ROI3)){
+	if ((nFlag == LEFT_ROI2) || (nFlag == LEFT_ROI3)){//ROI 내에서 검출된 여러 라인을 추적한 차선과의 거리를 비교하여 가장 가까운 라인을 남김
 		for (int i = 0; i < vecWorldLane.size(); i++){
 			fTempComp = abs(m_sLeftTrakingLane.fXcenter-vecWorldLane.at(i).fXcenter);
 			if (fTempComp < fMinDist){
@@ -2164,7 +2175,7 @@ void CMultiROILaneDetection::KalmanTrackingStage(EROINUMBER nFlag){
 	//cout << "Kalman stage" << endl;
 	if (nFlag == KALMAN_LEFT)
 	{
-		if (m_SKalmanLeftLane.cntNum == 0)
+		if (m_SKalmanLeftLane.cntNum == 0)//kalman setting 첫 프레임인지 판별
 		{
 			m_SKalmanLeftLane.SKalmanTrackingLineBefore = m_SKalmanLeftLane.SKalmanTrackingLine;
 			//cout << "Left Kalman Start" << endl;
@@ -2172,14 +2183,16 @@ void CMultiROILaneDetection::KalmanTrackingStage(EROINUMBER nFlag){
 		}
 		else
 		{
+			//prediction은 이전 frame을 가지고 predict()수행
+			//predict()결과에 현재 frame의 x,deriv를 이용해서 검사하기 : correct()
 			Mat matPrediction = m_SKalmanLeftLane.KF.predict();
 			SLine SLinePredict;
 			SLinePredict.fXcenter = matPrediction.at<float>(0);
 			SLinePredict.fXderiv = matPrediction.at<float>(1);
 			m_SKalmanLeftLane.matMeasurement.at<float>(0) = m_SKalmanLeftLane.SKalmanTrackingLine.fXcenter;
 			m_SKalmanLeftLane.matMeasurement.at<float>(1) = m_SKalmanLeftLane.SKalmanTrackingLine.fXderiv;
-			m_SKalmanLeftLane.matMeasurement.at<float>(2) = 0;
-			m_SKalmanLeftLane.matMeasurement.at<float>(3) = 0;
+			m_SKalmanLeftLane.matMeasurement.at<float>(2) = 0; //x의 속도값
+			m_SKalmanLeftLane.matMeasurement.at<float>(3) = 0; //deriv의 속도값
 			//m_SKalmanLeftLane.KF.measurementMatrix.at<float>(4) = 0;
 			//m_SKalmanLeftLane.KF.measurementMatrix.at<float>(5) = 0;
 			Mat matEstimated = m_SKalmanLeftLane.KF.correct(m_SKalmanLeftLane.matMeasurement);
@@ -2207,11 +2220,13 @@ void CMultiROILaneDetection::KalmanTrackingStage(EROINUMBER nFlag){
 			m_sLeftTrakingLane.fXderiv = SLineEstimated.fXderiv;
 			//line(m_imgResizeOrigin, ptUvSt, ptUvEnd, Scalar(0, 0, 255), 2);
 			m_bLeftDraw = true;
+			//tracking continue 함수에서 사용
 			m_SKalmanLeftLane.SKalmanTrackingLineBefore = m_SKalmanLeftLane.SKalmanTrackingLine;
 		}
 				
 		//cout << "cntNum : " << m_SKalmanLeftLane.cntNum << endl;
 		m_SKalmanLeftLane.cntNum++;
+		//tracking continue 함수에서 사용
 	}
 
 	if (nFlag == KALMAN_RIGHT){
@@ -2395,6 +2410,179 @@ void CMultiROILaneDetection::ClearDetectionResult(){
 	m_bTracking[LEFT_ROI2] = false;
 	m_bTracking[LEFT_ROI3] = false;
 	m_SKalmanRightLane.cntNum = 0;
+}
+
+void CMultiROILaneDetection::TrackingContinue(){
+	//Left ROI tracking continue 판별식
+	//검출이 안될 경우 Erase cnt를 증가시킴
+	if ((m_lanesGroundResult[LEFT_ROI2].size() == 0) && (m_lanesGroundResult[LEFT_ROI3].size() == 0)){
+		nLeftCnt += TRACKING_ERASE_LEVEL;
+
+		if (nLeftCnt >= TRACKINGERASE){//Erase cnt가 TRACKINGERASE보다 클경우 tracking stage 종료
+			nLeftCnt = 0;
+			m_leftTracking.clear();
+			m_leftGroundTracking.clear();
+			m_bTracking[LEFT_ROI2] = false;
+			m_bTracking[LEFT_ROI3] = false;
+			m_SKalmanLeftLane.cntNum = 0;
+		}
+		m_SKalmanLeftLane.cntErase += TRACKING_ERASE_LEVEL;
+		if (m_SKalmanLeftLane.cntErase >= TRACKINGERASE){
+			m_SKalmanLeftLane.cntErase = 0;
+			nLeftCnt = 0;
+			m_leftTracking.clear();
+			m_leftGroundTracking.clear();
+			m_bTracking[LEFT_ROI2] = false;
+			m_bTracking[LEFT_ROI3] = false;
+		}
+	}
+	else //검출이 될 경우 Erase cnt를 감소시킴
+	{
+		(nLeftCnt >= 0) ? (((nLeftCnt -= TRACKING_ERASE_LEVEL) == 0) ? nLeftCnt = 0 : nLeftCnt -= TRACKING_ERASE_LEVEL) : nLeftCnt = 0;
+		(m_SKalmanLeftLane.cntErase >= 0) ?
+			(((m_SKalmanLeftLane.cntErase -= TRACKING_ERASE_LEVEL) == 0) ?
+			m_SKalmanLeftLane.cntErase = 0 : m_SKalmanLeftLane.cntErase -= TRACKING_ERASE_LEVEL) : m_SKalmanLeftLane.cntErase = 0;
+	}
+
+
+	//Right ROI tracking continue 판별식
+	if ((m_lanesGroundResult[RIGHT_ROI2].size() == 0) && (m_lanesGroundResult[RIGHT_ROI3].size() == 0)){
+		nRightCnt += TRACKING_ERASE_LEVEL;
+		if (nRightCnt >= TRACKINGERASE){
+			nRightCnt = 0;
+			m_rightTracking.clear();
+			m_rightGroundTracking.clear();
+			m_bTracking[RIGHT_ROI2] = false;
+			m_bTracking[RIGHT_ROI3] = false;
+			m_SKalmanRightLane.cntNum = 0;
+		}
+		m_SKalmanRightLane.cntErase += TRACKING_ERASE_LEVEL;
+		if (m_SKalmanRightLane.cntErase >= TRACKINGERASE){
+			m_SKalmanRightLane.cntErase = 0;
+			nRightCnt = 0;
+			m_rightTracking.clear();
+			m_rightGroundTracking.clear();
+			m_bTracking[LEFT_ROI2] = false;
+			m_bTracking[LEFT_ROI3] = false;
+		}
+	}
+	else{
+		(nRightCnt >= 0) ? ((nRightCnt -= TRACKING_ERASE_LEVEL) == 0 ? nRightCnt = 0 : (nRightCnt -= TRACKING_ERASE_LEVEL)) : nRightCnt = 0;
+		(m_SKalmanRightLane.cntErase >= 0) ?
+			(((m_SKalmanRightLane.cntErase -= TRACKING_ERASE_LEVEL) == 0) ?
+			m_SKalmanRightLane.cntErase = 0 : m_SKalmanRightLane.cntErase -= TRACKING_ERASE_LEVEL) : m_SKalmanRightLane.cntErase = 0;
+	}
+
+	//Left Tracking 결과 
+	if (m_leftGroundTracking.size() > TRACKING_FLAG_NUM)
+		//if kalman tracking threshold true
+	{
+		m_bTracking[LEFT_ROI2] = true;
+		m_bTracking[LEFT_ROI3] = true;
+
+		//////////////////////////////////////////////////////////////////////////
+		//Moving Average Filter
+		Point_<double> ptStart = Point_<double>(0, 0);
+		Point_<double> ptEnd = Point_<double>(0, 0);
+		SLine SGroundLeftLine;
+		SGroundLeftLine.fXcenter = 0;
+		SGroundLeftLine.fXderiv = 0;
+		for (int i = 0; i < m_leftGroundTracking.size(); i++){
+			ptStart += m_leftGroundTracking[i].ptStartLine;
+			ptEnd += m_leftGroundTracking[i].ptEndLine;
+			SGroundLeftLine.fXcenter += m_leftGroundTracking[i].fXcenter;
+			SGroundLeftLine.fXderiv += m_leftGroundTracking[i].fXderiv;
+		}
+		int nSize = m_leftGroundTracking.size();
+
+		ptStart.x /= nSize;
+		ptStart.y /= nSize;
+		ptEnd.x /= nSize;
+		ptEnd.y /= nSize;
+
+		SGroundLeftLine.fXcenter /= nSize;
+		SGroundLeftLine.fXderiv /= nSize;
+
+		m_sLeftTrakingLane.fXcenter = SGroundLeftLine.fXcenter;
+		m_sLeftTrakingLane.fXderiv = SGroundLeftLine.fXderiv;
+		m_sLeftTrakingLane.fYtop = ptStart.y;
+		m_sLeftTrakingLane.fYBottom = ptEnd.y;
+		m_sLeftTrakingLane.ptStartLane = ptStart;
+		m_sLeftTrakingLane.ptEndLane = ptEnd;
+		ptStart.x = (ptStart.y - ptEnd.y) / 2 * m_sLeftTrakingLane.fXderiv + m_sLeftTrakingLane.fXcenter;
+		ptEnd.x = (ptEnd.y - ptStart.y) / 2 * m_sLeftTrakingLane.fXderiv + m_sLeftTrakingLane.fXcenter;
+
+		Point ptUvSt = TransformPointGround2Image(ptStart);
+		Point ptUvEnd = TransformPointGround2Image(ptEnd);
+		m_sLeftTrakingLane.ptUvStartLine = ptUvSt;
+		m_sLeftTrakingLane.ptUvEndLine = ptUvEnd;
+
+		//20150524
+		SLine SLineResult;
+		SLineResult.fXcenter = m_sLeftTrakingLane.fXcenter;
+		SLineResult.fXderiv = m_sLeftTrakingLane.fXderiv;
+		SLineResult.ptStartLine = m_sLeftTrakingLane.ptStartLane;
+		SLineResult.ptEndLine = m_sLeftTrakingLane.ptEndLane;
+
+		m_SKalmanLeftLane.SKalmanTrackingLine = SLineResult;
+	}
+
+	//Right Tracking 결과 
+	if (m_rightGroundTracking.size() > TRACKING_FLAG_NUM)
+		//if kalman tracking threshold true
+	{
+		m_bTracking[RIGHT_ROI2] = true;
+		m_bTracking[RIGHT_ROI3] = true;
+
+		//////////////////////////////////////////////////////////////////////////
+		//Moving Average Filter
+		Point_<double> ptStart = Point_<double>(0, 0);
+		Point_<double> ptEnd = Point_<double>(0, 0);
+		SLine SGroundRightLine;
+		SGroundRightLine.fXcenter = 0;
+		SGroundRightLine.fXderiv = 0;
+		for (int i = 0; i < m_rightGroundTracking.size(); i++){
+			ptStart += m_rightGroundTracking[i].ptStartLine;
+			ptEnd += m_rightGroundTracking[i].ptEndLine;
+			SGroundRightLine.fXcenter += m_rightGroundTracking[i].fXcenter;
+			SGroundRightLine.fXderiv += m_rightGroundTracking[i].fXderiv;
+		}
+		int nSize = m_rightGroundTracking.size();
+
+		ptStart.x /= nSize;
+		ptStart.y /= nSize;
+		ptEnd.x /= nSize;
+		ptEnd.y /= nSize;
+
+		SGroundRightLine.fXcenter /= nSize;
+		SGroundRightLine.fXderiv /= nSize;
+
+		m_sRightTrakingLane.fXcenter = SGroundRightLine.fXcenter;
+		m_sRightTrakingLane.fXderiv = SGroundRightLine.fXderiv;
+		m_sRightTrakingLane.fYtop = ptStart.y;
+		m_sRightTrakingLane.fYBottom = ptEnd.y;
+		m_sRightTrakingLane.ptStartLane = ptStart;
+		m_sRightTrakingLane.ptEndLane = ptEnd;
+		ptStart.x = (ptStart.y - ptEnd.y) / 2 * m_sRightTrakingLane.fXderiv + m_sRightTrakingLane.fXcenter;
+		ptEnd.x = (ptEnd.y - ptStart.y) / 2 * m_sRightTrakingLane.fXderiv + m_sRightTrakingLane.fXcenter;
+
+		Point ptUvSt = TransformPointGround2Image(ptStart);
+		Point ptUvEnd = TransformPointGround2Image(ptEnd);
+		m_sRightTrakingLane.ptUvStartLine = ptUvSt;
+		m_sRightTrakingLane.ptUvEndLine = ptUvEnd;
+
+		//20150524
+		SLine SLineResult;
+		SLineResult.fXcenter = m_sRightTrakingLane.fXcenter;
+		SLineResult.fXderiv = m_sRightTrakingLane.fXderiv;
+		SLineResult.ptStartLine = m_sRightTrakingLane.ptStartLane;
+		SLineResult.ptEndLine = m_sRightTrakingLane.ptEndLane;
+
+		m_SKalmanRightLane.SKalmanTrackingLine = SLineResult;
+
+
+	}
+
 }
 // my function
 void SetFrameName(char* szDataName, char* szDataDir,int nFrameNum){
