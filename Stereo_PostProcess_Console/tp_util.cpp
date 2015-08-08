@@ -21,7 +21,7 @@ void fitLineRansac(const std::vector<Point2f> points,
 	double a_max)
 {
 	int n = points.size();
-
+	//cout <<"point size : "<< n << endl;
 	if (n<2)
 	{
 		return;
@@ -38,8 +38,8 @@ void fitLineRansac(const std::vector<Point2f> points,
 			i1 = rng(n);
 			i2 = rng(n);
 		}
-		const Point2f& p1 = points[i1];
-		const Point2f& p2 = points[i2];
+		Point2f p1 = points[i1];
+		Point2f p2 = points[i2];
 
 		Point2f dp = p2 - p1;
 		dp *= 1. / norm(dp);
