@@ -32,7 +32,7 @@ using namespace std;
 #define MOVING_AVERAGE_NUM 7
 #define TRACKING_FLAG_NUM 4
 #define TRACKING_ERASE_LEVEL 1
-#define TRACKINGERASE 5
+#define TRACKINGERASE 10
 #define MIN_WORLD_WIDTH 2.0		//Left,Right lane minimum interval
 enum EROINUMBER{
 	CENTER_ROI = 0,
@@ -2420,14 +2420,6 @@ void CMultiROILaneDetection::KalmanTrackingStage(EROINUMBER nFlag){
 			SLineEstimated.fXcenter = matEstimated.at<float>(0);
 			SLineEstimated.fXderiv = matEstimated.at<float>(1);
 
-			/*cout << "Kalman stage " << endl;
-			cout << "before : " << m_SKalmanLeftLane.SKalmanTrackingLineBefore.fXcenter;
-			cout << " , " << m_SKalmanLeftLane.SKalmanTrackingLineBefore.fXderiv << endl;
-			cout << "current : " << m_SKalmanLeftLane.SKalmanTrackingLine.fXcenter;
-			cout << " , " << m_SKalmanLeftLane.SKalmanTrackingLine.fXderiv << endl;
-			cout << "KalmanFiltered : " << SLineEstimated.fXcenter;
-			cout << " , " << SLineEstimated.fXderiv << endl;*/
-
 			m_sRightTrakingLane.ptStartLane.x = (m_sRightTrakingLane.ptStartLane.y - m_sRightTrakingLane.ptEndLane.y) / 2
 				* SLineEstimated.fXderiv + SLineEstimated.fXcenter;
 			m_sRightTrakingLane.ptEndLane.x = (-m_sRightTrakingLane.ptStartLane.y + m_sRightTrakingLane.ptEndLane.y) / 2
@@ -2585,35 +2577,6 @@ void CMultiROILaneDetection::TrackingStageGround(EROINUMBER nflag){
 		}
 
 	}
-
-	//	}
-	/*if ((nflag == RIGHT_ROI2) || (nflag == RIGHT_ROI3))
-	{
-	if (!m_lanesGroundResult[nflag].empty())
-	{
-	SLineRight = m_lanesGroundResult[nflag][0];
-	SLineRight.fGroundHeight = m_lanesGroundResult[nflag][0].ptStartLine.y
-	- m_lanesGroundResult[nflag][0].ptEndLine.y;
-	SLineRight.fXcenter = (m_lanesGroundResult[nflag][0].ptStartLine.x + m_lanesGroundResult[nflag][0].ptEndLine.x) / 2;
-	SLineRight.fXderiv = (m_lanesGroundResult[nflag][0].ptStartLine.x - m_lanesGroundResult[nflag][0].ptEndLine.x)
-	/ SLineRight.fGroundHeight;
-
-	SLineRight.ptStartLine.x = (SLineRight.ptStartLine.y - m_sCameraInfo.fGroundTop)*SLineRight.fXderiv
-	+ SLineRight.ptStartLine.x;
-	SLineRight.ptStartLine.y = m_sCameraInfo.fGroundTop;
-
-	SLineRight.ptEndLine.x = (SLineRight.ptEndLine.y - m_sCameraInfo.fGroundBottom)*SLineRight.fXderiv
-	+ SLineRight.ptEndLine.x;
-	SLineRight.ptEndLine.y = m_sCameraInfo.fGroundBottom;
-
-	m_rightGroundTracking.push_back(SLineRight);
-	if (m_rightGroundTracking.size() > MOVING_AVERAGE_NUM){
-	m_iterGroundRight = m_rightGroundTracking.begin();
-	m_rightGroundTracking.erase(m_iterGroundLeft);
-	}
-
-	}
-	}*/
 }
 void CMultiROILaneDetection::ClearDetectionResult(int nTrackingFlag){
 	m_bDraw[nTrackingFlag] = false;

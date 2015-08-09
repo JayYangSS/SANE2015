@@ -63,8 +63,8 @@ enum DB_ROAD{
 	URBAN,
 	EXPRESSWAY
 };
-#define DB_ROADINFO URBAN
-//#define DB_ROADINFO EXPRESSWAY
+//#define DB_ROADINFO URBAN
+#define DB_ROADINFO EXPRESSWAY
 
 string g_strOriginalWindow = "OriginalImg";
 
@@ -123,7 +123,12 @@ int main()
 			if (INIT_ROADINFO == EXPRESSWAY)
 			{
 				//고속도로 4월
-				strcpy(szPrescanDB_dir, "./[DB]CVLAB_Lane/Cloudy/Expressway/Straight_1/2015-04-13-14h-50m-44s_F_normal_");
+				//strcpy(szPrescanDB_dir, "./[DB]CVLAB_Lane/Cloudy/Expressway/Straight_1/2015-04-13-14h-50m-44s_F_normal_");
+				//strcpy(szPrescanDB_dir, "./[DB]SANE/backlight/expressway_backlight_april_");
+				//strcpy(szPrescanDB_dir, "./[DB]SANE/cloudy/expressway_cloudy_");
+				//strcpy(szPrescanDB_dir, "./[DB]SANE/rainy/expressway_rainy_april_");
+				//strcpy(szPrescanDB_dir, "./[DB]SANE/night/expressway_night_aplil_");
+				strcpy(szPrescanDB_dir, "./[DB]SANE/normal/expressway_normal_march_");
 			}
 		}
 		if (INIT_CV == CV2){
@@ -499,23 +504,7 @@ int main()
 	//	for(int i=0;i<testIteration;i++){
 	double dStartTickTest = (double)getTickCount();
 	obj.InitialResizeFunction(sizeResizeImg);
-	//obj.SetRoiIpmCofig(CENTER_ROI);
-	//obj.SetRoiIpmCofig(LEFT_ROI2);
-	//obj.SetRoiIpmCofig(LEFT_ROI3);
-	//obj.SetRoiIpmCofig(RIGHT_ROI2);
-	//obj.SetRoiIpmCofig(RIGHT_ROI3);
 	obj.SetRoiIpmCofig(AUTOCALIB);
-	//////////////////////////////////////////////////////////////////////////
-	//threshold(obj.m_imgIPM[1],obj.m_imgIPM[1],0.5);
-	//cvtColor(obj.m_imgIPM,obj.m_filteredThreshold,CV_GRAY2RGBA)
-	//threshold(obj.m_filteredThreshold,obj.m_filteredThreshold,125,255,THRESH_TOZERO);
-	//GaussianBlur(,,Size(3,3),1,1))
-	//Mat erode33(3,3,CV_8UC1,255);
-	//erode(erode33,erode33,erode33);
-	////dilate()
-	//boxFilter(erode33,erode33,-1,Size(3,3));
-	//Sobel(erode33,erode33,-1,3,3);
-	//////////////////////////////////////////////////////////////////////////
 	double dEndTickTest = (double)getTickCount();
 	dTickTestTotal += (dEndTickTest - dStartTickTest);
 	//	}
@@ -560,68 +549,6 @@ int main()
 
 		originImg.push_back(obj.m_imgResizeScaleGray.clone());
 		originImgClr.push_back(obj.m_imgResizeOrigin.clone());
-		//vecIpmFiltered.clear();
-		//vecIpmFiltered.push_back(obj.m_ipmFiltered[AUTOCALIB]);
-		//vecIpmArray.push_back(vecIpmFiltered[i]);
-		//double dStartTick = (double)getTickCount();
-		//CENTER_ROI
-		//obj.StartLanedetection(CENTER_ROI);
-
-		//LEFT_ROI2
-		//obj.StartLanedetection(LEFT_ROI2);
-
-		//LEFT_ROI3
-		//obj.StartLanedetection(LEFT_ROI3);
-
-		//RIGHT_ROI2
-		//obj.StartLanedetection(RIGHT_ROI2);
-
-		//RIGHT_ROI3
-		//obj.StartLanedetection(RIGHT_ROI3);
-
-		//AUTOCALIB
-		//obj.StartLanedetection(AUTOCALIB);
-
-		/*double dEndTick = (double)getTickCount();
-		Point ptVanSt,ptVanEnd;
-		ptVanSt.x = 0;
-		ptVanSt.y = obj.m_sCameraInfo.ptVanishingPoint.y;
-		ptVanEnd.x = obj.m_imgResizeOrigin.cols-1;
-		ptVanEnd.y = obj.m_sCameraInfo.ptVanishingPoint.y;
-		line(obj.m_imgResizeOrigin,ptVanSt,ptVanEnd,Scalar(0,255,0),2);*/
-		//circle(obj.m_imgResizeOrigin,obj.m_sCameraInfo.ptVanishingPoint,2,Scalar(0,0,255),2,2);
-		//ShowResults(obj,CENTER_ROI);
-		//ShowResults(obj,LEFT_ROI2);
-		//ShowResults(obj,LEFT_ROI3);
-		//ShowResults(obj,RIGHT_ROI2);
-		//ShowResults(obj,RIGHT_ROI3);
-		//ShowResults(obj,AUTOCALIB);
-		//////////////////////////////////////////////////////////////////////////
-		//Auto Calibration Data Push
-		//vecIpmFiltered.push_back(obj.m_ipmFiltered[CENTER_ROI].clone());
-		//obj.PushBackResult(AUTOCALIB,vecIpmFiltered);
-
-
-
-		//result & processing time show
-		//cout<<"		processing time  "<<(dEndTick-dStartTick) / getTickFrequency()*1000.0<<" msec"<<endl;
-
-		//imshow(g_strOriginalWindow,obj.m_imgResizeOrigin);
-		//imshow("origin",obj.m_imgOrigin);
-		//printf("frame num = %04d\n",obj.m_nFrameNum);
-		//g_dTotlaTick+=(dEndTick-dStartTick);
-		/*if('q'==waitKey(1)){
-		cout<<"Program quit, Total processing time  "<<(g_dTotlaTick) / getTickFrequency()*1000.0<<" msec"<<endl;
-		exit(0);
-		}*/
-
-		/*obj.m_lanes[CENTER_ROI].clear();
-		obj.m_laneScore[CENTER_ROI].clear();
-		obj.m_lanesResult[CENTER_ROI].clear();
-
-		obj.m_lanes[LEFT_ROI3].clear();
-		obj.m_laneScore[LEFT_ROI3].clear();
-		obj.m_lanesResult[LEFT_ROI3].clear();*/
 	}
 	//show 90fr 확인용
 	for (int i = 0; i<originImg.size(); i++){
@@ -712,6 +639,7 @@ int main()
 				fout << obj.m_laneScore[AUTOCALIB][i] << "\t";
 				dCompareScore += obj.m_laneScore[AUTOCALIB][i];
 			}
+			if (obj.m_laneScore[AUTOCALIB].size()>1)//20150809추가
 			if (dCompareScore>dMaxScore){ //검출 차선이 2개일 경우라는 조건을 추가해야함 (아직 미추가)
 				dMaxScore = dCompareScore;
 				fMaxPitch = pitch;
@@ -786,7 +714,7 @@ int main()
 	imshow("origin", obj.m_imgResizeOrigin);
 	waitKey(0);
 	obj.m_lanesResult[AUTOCALIB].clear();
-
+	
 	// AUTOCALIB
 	//obj.m_sRoiInfo[AUTOCALIB].nLeft = 216 - 20;
 	//obj.m_sRoiInfo[AUTOCALIB].nRight = 433 + 20;
@@ -859,7 +787,7 @@ int main()
 
 	//[LYW_0724] : obj에 본격적으로 ROI정보 넣어주기
 	//////////////////////////////////////////////////////////////////////////
-
+	
 	//LEFT_ROI2
 	obj.m_sRoiInfo[LEFT_ROI2].nLeft = rectLeftTop.x - rectLeftTop.width / 2;
 	obj.m_sRoiInfo[LEFT_ROI2].nRight = rectLeftTop.x + rectLeftTop.width / 2;
@@ -978,47 +906,14 @@ int main()
 	obj.m_bDraw[0] = false;
 	obj.m_bDraw[1] = false;
 	//tracking 모듈 초기화
-
+	//////////////////////////////////////////////////////////////////////////
+	//20150809_역광에서 오토캘리브 안되기 때문에 클라우드에서 오토캘리브 한 뒤 역광 디비 불러와서 평가 해야 함
+//	strcpy(obj.m_sPreScanDB.szDataDir, "./[DB]SANE/backlight/expressway_backlight_april_");
+	//////////////////////////////////////////////////////////////////////////
 	int jMax = 5;
 	if (DB_NUM == PRESCAN || DB_ROADINFO == EXPRESSWAY){
 		jMax = 0;
 	}
-
-
-	for (int j = 0; j <= jMax; j++){
-		char szEnvironment[20];
-		if (j == 10){
-			strcpy(szEnvironment, "Purity, Urban road");
-			strcpy(szTestDir, "./[DB]FreeScaleDemo/Purity/Urban/Straight_1/2015-04-13-09h-07m-32s_F_normal_");  // PUS 평가 완료
-		}
-		else if (j == 1){
-			strcpy(szEnvironment, "Cloudy, Urban road");
-			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_1/2015-04-13-14h-20m-45s_straight_");
-			strcpy(szTestDir, "./[DB]FreeScaleDemo/Cloudy/Urban/Straight_2/2015-04-13-14h-20m-45s_straight_2_");  // for demo
-			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_3/2015-04-13-14h-20m-45s_straight_3_");		// CUS 평가 완료
-			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_4/2015-04-13-14h-20m-45s_straight_4_");
-		}
-		else if (j == 2){
-			strcpy(szEnvironment, "BackLight, Urban road");
-			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/BackLight/Urban/Straight_1/2015-03-02-09h-40-00s_");//3월 //평가불가
-			strcpy(szTestDir, "./[DB]FreeScaleDemo/BackLight/Urban/Straight_2/2015-04-23-09h-17m-10s_F_event_");//4월		// BUS 평가 완료
-		}
-		else if (j == 3){
-			strcpy(szEnvironment, "Night, Urban road");
-			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Night/Urban/Straight_1/2015-04-17-20h-26m-47s_night_straight_1_");	// NUS1 평가 완료
-			strcpy(szTestDir, "./[DB]FreeScaleDemo/Night/Urban/Straight_2/2015-04-17-20h-29m-51s_night_straight_2_");		// NUS2 평가 완료
-		}
-		else if (j == 4){
-			strcpy(szEnvironment, "Rainy, Urban road");
-			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Rainy/Urban/Straight_1/2015-04-13-17h-37m-00s_");		// RUS 평가 완료
-			strcpy(szTestDir, "./[DB]FreeScaleDemo/Rainy/Urban/Straight_2/2015-04-13-18h-43m-00s_");		// RUS 평가 완료
-		}
-		else if (j == 5){
-			strcpy(szEnvironment, "Rainy, Urban road");
-			strcpy(szTestDir, "./[DB]FreeScaleDemo/Rainy/Urban/Straight_3/2015-04-13-17h-37m-00s_");		// RUS 평가 완료
-		}
-		strcpy(obj.m_sPreScanDB.szDataDir, szTestDir);
-		if (j != 2)
 		for (int i = FIRSTFRAMENUM;; i++){
 			/*obj.m_imgResizeScaleGray = originImg[i];
 			obj.m_imgResizeOrigin = originImgClr[i];*/
@@ -1044,7 +939,6 @@ int main()
 
 			//Clear result Uv Coordinate
 
-			////tkm before
 			//tracking module
 			obj.m_sTrakingLane[0].ptUvStartLine.x = EMPTY;
 			obj.m_sTrakingLane[1].ptUvStartLine.x = EMPTY;
@@ -1216,8 +1110,7 @@ int main()
 
 			////////////////////////////////////////////////////////////////////////////
 
-			putText(obj.m_imgResizeOrigin, szEnvironment, Point(10, 50),
-				FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 255), 2, 8, false);
+	
 
 
 			stringstream ssTime;
@@ -1248,7 +1141,6 @@ int main()
 		obj.ClearDetectionResult(1);
 
 
-	}
 	cout << "Average processing time  : " << d_totalProcessTime / nCntProcess << endl;
 	/*cout << "Total Frames : " << structEvaluation.nTotalFrame << endl;
 	cout << "Left Evaluation" << endl;
