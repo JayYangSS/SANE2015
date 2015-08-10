@@ -63,7 +63,6 @@ int StixelEstimation_img(Mat& imgDispRm, stixel_t* objStixels)
 			objStixels[u].nHeight = 0;
 		}
 		else StixelEstimation_col(imgDispRm, u, objStixels[u]);
-
 	}
 	return 0;
 }
