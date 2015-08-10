@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PD_Console", "PD_Console\PD_Console.vcxproj", "{F5DD3F08-38B3-457C-9E0F-3E1F5FEF2103}"
 EndProject
@@ -224,47 +224,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "opencv249_inc", "opencv249_
 		opencv249\include\opencv2\stitching\warpers.hpp = opencv249\include\opencv2\stitching\warpers.hpp
 		opencv249\include\opencv2\stitching\detail\warpers_inl.hpp = opencv249\include\opencv2\stitching\detail\warpers_inl.hpp
 		opencv249\include\opencv2\core\wimage.hpp = opencv249\include\opencv2\core\wimage.hpp
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "opencv249_bin", "opencv249_bin", "{7CF2C3E9-4984-4B12-83FF-7F82AB1068B3}"
-	ProjectSection(SolutionItems) = preProject
-		Release\opencv_calib3d249.dll = Release\opencv_calib3d249.dll
-		Debug\opencv_calib3d249d.dll = Debug\opencv_calib3d249d.dll
-		Release\opencv_contrib249.dll = Release\opencv_contrib249.dll
-		Debug\opencv_contrib249d.dll = Debug\opencv_contrib249d.dll
-		Release\opencv_core249.dll = Release\opencv_core249.dll
-		Debug\opencv_core249d.dll = Debug\opencv_core249d.dll
-		Release\opencv_features2d249.dll = Release\opencv_features2d249.dll
-		Debug\opencv_features2d249d.dll = Debug\opencv_features2d249d.dll
-		Release\opencv_ffmpeg249.dll = Release\opencv_ffmpeg249.dll
-		Release\opencv_flann249.dll = Release\opencv_flann249.dll
-		Debug\opencv_flann249d.dll = Debug\opencv_flann249d.dll
-		Release\opencv_gpu249.dll = Release\opencv_gpu249.dll
-		Debug\opencv_gpu249d.dll = Debug\opencv_gpu249d.dll
-		Release\opencv_highgui249.dll = Release\opencv_highgui249.dll
-		Debug\opencv_highgui249d.dll = Debug\opencv_highgui249d.dll
-		Release\opencv_imgproc249.dll = Release\opencv_imgproc249.dll
-		Debug\opencv_imgproc249d.dll = Debug\opencv_imgproc249d.dll
-		Release\opencv_legacy249.dll = Release\opencv_legacy249.dll
-		Debug\opencv_legacy249d.dll = Debug\opencv_legacy249d.dll
-		Release\opencv_ml249.dll = Release\opencv_ml249.dll
-		Debug\opencv_ml249d.dll = Debug\opencv_ml249d.dll
-		Release\opencv_nonfree249.dll = Release\opencv_nonfree249.dll
-		Debug\opencv_nonfree249d.dll = Debug\opencv_nonfree249d.dll
-		Release\opencv_objdetect249.dll = Release\opencv_objdetect249.dll
-		Debug\opencv_objdetect249d.dll = Debug\opencv_objdetect249d.dll
-		Release\opencv_ocl249.dll = Release\opencv_ocl249.dll
-		Debug\opencv_ocl249d.dll = Debug\opencv_ocl249d.dll
-		Release\opencv_photo249.dll = Release\opencv_photo249.dll
-		Debug\opencv_photo249d.dll = Debug\opencv_photo249d.dll
-		Release\opencv_stitching249.dll = Release\opencv_stitching249.dll
-		Debug\opencv_stitching249d.dll = Debug\opencv_stitching249d.dll
-		Release\opencv_superres249.dll = Release\opencv_superres249.dll
-		Debug\opencv_superres249d.dll = Debug\opencv_superres249d.dll
-		Release\opencv_video249.dll = Release\opencv_video249.dll
-		Debug\opencv_video249d.dll = Debug\opencv_video249d.dll
-		Release\opencv_videostab249.dll = Release\opencv_videostab249.dll
-		Debug\opencv_videostab249d.dll = Debug\opencv_videostab249d.dll
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Stereo_PostProcess_Console", "Stereo_PostProcess_Console\Stereo_PostProcess_Console.vcxproj", "{5BFB3923-7DCD-4767-A1F5-84189DE4400F}"
