@@ -147,7 +147,3 @@ struct SDetector
 		double nChns;
 	};
 };
-
-void LoadDetector(string strFileName, SDetector& detector);
-Rect_<int> acfDetect(Mat& img, SDetector detector);
-void chnsPyramid(Mat& img, SDetector::opts::pPyramid pyramid);
