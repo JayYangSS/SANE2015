@@ -18,8 +18,54 @@
 #define BASELINE 0.25		//unit : meter
 #define FOCAL_LENGTH 1200	//unit : pixel
 
+#define WIDTH 640
+#define HEIGHT 480
+
 using namespace cv;
 using namespace std;
+
+struct stixel_t
+{
+	int nGround;
+	int nHeight;
+	uchar chDistance;
+	stixel_t(){
+		nGround = -1;
+		nHeight = -1;
+		chDistance = 0;
+	}
+};
+
+int StixelEstimation_col(Mat& imgDispRm, int col, stixel_t& objStixel)
+{
+	int nIter = imgDispRm.rows / 2;
+	uchar chDisp;
+
+	for (int v = 1; v < nIter; v++){
+		chDisp = imgDispRm.at<uchar>(imgDispRm.rows - v, col);
+		
+		if (imgDispRm.at<uchar>(v, col)>0 && objStixel.nHeight == -1){ objStixel.nHeight = v; nIter = imgDispRm.rows - v; }
+		if (chDisp > 0 && objStixel.nGround == -1){
+			objStixel.nGround = imgDispRm.rows - v;
+			objStixel.chDistance = chDisp; // 2015.08.11 have to fix
+			nIter = imgDispRm.rows - v;
+		}
+	}
+	//cout << col << " : " << objStixel.nGround << ", " << objStixel.nHeight << endl;
+	return 0;
+}
+int StixelEstimation_img(Mat& imgDispRm, stixel_t* objStixels)
+{
+	for (int u = 0; u < imgDispRm.cols; u++){
+		if (u < 30) { 
+			objStixels[u].chDistance =  0;
+			objStixels[u].nGround = 0;
+			objStixels[u].nHeight = 0;
+		}
+		else StixelEstimation_col(imgDispRm, u, objStixels[u]);
+	}
+	return 0;
+}
 
 // calcul the disparity map between two images
 Mat calculDisp(Mat im1, Mat im2){
@@ -212,12 +258,17 @@ int main()
 	dtime = t * 1000 / getTickFrequency();
 	printf("fitRansac Time elapsed: %fms\n", dtime);
 	
-	Mat imgDispfilter3 = FilterHeight3m(-3.042016, 248.22857, dispFiltered2);
+	Mat imgDispfilter3 = FilterHeight3m(-3.042016, 248.22857, dispFiltered2);// 1m
 	imshow("remove sky", imgDispfilter3);
 
-	Mat imgSobel;
+	stixel_t objStixels[WIDTH];
+	StixelEstimation_img(imgDispfilter3, objStixels);
+	//cout << objStixels << endl;
+
+	/*Mat imgSobel;
 	Sobel(imgDispfilter3, imgSobel, -1, 0, 2);
 	imshow("sobel", imgSobel);
+	imwrite("sobel.bmp", imgSobel);*/
 
 	threshold(dispFiltered2, dispFiltered2, 1, 255, CV_THRESH_BINARY);
 	Mat imgFiltered;
