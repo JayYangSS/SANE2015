@@ -15,24 +15,27 @@
 
 #include "tp_util.h"
 
+#define BASELINE 0.25		//unit : meter
+#define FOCAL_LENGTH 1200	//unit : pixel
+
 using namespace cv;
 using namespace std;
 
-//2.1 calcul the disparity map between two images
+// calcul the disparity map between two images
 Mat calculDisp(Mat im1, Mat im2){
 	Mat disp, disp8;
-	cv::StereoSGBM sgbm(0, 32, 7, 8 * 7 * 7, 32 * 7 * 7, 2, 0, 5, 100, 32, true);
+	StereoSGBM sgbm (0, 48, 5, 8 * 5 * 5, 32 * 5 * 5, 1, 0, 5, 100, 32, false);
+	//sgbm = StereoSGBM(0, 32, 5, 8 * 5 * 5, 8 * 5 * 5, 1, 5, 10, 9, 4, false);
 	sgbm(im1, im2, disp);
-	disp.convertTo(disp8, CV_8U);
+	//disp.convertTo(disp8, CV_8U);
 	return disp;
 }
 
-
-//2.2 Computation of the 3D coordinates and remove all the pixels with a Z coodinate higher or lower than a threshold
+// Computation of the 3D coordinates and remove all the pixels with a Z coodinate higher or lower than a threshold
 Mat compute3DAndRemove(Mat disp){
 	Mat res(disp.rows, disp.cols, CV_8U, Scalar(0));
 	float thresMax = 2.5;
-	float thresMin = 0.2;
+	float thresMin = -0.6;
 	//float u0 = 258; //unused here
 	float v0 = 156;
 	float au = 410;
@@ -56,36 +59,37 @@ Mat compute3DAndRemove(Mat disp){
 	return res;
 }
 
-//2.3.1 Compute the v-disparity image histogram of disparity matrix
+// Compute the v-disparity image histogram of disparity matrix
 Mat computeVDisparity(Mat img){
-	int maxDisp = 32;
+	int maxDisp = 255;
 	Mat vDisp(img.rows, maxDisp, CV_8U, Scalar(0));
 	for (int u = 0; u<img.rows; u++){
+		if (u < 200) continue; // we are finding ground. therefore we check pixels below vanishing point 
 		for (int v = 0; v<img.cols; v++){
-			int disp = (img.at<unsigned char>(u, v)) / 8;
+			int disp = (img.at<uchar>(u, v));// / 8;
 			//if(disp>0 && disp < maxDisp){
 			if (disp>6 && disp < maxDisp - 2){ //We remove pixels of sky and car to compute the roadline
 				vDisp.at<unsigned char>(u, disp) += 1;
-			}
+			} 
 		}
 	}
 	return vDisp;
 }
 
-//2.3.3 Removing noise from v disparity map
+// Removing noise from v disparity map
 Mat removeNoise(Mat img){
 	Mat res = img.clone();
-	int thresh = 30;
+	int thresh = 50;
 	//threshold( src_gray, dst, threshold_value, max_BINARY_value,threshold_type );
 	threshold(img, res, thresh, 255, 3); // 255 > max binary value, 4 > zero inverted (to 0 under thresh)
 	return res;
 }
 
-//3.3.3 Storing pixel of a map into an std::vector
+// Storing pixel of a map into an std::vector
 std::vector<Point2f> storeRemainingPoint(Mat img){
 	std::vector<Point2f> res;
 	res.clear();
-	for (int u = 0; u<img.rows; u++){
+	for (int u = 200; u<img.rows; u++){
 		for (int v = 0; v<img.cols; v++){
 			int value = img.at<unsigned char>(u, v);
 			if (value > 0){
@@ -95,25 +99,46 @@ std::vector<Point2f> storeRemainingPoint(Mat img){
 	}
 	return res;
 }
-
-
-Mat filterRansac(Vec4f line, Mat img){
-	Mat res(img.rows, img.cols, CV_8U, Scalar(0));
+Mat filterRansac(Vec4f line, Mat& img){
+	//Mat res(img.rows, img.cols, CV_8U, Scalar(0));
 	double slope = line[0] / line[1];
 	double orig = line[2] - slope*line[3];
-	for (int u = 0; u<img.rows; u++){
+	printf("v=%lf * d + %lf\n", slope, orig);
+	//slope = -0.7531;
+	//orig = 200.;
+	for (int u = 200; u<img.rows; u++){
 		for (int v = 0; v<img.cols; v++){
 			int value = img.at<unsigned char>(u, v);
-			double test = orig + slope*value / 16 - u;
-			if (abs(test) < 30){
-				res.at<unsigned char>(u, v) = value;
+			double test = orig + slope*value - u;
+			if (test > 10){
+				img.at<unsigned char>(u, v) = value;
+				//res.at<unsigned char>(u, v) = value;
 			}
 			else{
-				res.at<unsigned char>(u, v) = 0;
+				img.at<unsigned char>(u, v) = 0;
+				//res.at<unsigned char>(u, v) = 0;
 			}
 		}
 	}
-	return res;
+	return img;
+}
+Mat FilterHeight3m(double slope, double orig, Mat& img)
+{
+	for (int u = 0; u<img.rows; u++){
+		for (int v = 0; v<img.cols; v++){
+			int value = img.at<unsigned char>(u, v);
+			//double test = orig + slope*value - u;
+			if (u > (orig+slope*value)){
+				img.at<unsigned char>(u, v) = value;
+				//res.at<unsigned char>(u, v) = value;
+			}
+			else{
+				img.at<unsigned char>(u, v) = 0;
+				//res.at<unsigned char>(u, v) = 0;
+			}
+		}
+	}
+	return img;
 }
 
 int main()
@@ -121,80 +146,114 @@ int main()
 	// Open image from input file in grayscale
 	Mat img1 = imread("Left_923730u.pgm", 0);
 	Mat img2 = imread("Right_923730u.pgm", 0);
-	//2.1.1 Displaying left and right loaded imgs
-	//imshow("left image", img1);
+	// Displaying left and right loaded imgs
+	imshow("left image", img1);
 	//imshow("right image", img2);
 	double dtime = 0;
 	int64 t = getTickCount();
-	// 2.1.2 Disparity map between the two images using SGBM
+	// Disparity map between the two images using SGBM
 	Mat disp, disp8;
 	disp = calculDisp(img1, img2);
-	disp.convertTo(disp8, CV_8U);
-	imshow("diparity map (2.1.2)", disp8);
+	disp.convertTo(disp8, CV_8U, 255 / (48*16.));
+	imshow("diparity map", disp8);
 
-	//2.2.1, 2.2.2 remove the road (z<0.2m) and upper pixels(z>2.5m)
-	Mat dispFiltered = compute3DAndRemove(disp8);
-	imshow("Disparity map with height filter (2.2.2)", dispFiltered);
+	t = getTickCount() - t;
+	dtime = t * 1000 / getTickFrequency();
+	printf("disparity Time elapsed: %fms\n", dtime);
 
-	//2.3.1 Compute VDisparity
-	Mat vDispNoisy = computeVDisparity(disp);
-	imshow("VDisparity method (2.3.1)", vDispNoisy);
+	
+	t = getTickCount();
+	//Mat dispFiltered = compute3DAndRemove(disp8);
+	//imshow("Disparity map with height filter (2.2.2)", dispFiltered);
 
-	//2.3.2 manually computation of ho & po :
+	t = getTickCount() - t;
+	dtime = t * 1000 / getTickFrequency();
+	printf("3D remove Time elapsed: %fms\n", dtime);
+
+	// Compute VDisparity
+	t = getTickCount();
+	Mat vDispNoisy = computeVDisparity(disp8);
+	
+	imshow("VDisparity method", vDispNoisy);
+
+	t = getTickCount() - t;
+	dtime = t * 1000 / getTickFrequency();
+	printf("Vdisparity Time elapsed: %fms\n", dtime);
+	
+
 	/* We measure a line y = 3.36x +143,56
 	* where y is the heigh in pixel image and x the luminosity between 0 and 32 of disparity map
 	* The luminosity depends on the depth x=32 -> depth = 0 and x=0 -> depth = +infiny
 	* But this correlation is not linear and the y is not linked with y in real world
 	* so computing the height of road and it's slope seems difficult there..
 	*/
-
-	//2.3.3 Removing noise from v disparity map
+	t = getTickCount();
+	//Removing noise from v disparity map
 	Mat vDisp = removeNoise(vDispNoisy);
-	imshow("VDisparity map no noise (2.3.3)", vDisp);
-
-	//2.3.3 extracting the remaining points and removing the floor
-	std::vector<Point2f> tempVec = storeRemainingPoint(vDisp);
-	Vec4f roadLine;
-	fitLineRansac(tempVec, roadLine);
-	std::cout << "2.3.3, road line : " << roadLine << std::endl;
-	//2.3.4 removing pixels under the road according to the line of the road
-	Mat dispFiltered2 = filterRansac(roadLine, disp8);
-	imshow("Final Disparity filtered (2.3.4)", dispFiltered2);
-
-	Mat morph1, morph2;
-	//2.4.1 morphological erosion and dilatation :
-	int transf_type;
-	//transf_type = MORPH_RECT;
-	//transf_type = MORPH_CROSS;
-	transf_type = MORPH_ELLIPSE;
-	int transf_size = 8;
-
-	Mat element = getStructuringElement(transf_type,
-		Size(2 * transf_size + 1, 2 * transf_size + 1),
-		Point(transf_size, transf_size));
-	erode(dispFiltered, morph1, element);
-	//imshow("Erosion disparity (2.4.1)", morph1);
-	dilate(morph1, morph2, element);
-	imshow("Eroded then dilated disparity1 (2.4.1)", morph2);
-
-	Mat morph3, morph4;
-	erode(dispFiltered2, morph3, element);
-	//imshow("Erosion disparity (2.4.1)", morph3);
-	dilate(morph3, morph4, element);
-	imshow("Eroded then dilated disparity2 (2.4.1)", morph4);
-
-
-	//2.4.2 extraction of components using segmentDisparity
-	Mat segmentedDisparity;
-	segmentDisparity(morph2, segmentedDisparity);
-	//résultas un peu louches ici puisque les pincipaux obstacles sont enlevés...
-	//Les cluster paraissaient plus évident sur l'image erodée et dilatée.
-	//Aussi, on est censé avoir 1 couleur par objet ce qui n'est pas du tout le cas.
-	imshow("Segmented disparity1 (2.4.2)", segmentedDisparity * 16);
-
+	imshow("VDisparity map no noise", vDisp);
 	t = getTickCount() - t;
 	dtime = t * 1000 / getTickFrequency();
-	printf("image , Time elapsed: %fms\n", dtime);
+	printf("Vdisparity-remove noise Time elapsed: %fms\n", dtime);
+	//if (waitKey(0) == 27) return 0;
+	imwrite("vdisparity.bmp", vDisp);
+
+	t = getTickCount();
+	// extracting the remaining points and removing the floor
+	std::vector<Point2f> tempVec = storeRemainingPoint(vDisp);
+	//cout << tempVec << endl;
+	Vec4f roadLine;
+	fitLineRansac(tempVec, roadLine);
+	//roadLine = Vec4f(100, 100, 340, 100);
+	std::cout << "road line : " << roadLine << std::endl;
+	// removing pixels under the road according to the line of the road
+	Mat dispFiltered2 = filterRansac(roadLine, disp8);
+	imshow("Final Disparity filtered", dispFiltered2);
+	t = getTickCount() - t;
+	dtime = t * 1000 / getTickFrequency();
+	printf("fitRansac Time elapsed: %fms\n", dtime);
+	
+	Mat imgDispfilter3 = FilterHeight3m(-3.042016, 248.22857, dispFiltered2);
+	imshow("remove sky", imgDispfilter3);
+
+	Mat imgSobel;
+	Sobel(imgDispfilter3, imgSobel, -1, 0, 2);
+	imshow("sobel", imgSobel);
+
+	threshold(dispFiltered2, dispFiltered2, 1, 255, CV_THRESH_BINARY);
+	Mat imgFiltered;
+	bitwise_and(dispFiltered2, img1, imgFiltered);
+	
+	imshow("ground remove", imgFiltered);
+	if (waitKey(0) == 27) return 0;
+
+	//Mat morph1, morph2;
+	//// morphological erosion and dilatation :
+	//int transf_type;
+	////transf_type = MORPH_RECT;
+	////transf_type = MORPH_CROSS;
+	//transf_type = MORPH_ELLIPSE;
+	//int transf_size = 8;
+
+	//Mat element = getStructuringElement(transf_type,
+	//	Size(2 * transf_size + 1, 2 * transf_size + 1),
+	//	Point(transf_size, transf_size));
+	//erode(dispFiltered, morph1, element);
+	//dilate(morph1, morph2, element);
+	
+
+	//Mat morph3, morph4;
+	//erode(dispFiltered2, morph3, element);
+	//dilate(morph3, morph4, element);
+
+
+	//// extraction of components using segmentDisparity
+	//Mat segmentedDisparity;
+	//segmentDisparity(morph2, segmentedDisparity);
+	//imshow("Segmented disparity1", segmentedDisparity * 16);
+
+	//t = getTickCount() - t;
+	//dtime = t * 1000 / getTickFrequency();
+	//printf("image , Time elapsed: %fms\n", dtime);
 
 	// Display images and wait for a key press
 	waitKey();
