@@ -105,6 +105,7 @@ void cvtPseudoColorImage(Mat srcGray, Mat& dstColor)
 		for (int j = 0; j<srcGray.cols; j++)
 		{
 			unsigned char val = srcGray.data[i*srcGray.cols + j];
+			if (val == 0) continue;
 			dstColor.data[(i*srcGray.cols + j) * 3 + 0] = g_pseudoColorLUT[val][0];
 			dstColor.data[(i*srcGray.cols + j) * 3 + 1] = g_pseudoColorLUT[val][1];
 			dstColor.data[(i*srcGray.cols + j) * 3 + 2] = g_pseudoColorLUT[val][2];
@@ -142,7 +143,7 @@ int StixelEstimation_col(Mat& imgDispRm, int col, stixel_t& objStixel)
 		
 		if (imgDispRm.at<uchar>(v, col)>0 && objStixel.nHeight == -1){ objStixel.nHeight = v; nIter = imgDispRm.rows - v; }
 		if (chDisp > 0 && objStixel.nGround == -1){
-			objStixel.nGround = imgDispRm.rows - v;
+			objStixel.nGround = imgDispRm.rows - v +10; //10 is manually
 			objStixel.chDistance = chDisp; // 2015.08.11 have to fix
 			nIter = imgDispRm.rows - v;
 		}
@@ -153,7 +154,7 @@ int StixelEstimation_col(Mat& imgDispRm, int col, stixel_t& objStixel)
 int StixelEstimation_img(Mat& imgDispRm, stixel_t* objStixels)
 {
 	for (int u = 0; u < imgDispRm.cols; u++){
-		if (u < 30) { 
+		if (u < 30) { //manually
 			objStixels[u].chDistance =  0;
 			objStixels[u].nGround = 0;
 			objStixels[u].nHeight = 0;
@@ -252,7 +253,7 @@ Mat filterRansac(Vec4f line, Mat& img){
 		for (int v = 0; v<img.cols; v++){
 			int value = img.at<unsigned char>(u, v);
 			double test = orig + slope*value - u;
-			if (test > 10){
+			if (test > 15){
 				img.at<unsigned char>(u, v) = value;
 				//res.at<unsigned char>(u, v) = value;
 			}
@@ -374,7 +375,7 @@ int main()
 	if (waitKey(0) == 27) return 0;
 	//return 0;
 
-	Mat imgDispfilter3 = FilterHeight3m(-3.042016, 248.22857, dispFiltered2);// 1m
+	Mat imgDispfilter3 = FilterHeight3m(-1.842016, 220.22857, dispFiltered2);// 1m
 	imshow("remove sky", imgDispfilter3);
 
 	stixel_t objStixels[WIDTH];
@@ -397,10 +398,9 @@ int main()
 	DrawStixel_gray(imgFiltered, objStixels);
 	//imshow("n", imgFiltered);
 	cvtPseudoColorImage(imgFiltered, imgMask);
-	addWeighted(imgColorDisp, 0.5, imgMask, 0.5, 0.0, imgColorDisp);
+	addWeighted(imgtemp, 0.5, imgMask, 0.5, 0.0, imgColorDisp);
 	imshow("color", imgColorDisp);
 	
-
 	//imshow("ground remove", imgFiltered);
 	if (waitKey(0) == 27) return 0;
 
