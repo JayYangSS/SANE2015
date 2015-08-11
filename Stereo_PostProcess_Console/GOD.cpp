@@ -36,6 +36,16 @@ struct stixel_t
 	}
 };
 
+int DrawStixel(Mat& imgColorDisp, stixel_t* objStixels){
+	for (int u = 0; u < imgColorDisp.cols; u++){
+		line(imgColorDisp,
+			Point(u, objStixels[u].nGround),
+			Point(u, objStixels[u].nHeight),
+			Scalar(0, 255 - objStixels[u].chDistance, objStixels[u].chDistance));
+	}
+	return 0;
+}
+
 int StixelEstimation_col(Mat& imgDispRm, int col, stixel_t& objStixel)
 {
 	int nIter = imgDispRm.rows / 2;
@@ -257,7 +267,9 @@ int main()
 	t = getTickCount() - t;
 	dtime = t * 1000 / getTickFrequency();
 	printf("fitRansac Time elapsed: %fms\n", dtime);
-	
+	if (waitKey(0) == 27) return 0;
+	//return 0;
+
 	Mat imgDispfilter3 = FilterHeight3m(-3.042016, 248.22857, dispFiltered2);// 1m
 	imshow("remove sky", imgDispfilter3);
 
@@ -273,8 +285,16 @@ int main()
 	threshold(dispFiltered2, dispFiltered2, 1, 255, CV_THRESH_BINARY);
 	Mat imgFiltered;
 	bitwise_and(dispFiltered2, img1, imgFiltered);
+
+	Mat imgColorDisp, imgMask;
+	cvtColor(imgFiltered, imgColorDisp, CV_GRAY2BGR);
+	imgMask = imgColorDisp.clone();
+	DrawStixel(imgMask, objStixels);
+	addWeighted(imgColorDisp, 0.5, imgMask, 0.5, 0.0, imgColorDisp);
+	imshow("color", imgColorDisp);
 	
-	imshow("ground remove", imgFiltered);
+
+	//imshow("ground remove", imgFiltered);
 	if (waitKey(0) == 27) return 0;
 
 	//Mat morph1, morph2;
