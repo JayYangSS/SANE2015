@@ -1,4 +1,7 @@
-//Master
+//LYW_backup_0811
+// Driving lane detection mode
+// 설명 : 다차선모드 전 모드
+
 #include "highgui.h"
 #include "cv.h"
 #include "opencv2/opencv.hpp"
@@ -26,7 +29,7 @@ using namespace std;
 
 //#define AUTOX 100
 #define AUTOX 0
-#define AUTOY 200
+#define AUTOY 200 //200
 //#define AUTOWIDTH 400
 #define AUTOWIDTH 639
 #define AUTOHEIGHT 80
@@ -63,8 +66,8 @@ enum DB_ROAD{
 	URBAN,
 	EXPRESSWAY
 };
-#define DB_ROADINFO URBAN
-//#define DB_ROADINFO EXPRESSWAY
+//#define DB_ROADINFO URBAN
+#define DB_ROADINFO EXPRESSWAY
 
 string g_strOriginalWindow = "OriginalImg";
 
@@ -121,9 +124,15 @@ int main()
 			
 			}
 			if (INIT_ROADINFO == EXPRESSWAY)
-			{
+			{             
 				//고속도로 4월
 				strcpy(szPrescanDB_dir, "./[DB]CVLAB_Lane/Cloudy/Expressway/Straight_1/2015-04-13-14h-50m-44s_F_normal_");
+				//strcpy(szPrescanDB_dir, "./[DB]CVLAB_Lane/Cloudy/Expressway/curved_lanes/f");// curved_lane
+				//strcpy(szPrescanDB_dir, "./[DB]CVLAB_Lane/Cloudy/Expressway/change_lanes/f");// change_lane
+				//strcpy(szPrescanDB_dir, "./[DB]CVLAB_Lane/Cloudy/Expressway/curved_lanes/3/f");// change_lane || 3이 가장 ROI setting good!
+				//strcpy(szPrescanDB_dir, "./[DB]CVLAB_Lane/Cloudy/Expressway/change_lanes/3/f");
+				//strcpy(szPrescanDB_dir, "./[DB]CVLAB_Lane/Cloudy/Urban/curved_lanes/3/f");
+			
 			}			
 		}
 		if (INIT_CV == CV2){
@@ -203,6 +212,12 @@ int main()
 			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Purity/Expressway/Straight_1/2015-03-07-16h-48m-15s_F_event_");		// PES 평가 완료
 			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Purity/Expressway/Departure_1/2015-03-11-15h-11m-21s_F_event_");
 			strcpy(szTestDir, "./[DB]CVLAB_Lane/Cloudy/Expressway/Straight_1/2015-04-13-14h-50m-44s_F_normal_");	// CES 평가 완료
+			//strcpy(szTestDir, "./[DB]CVLAB_Lane/Cloudy/Expressway/curved_lanes/f"); // curved_lane
+			//strcpy(szTestDir, "./[DB]CVLAB_Lane/Cloudy/Expressway/curved_lanes/3/f"); // curved_lane
+			//strcpy(szTestDir, "./[DB]CVLAB_Lane/Cloudy/Expressway/change_lanes/3/f"); // change_lane
+			//strcpy(szTestDir, "./[DB]CVLAB_Lane/Cloudy/Urban/curved_lanes/1/f"); // change_lane
+			//"./[DB]CVLAB_Lane/Cloudy/Expressway/change_lanes/f"
+			//"./[DB]CVLAB_Lane/Cloudy/Urban/change_lanes/2/f"
 			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Expressway/Departure_1/2015-04-13-14h-37m-02s_F_normal_");
 			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Backlight/Expressway/Straight_1/2015-04-16-17h-41m-50s_F_event_");
 			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Backlight/Expressway/Straight_3/2015-04-16-17h-41m-50s_F_event_");		// BES 평가 완료
@@ -1050,17 +1065,21 @@ int main()
 			//TrackingStageGround(obj, LEFT_ROI3);
 			//Left,Right 검출 결과 추적 맴버 변수로 변환
 
+			
+			
+			
+			//KTracking setting
 			obj.TrackingStageGround(LEFT_ROI2);
 			obj.TrackingStageGround(LEFT_ROI3);
 			obj.TrackingStageGround(RIGHT_ROI2);
 			obj.TrackingStageGround(RIGHT_ROI3);
 			
-			///////dddd
+			
 			////Tracking continue 판별식
 			obj.TrackingContinue();
 
 
-
+			//KTracking 계산
 			obj.KalmanTrackingStage(KALMAN_LEFT);
 			obj.KalmanTrackingStage(KALMAN_RIGHT);
 
@@ -1104,6 +1123,10 @@ int main()
 			//cout << "	Tracking time " << (dTrackingEnd - dTrackingSt) / getTickFrequency()*1000.0 << " msec" << endl;
 			d_totalProcessTime += (dEndTick - dStartTick) / getTickFrequency()*1000.0;
 			nCntProcess++;
+
+
+
+
 			//////////////////////////////////////////////////////////////////////////
 			//###########Result Draw##################################################
 
@@ -1229,9 +1252,10 @@ int main()
 			////imshow("IPM_GROUND", obj.m_imgIPM[GROUND]);
 			//ShowResults(obj,AUTOCALIB);
 			////waitKey(20);
-			char cTemp=waitKey(0);
-			if (cTemp == 'z'){
+			char cTemp=waitKey(1);
+			if (cTemp == 27){
 				i-=2;
+				break;
 			}
 		}// end of 하나의 frame에서 detection & tracking 다
 		obj.ClearDetectionResult();
@@ -1260,7 +1284,7 @@ int main()
 	cout << "TN : " << structEvaluation.LeftTN + structEvaluation.RightTN << endl;
 
 	cout << "Total Ground Truth: " << structEvaluation.nLeftGroundTruth + structEvaluation.nRightGroundTruth << endl;*/
-	waitKey(0);
+	waitKey(1);
 	///end
 	cout << "-------------------------------" << endl;
 	cout << "process END" << endl;
