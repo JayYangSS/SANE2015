@@ -24,6 +24,8 @@
 using namespace cv;
 using namespace std;
 
+unsigned char g_pseudoColorLUT[256][3]; // RGB
+
 struct stixel_t
 {
 	int nGround;
@@ -35,6 +37,81 @@ struct stixel_t
 		chDistance = 0;
 	}
 };
+/**
+@brief	make Pseudo-Color LUT (Look up table)
+@param	-
+@return	-
+*/
+void makePseudoColorLUT()
+{
+	int b = 125;
+	int g = 0;
+	int r = 0;
+
+	int idx = 0;
+
+	int mode = 0;
+	// mode = 0 : increasing 'b'
+	// mode = 1 : increasing 'g'
+	// mode = 2 : decreasing 'b'
+	// mode = 3 : increasing 'r'
+	// mode = 4 : decreasing 'g'
+	// mode = 5 : decreasing 'r'
+
+	while (1)
+	{
+		g_pseudoColorLUT[idx][0] = b;
+		g_pseudoColorLUT[idx][1] = g;
+		g_pseudoColorLUT[idx][2] = r;
+
+		if (b == 255 && g == 0 && r == 0)
+			mode = 1;
+		else if (b == 255 && g == 255 && r == 0)
+			mode = 2;
+		else if (b == 0 && g == 255 && r == 0)
+			mode = 3;
+		else if (b == 0 && g == 255 && r == 255)
+			mode = 4;
+		else if (b == 0 && g == 0 && r == 255)
+			mode = 5;
+
+		switch (mode)
+		{
+		case 0: b += 5; break;
+		case 1: g += 5; break;
+		case 2: b -= 5; break;
+		case 3: r += 5; break;
+		case 4: g -= 5; break;
+		case 5: r -= 5; break;
+		default: break;
+		}
+
+		if (idx == 255)
+			break;
+
+		idx++;
+	}
+}
+
+/**
+@brief	convert Pseudo-Color Image
+@param	srcGray: 입력 gray 영상, dstColor: 출력 color 영상
+@return	-
+*/
+void cvtPseudoColorImage(Mat srcGray, Mat& dstColor)
+{
+	for (int i = 0; i<srcGray.rows; i++)
+	{
+		for (int j = 0; j<srcGray.cols; j++)
+		{
+			unsigned char val = srcGray.data[i*srcGray.cols + j];
+			dstColor.data[(i*srcGray.cols + j) * 3 + 0] = g_pseudoColorLUT[val][0];
+			dstColor.data[(i*srcGray.cols + j) * 3 + 1] = g_pseudoColorLUT[val][1];
+			dstColor.data[(i*srcGray.cols + j) * 3 + 2] = g_pseudoColorLUT[val][2];
+		}
+	}
+}
+
 
 int DrawStixel(Mat& imgColorDisp, stixel_t* objStixels){
 	for (int u = 0; u < imgColorDisp.cols; u++){
@@ -42,6 +119,15 @@ int DrawStixel(Mat& imgColorDisp, stixel_t* objStixels){
 			Point(u, objStixels[u].nGround),
 			Point(u, objStixels[u].nHeight),
 			Scalar(0, 255 - objStixels[u].chDistance, objStixels[u].chDistance));
+	}
+	return 0;
+}
+int DrawStixel_gray(Mat& imgGrayDisp, stixel_t* objStixels){
+	for (int u = 0; u < imgGrayDisp.cols; u++){
+		line(imgGrayDisp,
+			Point(u, objStixels[u].nGround),
+			Point(u, objStixels[u].nHeight),
+			Scalar(objStixels[u].chDistance));
 	}
 	return 0;
 }
@@ -217,6 +303,24 @@ int main()
 	dtime = t * 1000 / getTickFrequency();
 	printf("disparity Time elapsed: %fms\n", dtime);
 
+	Mat imgColorDisp8;
+	cvtColor(disp8, imgColorDisp8, CV_GRAY2BGR);
+
+	makePseudoColorLUT();
+	cvtPseudoColorImage(disp8, imgColorDisp8);
+	
+	Mat imgtemp;
+	cvtColor(img1, imgtemp, CV_GRAY2BGR);
+	addWeighted(imgColorDisp8, 0.5, imgtemp, 0.5, 0.0, imgColorDisp8);
+	/*for (int v = 0; v < imgColorDisp8.rows; v++){
+		for (int u = 0; u < imgColorDisp8.cols; u++){
+			if (disp8.at<uchar>(v, u) == 0) continue;
+			imgColorDisp8.at<Vec3b>(v, u)[0] = 0;
+			imgColorDisp8.at<Vec3b>(v, u)[1] = 255 - disp8.at<uchar>(v, u);
+			imgColorDisp8.at<Vec3b>(v, u)[2] = disp8.at<uchar>(v, u);
+		}
+	}*/
+	imshow("color disp", imgColorDisp8);
 	
 	t = getTickCount();
 	//Mat dispFiltered = compute3DAndRemove(disp8);
@@ -251,7 +355,7 @@ int main()
 	dtime = t * 1000 / getTickFrequency();
 	printf("Vdisparity-remove noise Time elapsed: %fms\n", dtime);
 	//if (waitKey(0) == 27) return 0;
-	imwrite("vdisparity.bmp", vDisp);
+	//imwrite("vdisparity.bmp", vDisp);
 
 	t = getTickCount();
 	// extracting the remaining points and removing the floor
@@ -289,7 +393,10 @@ int main()
 	Mat imgColorDisp, imgMask;
 	cvtColor(imgFiltered, imgColorDisp, CV_GRAY2BGR);
 	imgMask = imgColorDisp.clone();
-	DrawStixel(imgMask, objStixels);
+	//DrawStixel(imgMask, objStixels);
+	DrawStixel_gray(imgFiltered, objStixels);
+	//imshow("n", imgFiltered);
+	cvtPseudoColorImage(imgFiltered, imgMask);
 	addWeighted(imgColorDisp, 0.5, imgMask, 0.5, 0.0, imgColorDisp);
 	imshow("color", imgColorDisp);
 	
