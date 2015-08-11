@@ -44,11 +44,16 @@ private:
 	Size m_sizeSrc;		//source image size
 	bool m_flgVideo;	//dispaly flag
 	bool m_flgDisplay;	//dispaly flag
+	Vector<Point2f> m_vecLinePoint; //v-disparity point : ground point
+	Vec4f m_vec4fLine;	//ground line
 
 	//member image
 	Mat m_matDisp16;		//16bit disparity
 	Mat m_imgGrayDisp8;		//8bit disparity image
 	Mat m_imgColorDisp8;	//8bit 3ch disparity image
+
+	//LUT
+	unsigned char m_pseudoColorLUT[256][3]; // RGB
 
 public:
 	enum { STEREO_BM = 0, STEREO_SGBM = 1 };
@@ -61,6 +66,20 @@ public:
 	void help();
 	void SetImage();
 	void SetParam();
+	
+	void MakePseudoColorLUT(); // pseudo color LUT
+	void cvtPseudoColorImage(Mat srcGray, Mat& dstColor); // input : gray image, output : color image
 
+	int CreateDisparity();//make disparity(16bit, 8bit)
+	int ComputeVDisparity();
+	int RmVDisparityNoise();
+	int StoreGroundPoint();//Vector<Point2f>
+	int FitLineRansac();
+	int filterRansac();
+	int GroundEstimation();//v-disp, line fitting, ransac warping
+	int HeightEstimation();
+	int StixelDistanceEstimation();
+
+	int CreateStixel();
 
 };
