@@ -301,7 +301,7 @@ int main()
 	//imshow("right image", img2);
 	// Disparity map between the two images using SGBM
 	
-	disp = calculDisp(img1, img2);
+	calculDisp(img1, img2, disp);
 	disp.convertTo(disp8, CV_8U, 255 / (48*16.));
 	imshow("diparity map", disp8);
 

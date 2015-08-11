@@ -69,6 +69,7 @@ public:
 	
 	void MakePseudoColorLUT(); // pseudo color LUT
 	void cvtPseudoColorImage(Mat srcGray, Mat& dstColor); // input : gray image, output : color image
+	void Display();
 
 	int CreateDisparity();//make disparity(16bit, 8bit)
 	int ComputeVDisparity();
@@ -80,6 +81,5 @@ public:
 	int HeightEstimation();
 	int StixelDistanceEstimation();
 
-	int CreateStixel();
-
+	int CreateStixels();
 };
