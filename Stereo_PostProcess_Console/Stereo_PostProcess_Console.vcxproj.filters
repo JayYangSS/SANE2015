@@ -29,5 +29,8 @@
     <ClInclude Include="tp_util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="StixelEstimation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

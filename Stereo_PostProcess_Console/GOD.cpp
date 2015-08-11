@@ -165,13 +165,14 @@ int StixelEstimation_img(Mat& imgDispRm, stixel_t* objStixels)
 }
 
 // calcul the disparity map between two images
-Mat calculDisp(Mat im1, Mat im2){
-	Mat disp, disp8;
+int calculDisp(Mat& im1, Mat& im2, Mat& imgDisp16){
+	
 	StereoSGBM sgbm (0, 48, 5, 8 * 5 * 5, 32 * 5 * 5, 1, 0, 5, 100, 32, false);
 	//sgbm = StereoSGBM(0, 32, 5, 8 * 5 * 5, 8 * 5 * 5, 1, 5, 10, 9, 4, false);
-	sgbm(im1, im2, disp);
+	
+	sgbm(im1, im2, imgDisp16);
 	//disp.convertTo(disp8, CV_8U);
-	return disp;
+	return 0;
 }
 
 // Computation of the 3D coordinates and remove all the pixels with a Z coodinate higher or lower than a threshold
@@ -242,6 +243,7 @@ std::vector<Point2f> storeRemainingPoint(Mat img){
 	}
 	return res;
 }
+
 Mat filterRansac(Vec4f line, Mat& img){
 	//Mat res(img.rows, img.cols, CV_8U, Scalar(0));
 	double slope = line[0] / line[1];
@@ -286,16 +288,19 @@ Mat FilterHeight3m(double slope, double orig, Mat& img)
 
 int main()
 {
+	double dtime = 0;
+	int64 t = getTickCount();
+
 	// Open image from input file in grayscale
 	Mat img1 = imread("Left_923730u.pgm", 0);
 	Mat img2 = imread("Right_923730u.pgm", 0);
+	Mat disp, disp8;
+
 	// Displaying left and right loaded imgs
 	imshow("left image", img1);
 	//imshow("right image", img2);
-	double dtime = 0;
-	int64 t = getTickCount();
 	// Disparity map between the two images using SGBM
-	Mat disp, disp8;
+	
 	disp = calculDisp(img1, img2);
 	disp.convertTo(disp8, CV_8U, 255 / (48*16.));
 	imshow("diparity map", disp8);
