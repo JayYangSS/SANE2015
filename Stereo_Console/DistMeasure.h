@@ -55,7 +55,6 @@ public:
 	//output
 	vector<double> m_vecdDistance;
 
-
 	//funtion
 	CDistMeasure();
 	void help();
