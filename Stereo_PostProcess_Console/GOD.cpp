@@ -347,11 +347,10 @@ int main()
 	printf("Vdisparity Time elapsed: %fms\n", dtime);
 	
 
-	/* We measure a line y = 3.36x +143,56
-	* where y is the heigh in pixel image and x the luminosity between 0 and 32 of disparity map
-	* The luminosity depends on the depth x=32 -> depth = 0 and x=0 -> depth = +infiny
+	/* We measure a line y = (?) d + (?)
+	* where y is the heigh in pixel image and d the luminosity between 0 and 255 of disparity map(disp8)
+	* The luminosity depends on the depth x=255 -> depth = 0 and x=0 -> depth = +infiny
 	* But this correlation is not linear and the y is not linked with y in real world
-	* so computing the height of road and it's slope seems difficult there..
 	*/
 	t = getTickCount();
 	//Removing noise from v disparity map
