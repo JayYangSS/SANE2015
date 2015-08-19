@@ -24,6 +24,8 @@
 using namespace cv;
 using namespace std;
 
+unsigned char g_pseudoColorLUT[256][3]; // RGB
+
 struct stixel_t
 {
 	int nGround;
@@ -35,6 +37,101 @@ struct stixel_t
 		chDistance = 0;
 	}
 };
+/**
+@brief	make Pseudo-Color LUT (Look up table)
+@param	-
+@return	-
+*/
+void makePseudoColorLUT()
+{
+	int b = 125;
+	int g = 0;
+	int r = 0;
+
+	int idx = 0;
+
+	int mode = 0;
+	// mode = 0 : increasing 'b'
+	// mode = 1 : increasing 'g'
+	// mode = 2 : decreasing 'b'
+	// mode = 3 : increasing 'r'
+	// mode = 4 : decreasing 'g'
+	// mode = 5 : decreasing 'r'
+
+	while (1)
+	{
+		g_pseudoColorLUT[idx][0] = b;
+		g_pseudoColorLUT[idx][1] = g;
+		g_pseudoColorLUT[idx][2] = r;
+
+		if (b == 255 && g == 0 && r == 0)
+			mode = 1;
+		else if (b == 255 && g == 255 && r == 0)
+			mode = 2;
+		else if (b == 0 && g == 255 && r == 0)
+			mode = 3;
+		else if (b == 0 && g == 255 && r == 255)
+			mode = 4;
+		else if (b == 0 && g == 0 && r == 255)
+			mode = 5;
+
+		switch (mode)
+		{
+		case 0: b += 5; break;
+		case 1: g += 5; break;
+		case 2: b -= 5; break;
+		case 3: r += 5; break;
+		case 4: g -= 5; break;
+		case 5: r -= 5; break;
+		default: break;
+		}
+
+		if (idx == 255)
+			break;
+
+		idx++;
+	}
+}
+
+/**
+@brief	convert Pseudo-Color Image
+@param	srcGray: 입력 gray 영상, dstColor: 출력 color 영상
+@return	-
+*/
+void cvtPseudoColorImage(Mat srcGray, Mat& dstColor)
+{
+	for (int i = 0; i<srcGray.rows; i++)
+	{
+		for (int j = 0; j<srcGray.cols; j++)
+		{
+			unsigned char val = srcGray.data[i*srcGray.cols + j];
+			if (val == 0) continue;
+			dstColor.data[(i*srcGray.cols + j) * 3 + 0] = g_pseudoColorLUT[val][0];
+			dstColor.data[(i*srcGray.cols + j) * 3 + 1] = g_pseudoColorLUT[val][1];
+			dstColor.data[(i*srcGray.cols + j) * 3 + 2] = g_pseudoColorLUT[val][2];
+		}
+	}
+}
+
+
+int DrawStixel(Mat& imgColorDisp, stixel_t* objStixels){
+	for (int u = 0; u < imgColorDisp.cols; u++){
+		line(imgColorDisp,
+			Point(u, objStixels[u].nGround),
+			Point(u, objStixels[u].nHeight),
+			Scalar(0, 255 - objStixels[u].chDistance, objStixels[u].chDistance));
+	}
+	return 0;
+}
+int DrawStixel_gray(Mat& imgGrayDisp, stixel_t* objStixels){
+	for (int u = 0; u < imgGrayDisp.cols; u++){
+		line(imgGrayDisp,
+			Point(u, objStixels[u].nGround),
+			Point(u, objStixels[u].nHeight),
+			Scalar(objStixels[u].chDistance));
+	}
+	return 0;
+}
 
 int StixelEstimation_col(Mat& imgDispRm, int col, stixel_t& objStixel)
 {
@@ -46,7 +143,7 @@ int StixelEstimation_col(Mat& imgDispRm, int col, stixel_t& objStixel)
 		
 		if (imgDispRm.at<uchar>(v, col)>0 && objStixel.nHeight == -1){ objStixel.nHeight = v; nIter = imgDispRm.rows - v; }
 		if (chDisp > 0 && objStixel.nGround == -1){
-			objStixel.nGround = imgDispRm.rows - v;
+			objStixel.nGround = imgDispRm.rows - v +10; //10 is manually
 			objStixel.chDistance = chDisp; // 2015.08.11 have to fix
 			nIter = imgDispRm.rows - v;
 		}
@@ -57,7 +154,7 @@ int StixelEstimation_col(Mat& imgDispRm, int col, stixel_t& objStixel)
 int StixelEstimation_img(Mat& imgDispRm, stixel_t* objStixels)
 {
 	for (int u = 0; u < imgDispRm.cols; u++){
-		if (u < 30) { 
+		if (u < 30) { //manually
 			objStixels[u].chDistance =  0;
 			objStixels[u].nGround = 0;
 			objStixels[u].nHeight = 0;
@@ -68,13 +165,14 @@ int StixelEstimation_img(Mat& imgDispRm, stixel_t* objStixels)
 }
 
 // calcul the disparity map between two images
-Mat calculDisp(Mat im1, Mat im2){
-	Mat disp, disp8;
+int calculDisp(Mat& im1, Mat& im2, Mat& imgDisp16){
+	
 	StereoSGBM sgbm (0, 48, 5, 8 * 5 * 5, 32 * 5 * 5, 1, 0, 5, 100, 32, false);
 	//sgbm = StereoSGBM(0, 32, 5, 8 * 5 * 5, 8 * 5 * 5, 1, 5, 10, 9, 4, false);
-	sgbm(im1, im2, disp);
+	
+	sgbm(im1, im2, imgDisp16);
 	//disp.convertTo(disp8, CV_8U);
-	return disp;
+	return 0;
 }
 
 // Computation of the 3D coordinates and remove all the pixels with a Z coodinate higher or lower than a threshold
@@ -145,6 +243,7 @@ std::vector<Point2f> storeRemainingPoint(Mat img){
 	}
 	return res;
 }
+
 Mat filterRansac(Vec4f line, Mat& img){
 	//Mat res(img.rows, img.cols, CV_8U, Scalar(0));
 	double slope = line[0] / line[1];
@@ -156,7 +255,7 @@ Mat filterRansac(Vec4f line, Mat& img){
 		for (int v = 0; v<img.cols; v++){
 			int value = img.at<unsigned char>(u, v);
 			double test = orig + slope*value - u;
-			if (test > 10){
+			if (test > 15){
 				img.at<unsigned char>(u, v) = value;
 				//res.at<unsigned char>(u, v) = value;
 			}
@@ -189,17 +288,20 @@ Mat FilterHeight3m(double slope, double orig, Mat& img)
 
 int main()
 {
+	double dtime = 0;
+	int64 t = getTickCount();
+
 	// Open image from input file in grayscale
 	Mat img1 = imread("Left_923730u.pgm", 0);
 	Mat img2 = imread("Right_923730u.pgm", 0);
+	Mat disp, disp8;
+
 	// Displaying left and right loaded imgs
 	imshow("left image", img1);
 	//imshow("right image", img2);
-	double dtime = 0;
-	int64 t = getTickCount();
 	// Disparity map between the two images using SGBM
-	Mat disp, disp8;
-	disp = calculDisp(img1, img2);
+	
+	calculDisp(img1, img2, disp);
 	disp.convertTo(disp8, CV_8U, 255 / (48*16.));
 	imshow("diparity map", disp8);
 
@@ -207,6 +309,24 @@ int main()
 	dtime = t * 1000 / getTickFrequency();
 	printf("disparity Time elapsed: %fms\n", dtime);
 
+	Mat imgColorDisp8;
+	cvtColor(disp8, imgColorDisp8, CV_GRAY2BGR);
+
+	makePseudoColorLUT();
+	cvtPseudoColorImage(disp8, imgColorDisp8);
+	
+	Mat imgtemp;
+	cvtColor(img1, imgtemp, CV_GRAY2BGR);
+	addWeighted(imgColorDisp8, 0.5, imgtemp, 0.5, 0.0, imgColorDisp8);
+	/*for (int v = 0; v < imgColorDisp8.rows; v++){
+		for (int u = 0; u < imgColorDisp8.cols; u++){
+			if (disp8.at<uchar>(v, u) == 0) continue;
+			imgColorDisp8.at<Vec3b>(v, u)[0] = 0;
+			imgColorDisp8.at<Vec3b>(v, u)[1] = 255 - disp8.at<uchar>(v, u);
+			imgColorDisp8.at<Vec3b>(v, u)[2] = disp8.at<uchar>(v, u);
+		}
+	}*/
+	imshow("color disp", imgColorDisp8);
 	
 	t = getTickCount();
 	//Mat dispFiltered = compute3DAndRemove(disp8);
@@ -227,11 +347,10 @@ int main()
 	printf("Vdisparity Time elapsed: %fms\n", dtime);
 	
 
-	/* We measure a line y = 3.36x +143,56
-	* where y is the heigh in pixel image and x the luminosity between 0 and 32 of disparity map
-	* The luminosity depends on the depth x=32 -> depth = 0 and x=0 -> depth = +infiny
+	/* We measure a line y = (?) d + (?)
+	* where y is the heigh in pixel image and d the luminosity between 0 and 255 of disparity map(disp8)
+	* The luminosity depends on the depth x=255 -> depth = 0 and x=0 -> depth = +infiny
 	* But this correlation is not linear and the y is not linked with y in real world
-	* so computing the height of road and it's slope seems difficult there..
 	*/
 	t = getTickCount();
 	//Removing noise from v disparity map
@@ -241,7 +360,7 @@ int main()
 	dtime = t * 1000 / getTickFrequency();
 	printf("Vdisparity-remove noise Time elapsed: %fms\n", dtime);
 	//if (waitKey(0) == 27) return 0;
-	imwrite("vdisparity.bmp", vDisp);
+	//imwrite("vdisparity.bmp", vDisp);
 
 	t = getTickCount();
 	// extracting the remaining points and removing the floor
@@ -257,8 +376,10 @@ int main()
 	t = getTickCount() - t;
 	dtime = t * 1000 / getTickFrequency();
 	printf("fitRansac Time elapsed: %fms\n", dtime);
-	
-	Mat imgDispfilter3 = FilterHeight3m(-3.042016, 248.22857, dispFiltered2);// 1m
+	if (waitKey(0) == 27) return 0;
+	//return 0;
+
+	Mat imgDispfilter3 = FilterHeight3m(-1.842016, 220.22857, dispFiltered2);// 1m
 	imshow("remove sky", imgDispfilter3);
 
 	stixel_t objStixels[WIDTH];
@@ -273,8 +394,18 @@ int main()
 	threshold(dispFiltered2, dispFiltered2, 1, 255, CV_THRESH_BINARY);
 	Mat imgFiltered;
 	bitwise_and(dispFiltered2, img1, imgFiltered);
+
+	Mat imgColorDisp, imgMask;
+	cvtColor(imgFiltered, imgColorDisp, CV_GRAY2BGR);
+	imgMask = imgColorDisp.clone();
+	//DrawStixel(imgMask, objStixels);
+	DrawStixel_gray(imgFiltered, objStixels);
+	//imshow("n", imgFiltered);
+	cvtPseudoColorImage(imgFiltered, imgMask);
+	addWeighted(imgtemp, 0.5, imgMask, 0.5, 0.0, imgColorDisp);
+	imshow("color", imgColorDisp);
 	
-	imshow("ground remove", imgFiltered);
+	//imshow("ground remove", imgFiltered);
 	if (waitKey(0) == 27) return 0;
 
 	//Mat morph1, morph2;
