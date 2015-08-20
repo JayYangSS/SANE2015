@@ -18,7 +18,14 @@ CPedestrianDetection::~CPedestrianDetection()
 // public
 vector<Rect_<int> > CPedestrianDetection::Detect(Mat& imgSrc)
 {
-	BuildPyramid(imgSrc);
+	vector<vector<Mat> > data;
+	BuildPyramid(imgSrc, data);
+
+	//
+	// 이 사이에 filtering 부분 추가
+	//
+
+	AcfDetect(data);
 
 	return vector<Rect_<int> >();
 }
@@ -38,7 +45,81 @@ void CPedestrianDetection::DrawBoundingBox(Mat& imgDisp, vector<Rect_<int> >& re
 //////////////////////////////////////////////////////////////////////////
 
 // private
-void CPedestrianDetection::BuildPyramid(Mat& imgSrc)
+void CPedestrianDetection::AcfDetect(vector<vector<Mat> >& matData)
+{
+	//const int shrink = 4;
+	//const int modelHt = 64;
+	//const int modelWd = 32;
+	//const int stride = 4;
+	//const double cascThr = -1.0f;
+	//const int treeDepth = 0;
+	//const int nChns = 40;
+	//const int nTreeNodes = 63;
+	//const int nTrees = 4028;
+
+	//double* chns;
+
+	//// construct cids array
+	//const int nFtrs = modelHt / shrink * modelWd / shrink * nChns;
+	//unsigned long int cids[nFtrs];
+	//int m = 0;
+	//for (int z = 0; z < nChns; z++)
+	//{
+	//	for (int c = 0; c < modelWd / shrink; c++)
+	//	{
+	//		for (int r = 0; r < modelHt / shrink; r++)
+	//		{
+	//			cids[m++] = z*width*height + c*height + r;
+	//		}
+	//	}
+	//}
+
+	//const int height1 = (int)ceil(double(height*shrink - modelHt + 1) / stride);
+	//const int width1 = (int)ceil(double(width*shrink - modelWd + 1) / stride);
+
+	//double *thrs;// detector.clf.thrs임 (고정값)
+	//double *hs;// detector.clf.hs임 (고정값)
+	//unsigned long int *fids;// detector.clf.fids임 (고정값)
+	//unsigned long int *child;// detector.clf.child임 (고정값)
+
+	//// apply classifier to each patch
+	//vector<int> rs;
+	//vector<int> cs;
+	//vector<double> hs1;
+	//for (int c = 0; c < width1; c++)
+	//{
+	//	for (int r = 0; r < height1; r++)
+	//	{
+	//		double h = 0;
+	//		double *chns1 = chns + (r*stride / shrink) + (c*stride / shrink)*height; // chns 가 p.data{i} 임. 피라미드가 구성되어있을듯
+	//		// general case (variable tree depth)
+	//		for (int t = 0; t < nTrees; t++)
+	//		{
+	//			unsigned long int offset = t*nTreeNodes;
+	//			unsigned long int k = offset;
+	//			unsigned long int k0 = k;
+	//			while (child[k])
+	//			{
+	//				double ftr = chns1[cids[fids[k]]];
+	//				k = (ftr < thrs[k]) ? 1 : 0;
+	//				k0 = k = child[k0] - k + offset;
+	//			}
+	//			h += hs[k];
+	//			if (h <= cascThr) break;
+	//		}
+
+	//		if (h > cascThr)
+	//		{
+	//			cs.push_back(c);
+	//			rs.push_back(r);
+	//			hs1.push_back(h);
+	//		}
+	//	}
+	//}
+}
+
+// private
+void CPedestrianDetection::BuildPyramid(Mat& imgSrc, vector<vector<Mat> >& matData)
 {
 	// step 1 : RGB to LUV
 	Mat imgLUV16b;
@@ -50,8 +131,7 @@ void CPedestrianDetection::BuildPyramid(Mat& imgSrc)
 		m_sizeInputImage = imgSrc.size();
 		GetPyramidScales();
 	}
-	vector<vector<Mat> > data;
-	data.resize(m_nScales);
+	matData.resize(m_nScales);
 
 	// step 3 : channel computation along the real scales
 	const double kdShrink = 2;
@@ -76,7 +156,7 @@ void CPedestrianDetection::BuildPyramid(Mat& imgSrc)
 			imgLUV16b = imgOneScale.clone();
 		}
 
-		ComputeChannelFeature(imgOneScale, data[i]);
+		ComputeChannelFeature(imgOneScale, matData[i]);
 	}
 
 	// step 4 : channel computation along the approx. scales
@@ -105,8 +185,8 @@ void CPedestrianDetection::BuildPyramid(Mat& imgSrc)
 			{
 				double ratio_ = pow(m_vecdScales[i] / m_vecdScales[iR], -m_lambdas[j]);
 				Mat imgReszed;
-				ResampleImg(data[iR][j], imgReszed, h1, w1, (float)ratio_);
-				data[i].push_back(imgReszed);
+				ResampleImg(matData[iR][j], imgReszed, h1, w1, (float)ratio_);
+				matData[i].push_back(imgReszed);
 			}
 		}
 		else
@@ -115,7 +195,45 @@ void CPedestrianDetection::BuildPyramid(Mat& imgSrc)
 			i--;
 		}
 	}
+
+	// step 5 : smooth and padding channels
+	SmoothAndPadChannels(matData);
 }
+
+
+
+void CPedestrianDetection::SmoothAndPadChannels(vector<vector<Mat> >& matData)
+{
+	int padH = 8;
+	int padW = 6;
+	int shrink = 2;
+
+	for (int i = 0; i < (int)matData.size(); i++)
+	{
+		for (int j = 0; j < (int)matData[i].size(); j++)
+		{
+			int h = matData[i][j].rows;
+			int w = matData[i][j].cols;
+
+			Mat temp1;
+			transpose(matData[i][j], temp1);
+			Mat temp2 = Mat::zeros(w, h, CV_32FC1);
+
+			float* A = (float*)temp1.data;
+			float* B = (float*)temp2.data;
+
+			convTri1(A, B, h, w, 1, 2.0f, 1);
+
+			Mat temp3 = Mat::zeros(w + padW, h + padH, CV_32FC1);
+			float* C = (float*)temp3.data;
+
+			imPad(B, C, h, w, 1, padH / shrink, padH / shrink, padW / shrink, padW / shrink, 1, 0.0f);
+			transpose(temp3, matData[i][j]);
+		}
+	}
+
+}
+
 
 // private
 void CPedestrianDetection::RgbConvertTo(Mat& imgSrc, Mat& imgDst16b)
@@ -468,74 +586,3 @@ void CPedestrianDetection::CalculateGradHist(Mat& imgSrcMag, Mat& imgSrcOrient, 
 
 	delete H;
 }
-
-/*void acfDetect(double* chns, int height, int width)
-{
-const int shrink = 4;
-const int modelHt = 64;
-const int modelWd = 32;
-const int stride = 4;
-const double cascThr = -1.0f;
-const int treeDepth = 0;
-const int nChns = 40;
-const int nTreeNodes = 63;
-const int nTrees = 4028;
-
-// construct cids array
-const int nFtrs = modelHt / shrink * modelWd / shrink * nChns;
-unsigned long int cids[nFtrs];
-int m = 0;
-for (int z = 0; z < nChns; z++)
-{
-for (int c = 0; c < modelWd / shrink; c++)
-{
-for (int r = 0; r < modelHt / shrink; r++)
-{
-cids[m++] = z*width*height + c*height + r;
-}
-}
-}
-
-const int height1 = (int)ceil(double(height*shrink - modelHt + 1) / stride);
-const int width1 = (int)ceil(double(width*shrink - modelWd + 1) / stride);
-
-double *thrs;// detector.clf.thrs임 (고정값)
-double *hs;// detector.clf.hs임 (고정값)
-unsigned long int *fids;// detector.clf.fids임 (고정값)
-unsigned long int *child;// detector.clf.child임 (고정값)
-
-// apply classifier to each patch
-vector<int> rs;
-vector<int> cs;
-vector<double> hs1;
-for (int c = 0; c < width1; c++)
-{
-for (int r = 0; r < height1; r++)
-{
-double h = 0;
-double *chns1 = chns + (r*stride / shrink) + (c*stride / shrink)*height; // chns 가 p.data{i} 임. 피라미드가 구성되어있을듯
-// general case (variable tree depth)
-for (int t = 0; t < nTrees; t++)
-{
-unsigned long int offset = t*nTreeNodes;
-unsigned long int k = offset;
-unsigned long int k0 = k;
-while (child[k])
-{
-double ftr = chns1[cids[fids[k]]];
-k = (ftr < thrs[k]) ? 1 : 0;
-k0 = k = child[k0] - k + offset;
-}
-h += hs[k];
-if (h <= cascThr) break;
-}
-
-if (h>cascThr)
-{
-cs.push_back(c);
-rs.push_back(r);
-hs1.push_back(h);
-}
-}
-}
-}*/
