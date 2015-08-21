@@ -61,12 +61,12 @@ public:
 	void SetImage(Mat& imgLeft, Mat& imgRight, vector<Rect_<int> >& vecrectRoi);
 	void SetParam(Mat& imgLeft, Mat& imgRight, vector<Rect_<int> >& vecrectRoi, double dBaseLine, double dFocalLength,
 		int nVanishingY = 0, double dPitchDeg = 0,
-		int nNumOfDisp = 48, int nWindowSize = 13, int nStereoAlg = 0, int nDistAlg = 0,	//number of disparity=48, stereo alg=SAD block matching, dist alg=FVLM
+		int nNumOfDisp = 96, int nWindowSize = 13, int nStereoAlg = 0, int nDistAlg = 0,	//number of disparity=48, stereo alg=SAD block matching, dist alg=FVLM
 		double dBoundDist = 20, double dMaxDist = 50 //unit : meters
 		);
 	void SetParam(double dBaseLine, double dFocalLength,
 		int nVanishingY = 0, double dPitchDeg = 0,
-		int nNumOfDisp = 48, int nWindowSize = 13, int nStereoAlg = 0, int nDistAlg = 0,	//number of disparity=48, stereo alg=SAD block matching, dist alg=FVLM
+		int nNumOfDisp = 96, int nWindowSize = 13, int nStereoAlg = 0, int nDistAlg = 0,	//number of disparity=48, stereo alg=SAD block matching, dist alg=FVLM
 		double dBoundDist = 20, double dMaxDist = 50 //unit : meters
 		);
 	int CalcDistImg(int flag = 0); // FVLM, mono, stereoBM, stereoSGBM

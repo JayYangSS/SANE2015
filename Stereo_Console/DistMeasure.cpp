@@ -117,6 +117,7 @@ int CDistMeasure::CalcDistImg(int nflag) // Flag seq : FVLM, MONO, STEREOBM, STE
 int CDistMeasure::CalcDistRoi_mono(Rect_<int>& rectRoi, double& dDistance)
 {
 	dDistance = 1.17*tan((78.69 + m_dPitchDeg + 0.047125*(m_imgLeftInput.rows - (rectRoi.y + rectRoi.height)))*PI / 180);
+	//dDistance = 1.65*tan((75.4332 + m_dPitchDeg + 0.0776896*(m_imgLeftInput.rows - (rectRoi.y + rectRoi.height)))*PI / 180);
 	return 0;
 }
 int CDistMeasure::CalcDistRoi_stereo(Rect_<int>& rectRoi, double& dDistance, int nflag)
