@@ -28,9 +28,9 @@ void CDistMeasure::help()
 {
 	cout << "This class measures the distance of detected object." << endl;
 	cout << "Please Follow the steps." << endl;
-	cout << "1. SetParam(...)\n2. CalcDist()" << endl;
-	cout << "The parameters that are imgLeft, imgRight, ROI seq, baseline and focal length is absolutely necessary" << endl;
-	cout << "And you can control the each other parameters. Good Luck" << endl;
+	cout << "1. SetParam(...)\n2. CalcDist(-method of distance measurement-)" << endl;
+	cout << "Paramerer setting is absolutely necessary" << endl;
+	cout << "And you can control the each other parameters. Good Luck" << endl<<endl;
 }
 //set up parameters
 void CDistMeasure::SetImage(Mat& imgLeft, Mat& imgRight, vector<Rect_<int> >& vecrectRoi)

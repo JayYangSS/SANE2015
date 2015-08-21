@@ -24,6 +24,9 @@
     <ClCompile Include="DMclass_test_Daimler.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="classDM_test_general.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DistMeasure.h">
