@@ -1,49 +1,34 @@
-#include "commons.h"
-
-// hrkim's comment
+#include "PedestrianDetection.h"
 
 int main()
 {
-	//SDetector sACF;
-	//LoadDetector("file.txt", sACF);
-
 	VideoCapture vcap("PD_sunny.mp4");
 	if (!vcap.isOpened())
 		return -1;
 
+	CPedestrianDetection objPD;
+
 	Mat imgInput;
-	int delayms = 1;
+	Mat imgDisp;
+	int nDelayms = 1;
 
 	while (1)
 	{
 		vcap >> imgInput;
 		if (imgInput.empty()) break;
-		imshow("asdf", imgInput);
-		int key = waitKey(delayms);
-		if (key == 27) break;
-		else if (key == 32) delayms = 1-delayms;
-		else if (key == 'f') { delayms = 0; }
-	}
 
-	//acfDetect(imgInput, sACF);
+		imgDisp = imgInput.clone();
+
+		objPD.Detect(imgInput);
+		objPD.DrawBoundingBox(imgDisp);
+
+		imshow("asdf", imgDisp);
+
+		int nKey = waitKey(nDelayms);
+		if (nKey == 27) break;
+		else if (nKey == 32) nDelayms = 1 - nDelayms;
+		else if (nKey == 'f') { nDelayms = 0; }
+	}
 
 	return 0;
 }
-
-void LoadDetector(string strFileName, SDetector& detector)
-{
-
-}
-
-Rect_<int> acfDetect(Mat& img, SDetector detector)
-{
-
-	return Rect_<int>(0, 0, 0, 0);
-}
-
-void chnsPyramid(Mat& img, SDetector::opts::pPyramid pyramid)
-{
-	
-}
-
-void chnsCompute();
