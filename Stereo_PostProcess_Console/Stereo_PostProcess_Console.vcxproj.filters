@@ -24,6 +24,9 @@
     <ClCompile Include="NoA_vision.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="StixelEstimation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tp_util.h">

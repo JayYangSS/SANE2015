@@ -377,7 +377,7 @@ int main()
 	dtime = t * 1000 / getTickFrequency();
 	printf("fitRansac Time elapsed: %fms\n", dtime);
 	if (waitKey(0) == 27) return 0;
-	//return 0;
+	return 0;
 
 	Mat imgDispfilter3 = FilterHeight3m(-1.842016, 220.22857, dispFiltered2);// 1m
 	imshow("remove sky", imgDispfilter3);
