@@ -88,10 +88,55 @@ void CDistMeasure::SetParam(double dBaseLine, double dFocalLength,
 	m_flgVideo = false;
 	m_flgDisplay = true;
 }
+void CDistMeasure::SetParam(int nDataBaseParamSetFlag)
+{
+	if (nDataBaseParamSetFlag == Manually){
+		printf("not available yet. sorry.\n"); return;
+	}
+	else if (nDataBaseParamSetFlag == Daimler){
+		m_sizeSrc.height = 480;
+		m_sizeSrc.width = 640;
+		m_dBaseLine = 0.25;
+		m_dFocalLength = 1200.;
+		//m_nVanishingY = 0;
+		m_dPitchDeg = -1.8907;
+		m_dBoundDist = 20.;
+		m_dMaxDist = 50.;
+		m_nNumberOfDisp = 48;
+		m_nWindowSize = 13;
+		m_nStereoAlg = STEREO_BM;
+		m_nDistAlg = FVLM;
+		m_dCameraHeight = 1.17;
+		//m_dFOVDeg=0.;
+	}
+	else if (nDataBaseParamSetFlag == KITTI){
+		m_sizeSrc.height = 375;
+		m_sizeSrc.width = 1242;
+		m_dBaseLine = 0.54;
+		m_dFocalLength = 721.5377;
+		//m_nVanishingY = 0;
+		m_dPitchDeg = 0.;	// TBD
+		m_dBoundDist = 20.;
+		m_dMaxDist = 50.;
+		m_nNumberOfDisp = 48;
+		m_nWindowSize = 13;
+		m_nStereoAlg = STEREO_BM;
+		m_nDistAlg = FVLM;
+		m_dCameraHeight = 1.65;
+		//m_dFOVDeg=0.;
+	}
+	else
+		printf("not available");
+
+	m_dFOVvDeg = 2 * fastAtan2(m_sizeSrc.height / 2, m_dFocalLength);
+	m_dFOVhDeg = 2 * fastAtan2(m_sizeSrc.width / 2, m_dFocalLength);
+	return;
+}
+
 //Calculate distance function
 int CDistMeasure::CalcDistImg(int nflag) // Flag seq : FVLM, MONO, STEREOBM, STEREOSGBM
 {
-	for (int i = 0; i < m_vecrectRoi.size(); i++){
+	for (unsigned int i = 0; i < m_vecrectRoi.size(); i++){
 		double dDistTemp = 0;
 		if (nflag == FVLM)
 			CalcDistRoi_FVLM(m_vecrectRoi[i], dDistTemp, nflag);
@@ -116,10 +161,12 @@ int CDistMeasure::CalcDistImg(int nflag) // Flag seq : FVLM, MONO, STEREOBM, STE
 }
 int CDistMeasure::CalcDistRoi_mono(Rect_<int>& rectRoi, double& dDistance)
 {
-	dDistance = 1.17*tan((78.69 + m_dPitchDeg + 0.047125*(m_imgLeftInput.rows - (rectRoi.y + rectRoi.height)))*PI / 180);
-	//dDistance = 1.65*tan((75.4332 + m_dPitchDeg + 0.0776896*(m_imgLeftInput.rows - (rectRoi.y + rectRoi.height)))*PI / 180);
+	dDistance = m_dCameraHeight*tan((90 - m_dFOVvDeg / 2 + m_dPitchDeg + (m_dFOVvDeg / m_sizeSrc.height)*(m_imgLeftInput.rows - (rectRoi.y + rectRoi.height)))*PI / 180);
+	//dDistance = 1.17*tan((78.69 + m_dPitchDeg + 0.047125*(m_imgLeftInput.rows - (rectRoi.y + rectRoi.height)))*PI / 180);		//Daimler
+	//dDistance = 1.65*tan((75.4332 + m_dPitchDeg + 0.0776896*(m_imgLeftInput.rows - (rectRoi.y + rectRoi.height)))*PI / 180);	//KITTI
 	return 0;
 }
+
 int CDistMeasure::CalcDistRoi_stereo(Rect_<int>& rectRoi, double& dDistance, int nflag)
 {
 	if (nflag == STEREOBM) m_nStereoAlg = STEREO_BM;
