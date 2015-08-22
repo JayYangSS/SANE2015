@@ -83,6 +83,7 @@
     <ClCompile Include="NoA_vision.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="StixelEstimation.cpp" />
     <ClCompile Include="tp_util.cpp" />
   </ItemGroup>
   <ItemGroup>

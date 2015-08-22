@@ -69,9 +69,11 @@ int main()
 	////////////////////////////////////// off line ////////////////////////////////////////////
 	// class param setting
 	CDistMeasure objDistMeasure;
-	objDistMeasure.SetParam(BASELINE, FOCAL, 0, -1.8907);
-	objDistMeasure.m_nDistAlg = CDistMeasure::FVLM;
-	objDistMeasure.m_flgVideo = true; // video or image
+	//objDistMeasure.SetParam(BASELINE, FOCAL, 0, -1.8907);
+	//objDistMeasure.m_nDistAlg = CDistMeasure::STEREOBM;
+	//objDistMeasure.m_flgVideo = false; // video or image
+	objDistMeasure.SetParam(CDistMeasure::Daimler);
+	objDistMeasure.m_flgVideo = false; // video or image
 
 	//////////////////////////////////// on line /////////////////////////////////////////////
 
@@ -202,7 +204,7 @@ int main()
 		int64 t = getTickCount();
 		if (vecRectGT.size() != 0){
 			objDistMeasure.SetImage(imgLeftInput, imgRightInput, vecRectGT);
-			objDistMeasure.CalcDistImg(0);
+			objDistMeasure.CalcDistImg(CDistMeasure::FVLM);
 		}
 
 		
