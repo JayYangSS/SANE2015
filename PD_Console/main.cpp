@@ -7,6 +7,7 @@ int main()
 		return -1;
 
 	CPedestrianDetection objPD;
+	objPD.LoadClassifier("acf_classifier.txt");
 
 	Mat imgInput;
 	Mat imgDisp;
@@ -18,11 +19,13 @@ int main()
 		if (imgInput.empty()) break;
 
 		imgDisp = imgInput.clone();
+		Mat imgInput2;
+		resize(imgInput, imgInput2, Size(640, 360));
 
-		objPD.Detect(imgInput);
-		objPD.DrawBoundingBox(imgDisp);
+		objPD.Detect(imgInput2);
+		objPD.DrawBoundingBox(imgInput2);
 
-		imshow("asdf", imgDisp);
+		imshow("asdf", imgInput2);
 
 		int nKey = waitKey(nDelayms);
 		if (nKey == 27) break;

@@ -13,9 +13,72 @@ public:
 	CPedestrianDetection();
 	~CPedestrianDetection();
 
+	bool LoadClassifier(string strFilterFile);
 	vector<Rect_<int> > Detect(Mat& imgSrc);
 	void DrawBoundingBox(Mat& imgDisp);
 	void DrawBoundingBox(Mat& imgDisp, vector<Rect_<int> >& rectBB);
+
+private:
+	static bool Comparator(const pair<float, Rect_<float> >& l, const pair<float, Rect_<float> >& r);
+	void GetChild(float *chns1, unsigned int *cids, unsigned int *fids, float *thrs, unsigned int offset, unsigned int &k0, unsigned int &k);
+	void AcfDetect(vector<Mat>& matData, vector<pair<float, Rect_<float> > >& vecRetVal);
+	vector<Rect_<int> > bbNMS(vector<pair<float, Rect_<float> > >& bbs);
+
+	void BuildPyramid(Mat& imgSrc, vector<vector<Mat> >& matData);
+	void RgbConvertTo(Mat& imgSrc, Mat& imgDst);
+	void GetPyramidScales();
+	void ResampleImg(Mat& imgSrc, Mat& imgDst, int nReHeight, int nReWidth, float ratioVal = 1.0f);
+	void ComputeChannelFeature(Mat& imgChn, vector<Mat>& vecimgChns);
+	void AddChannel(Mat& imgChn, vector<Mat>& vecimgChns, int h, int w);
+	void CalculateGradMag(Mat& imgSrc, Mat& imgDstMag, Mat& imgDstOrient);
+	void ConvTriangle(Mat& imgSrc, Mat& imgDst);
+	void NormalizeGradMag(Mat& imgSrc, Mat& imgDst);
+	void CalculateGradHist(Mat& imgSrcMag, Mat& imgSrcOrient, Mat& imgDstHist);
+	void SmoothAndPadChannels(vector<vector<Mat> >& matData);
+	void ConvFilterChannels(vector<vector<Mat> >& matData, float* chns);
+
+	vector<Rect_<int> > m_vecrectDetectedBB;
+	Size_<float> m_sizeInputImage;
+	int m_nScales;
+	vector<float> m_vecfScales;
+	vector<pair<float, float> > m_vecfScalesHW;
+	float m_fOverlap;
+
+	// classifier data
+	Size_<int> m_sizeModelPad;
+	int m_nStride;
+	float m_fCascadeThresh;
+	int m_nTreeDepth;
+	int m_nTreeNodes;
+	int m_nTrees;
+	float *m_pThrs;
+	float *m_pHs;
+	unsigned int *m_pFids;
+	unsigned int *m_pChild;
+
+	// filter data from file
+	vector<Mat> m_matFilter;
+
+	// params
+	float m_fShrink;
+	float m_fPerOct;
+	int m_nAppox;
+	int m_nChns;
+	Size_<float> m_sizeSmallestPyramid; // smallest scale of the pyramid
+	int m_nColorFlag; // rgb2luv
+	float m_fLambda[10];
+	Size2i m_sizePad;
+
+	// gradient params
+	bool m_bFullOrient;
+	float m_fNormConst;
+	int m_nBinSize;
+	int m_nOrients;
+	int m_nSoftBin;
+
+	// conv_tri params
+	int m_nDownSampling;
+	int m_nRadius;
 
 private:
 
@@ -122,29 +185,6 @@ private:
 	void convTri1(float *I, float *O, int h, int w, int d, float p, int s);
 	void convMaxY(float *I, float *O, float *T, int h, int r);
 	void convMax(float *I, float *O, int h, int w, int d, int r);
-
-
-private:
-	void AcfDetect(vector<vector<Mat> >& matData);
-	void BuildPyramid(Mat& imgSrc, vector<vector<Mat> >& matData);
-	void RgbConvertTo(Mat& imgSrc, Mat& imgDst);
-	void GetPyramidScales();
-	void ResampleImg(Mat& imgSrc, Mat& imgDst, int nReHeight, int nReWidth, float ratioVal = 1.0f);
-	void CalculateGradMag(Mat& imgSrc, Mat& imgDstMag, Mat& imgDstOrient);
-	void ComputeChannelFeature(Mat& imgPyramid, vector<Mat>& vecimgChns);
-	void AddChannel(Mat& imgSrc, vector<Mat>& vecimgChns, int h, int w);
-	void ConvTriangle(Mat& imgSrc, Mat& imgDst);
-	void NormalizeGradMag(Mat& imgSrcMag, Mat& imgSrcSmooth, Mat& imgDstMag);
-	void CalculateGradHist(Mat& imgSrcMag, Mat& imgSrcOrient, Mat& imgDstHist);
-	void SmoothAndPadChannels(vector<vector<Mat> >& matData);
-
-	Size_<double> m_sizeInputImage;
-	int m_nScales;
-	vector<double> m_vecdScales;
-	vector<Size_<double> > m_vecdScalesHW;
-	double m_lambdas[10];
-
-	vector<Rect_<int> > m_vecrectDetectedBB;////////////////////
 };
 
 // Constants for rgb2luv conversion and lookup table for y-> l conversion
