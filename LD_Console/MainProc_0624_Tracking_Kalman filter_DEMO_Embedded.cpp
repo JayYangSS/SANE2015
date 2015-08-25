@@ -22,7 +22,7 @@
 using namespace cv;
 using namespace std;
 
-#define EVALUATION 0
+#define EVALUATION 0 // 1 : GT를 로드해서 평가한다
 
 //
 #define PI 3.14159265358979323846
@@ -43,6 +43,12 @@ using namespace std;
 #define CV2WIDTH 639
 #define CV2HEIGHT 70
 
+/*[LYW_0824] : Auto Caliba parameter추가  */
+#define LAST_PITCH 5
+#define LAST_YAW 1
+#define INTERVAL_PITCH 0.3
+#define INTERVAL_YAW 1
+ 
 // 0:png, 1:Video
 enum FRAMETYPE{
 	PNG,
@@ -230,7 +236,7 @@ int main()
 	CMultiROILaneDetection obj;		//constructor
 	obj.nLeftCnt = 0;
 	obj.nRightCnt = 0;
-	if (DB_NUM == CVLAB)
+	if (DB_NUM == CVLAB) // [LYW_0824] : Extrinsic Parameter setting
 	{
 		obj.m_sCameraInfo.sizeFocalLength.width = (float)656;
 		obj.m_sCameraInfo.sizeFocalLength.height = (float)656;
@@ -262,7 +268,7 @@ int main()
 	obj.m_sConfig.nRansacIteration = 40;	//not used
 	obj.m_sConfig.nRansacThreshold = (float)0.2;	//not used
 	obj.m_sConfig.fVanishPortion = (float) 0.0;
-	obj.m_sConfig.fLowerQuantile = (float) 0.97;
+	obj.m_sConfig.fLowerQuantile = (float) 0.97;//[LYW_0824] : 상위 3%인 값들만 걸러내기 위함 in FilterLineIPM()
 	obj.m_sConfig.nLocalMaxIgnore = 0;		//Local maxima boundary reject pixels
 	//obj.m_sConfig.nDetectionThreshold = 6;
 	//obj.m_sConfig.nDetectionThreshold = 4;
@@ -278,10 +284,10 @@ int main()
 
 	unsigned int nTotalFrame = 90;
 
-	obj.m_nFrameNum = FIRSTFRAMENUM;
+	obj.m_nFrameNum = FIRSTFRAMENUM; // 1
 	//first frame read
 	SetFrameName(obj.m_sPreScanDB.szDataName, obj.m_sPreScanDB.szDataDir, obj.m_nFrameNum);
-	obj.m_imgOrigin = imread(string(obj.m_sPreScanDB.szDataName));
+	obj.m_imgOrigin = imread(string(obj.m_sPreScanDB.szDataName)); // [LYW_0824] : 첫번째 fr읽어서 m_imgOrigin에 넣음.
 	if (obj.m_imgOrigin.empty())
 	{
 		printf("error, empty Images...");
@@ -293,11 +299,16 @@ int main()
 
 	sizeOrigImg.width = obj.m_imgOrigin.cols;
 	sizeOrigImg.height = obj.m_imgOrigin.rows;
-	sizeResizeImg = Size(sizeOrigImg.width / g_nResizeFacor, sizeOrigImg.height / g_nResizeFacor);
-	obj.m_sCameraInfo.sizeCameraImage = sizeResizeImg;
-	resize(obj.m_imgOrigin, obj.m_imgResizeOrigin, sizeResizeImg);
+	sizeResizeImg = Size(sizeOrigImg.width / g_nResizeFacor, sizeOrigImg.height / g_nResizeFacor); //[LYW_0824] : HD급은 반띵 g_nResizeFacor=2
+	obj.m_sCameraInfo.sizeCameraImage = sizeResizeImg;  
+	resize(obj.m_imgOrigin, obj.m_imgResizeOrigin, sizeResizeImg); //[LYW_0824] : 원본영상을 reSizing HD는 반띵 ( 640,360 )
 	cout << obj.m_imgResizeOrigin.size() << endl;
+
 	//ROI IPM Transform make
+
+//#Q : [LYW_0824] : 아래에 나열되는 CENTER_ROI, LEFT/RIGHT_ROI 2,3는 지워도 되는코드 아냐?? Auto Calib.에서는 결국 flag:AUTOCALIB 이거 쓰잖아
+	//근데 지워봤더니 검출결과가 안그려져... 이상하네... 승준이에게 물어보자
+
 	// CENTER_ROI
 	obj.m_sRoiInfo[CENTER_ROI].nLeft = 216;
 	obj.m_sRoiInfo[CENTER_ROI].nRight = 433;
@@ -311,14 +322,13 @@ int main()
 	obj.m_sRoiInfo[CENTER_ROI].ptRoiEnd.y = obj.m_sRoiInfo[CENTER_ROI].ptRoi.y + obj.m_sRoiInfo[CENTER_ROI].sizeRoi.height;
 
 	obj.m_sRoiInfo[CENTER_ROI].sizeIPM.width = 213;
-	//	obj.m_sRoiInfo[CENTER_ROI].nRight - obj.m_sRoiInfo[CENTER_ROI].nLeft;
 	obj.m_sRoiInfo[CENTER_ROI].sizeIPM.height = 80;
-	//	obj.m_sRoiInfo[CENTER_ROI].nBottom - obj.m_sRoiInfo[CENTER_ROI].nTop+50;
+	//[LYW_0824] : 아래 4개는 워따 쓰는물건이고??
 	obj.m_sRoiInfo[CENTER_ROI].nDetectionThreshold = 4;
 	obj.m_sRoiInfo[CENTER_ROI].nGetEndPoint = 0;
 	obj.m_sRoiInfo[CENTER_ROI].nGroupThreshold = 10;
 	obj.m_sRoiInfo[CENTER_ROI].fOverlapThreshold = 0.3;
-
+	//[LYW_0824] : 이건 승준이도 건들지말라고 했음.
 	obj.m_sRoiInfo[CENTER_ROI].nRansacNumSamples = 2;	//Ransac
 	obj.m_sRoiInfo[CENTER_ROI].nRansacNumIterations = 40;
 	obj.m_sRoiInfo[CENTER_ROI].nRansacNumGoodFit = 10;
@@ -504,24 +514,11 @@ int main()
 	int testIteration = 1;
 	//	for(int i=0;i<testIteration;i++){
 	double dStartTickTest = (double)getTickCount();
-	obj.InitialResizeFunction(sizeResizeImg);
-	//obj.SetRoiIpmCofig(CENTER_ROI);
-	//obj.SetRoiIpmCofig(LEFT_ROI2);
-	//obj.SetRoiIpmCofig(LEFT_ROI3);
-	//obj.SetRoiIpmCofig(RIGHT_ROI2);
-	//obj.SetRoiIpmCofig(RIGHT_ROI3);
+	obj.InitialResizeFunction(sizeResizeImg); // [LYW_0824] : 위에서 중복코드발생. 위에 코드를 지우는게 좋을듯.
+	//[LYW_0824] : 아래 코드들은 지워도 될듯... 잔재들.... 결국 지웠음. History에서 확인
+
 	obj.SetRoiIpmCofig(AUTOCALIB);
-	//////////////////////////////////////////////////////////////////////////
-	//threshold(obj.m_imgIPM[1],obj.m_imgIPM[1],0.5);
-	//cvtColor(obj.m_imgIPM,obj.m_filteredThreshold,CV_GRAY2RGBA)
-	//threshold(obj.m_filteredThreshold,obj.m_filteredThreshold,125,255,THRESH_TOZERO);
-	//GaussianBlur(,,Size(3,3),1,1))
-	//Mat erode33(3,3,CV_8UC1,255);
-	//erode(erode33,erode33,erode33);
-	////dilate()
-	//boxFilter(erode33,erode33,-1,Size(3,3));
-	//Sobel(erode33,erode33,-1,3,3);
-	//////////////////////////////////////////////////////////////////////////
+
 	double dEndTickTest = (double)getTickCount();
 	dTickTestTotal += (dEndTickTest - dStartTickTest);
 	//	}
@@ -543,14 +540,12 @@ int main()
 
 
 
-
-
 	//main loof start
 	//[LYW_0724]: 90프레임 누적
 	for (int i = FIRSTFRAMENUM; obj.m_nFrameNum<nTotalFrame; obj.m_nFrameNum++, i++){
 
 		//frame read
-		if (obj.m_nFrameNum != FIRSTFRAMENUM){
+		if (obj.m_nFrameNum != FIRSTFRAMENUM){ // [LYW_0824] : 위에서 첫프레임은 읽었으니깐! 2번째fr부터 읽어오면되
 			SetFrameName(obj.m_sPreScanDB.szDataName, obj.m_sPreScanDB.szDataDir, obj.m_nFrameNum);
 			obj.m_imgOrigin = imread(string(obj.m_sPreScanDB.szDataName));
 
@@ -559,91 +554,30 @@ int main()
 				printf("empty\n");
 				break;
 			}
-
-			obj.InitialResizeFunction(sizeResizeImg);
-			//resize(obj.m_imgOrigin,obj.m_imgResizeOrigin,sizeResizeImg);
+			obj.InitialResizeFunction(sizeResizeImg); //[LYW_0824] : 매 fr들어올때마다 resize해줘야지.
 		}///end		
 
 		originImg.push_back(obj.m_imgResizeScaleGray.clone());
-		originImgClr.push_back(obj.m_imgResizeOrigin.clone());
-		//vecIpmFiltered.clear();
-		//vecIpmFiltered.push_back(obj.m_ipmFiltered[AUTOCALIB]);
-		//vecIpmArray.push_back(vecIpmFiltered[i]);
-		//double dStartTick = (double)getTickCount();
-		//CENTER_ROI
-		//obj.StartLanedetection(CENTER_ROI);
+		originImgClr.push_back(obj.m_imgResizeOrigin.clone()); //#Q : [LYW_0824] :originImgClr용도가 뭘까? 사이즈만변경된 이미지.
 
-		//LEFT_ROI2
-		//obj.StartLanedetection(LEFT_ROI2);
+	}// end of 90fr 저장하기
 
-		//LEFT_ROI3
-		//obj.StartLanedetection(LEFT_ROI3);
-
-		//RIGHT_ROI2
-		//obj.StartLanedetection(RIGHT_ROI2);
-
-		//RIGHT_ROI3
-		//obj.StartLanedetection(RIGHT_ROI3);
-
-		//AUTOCALIB
-		//obj.StartLanedetection(AUTOCALIB);
-
-		/*double dEndTick = (double)getTickCount();
-		Point ptVanSt,ptVanEnd;
-		ptVanSt.x = 0;
-		ptVanSt.y = obj.m_sCameraInfo.ptVanishingPoint.y;
-		ptVanEnd.x = obj.m_imgResizeOrigin.cols-1;
-		ptVanEnd.y = obj.m_sCameraInfo.ptVanishingPoint.y;
-		line(obj.m_imgResizeOrigin,ptVanSt,ptVanEnd,Scalar(0,255,0),2);*/
-		//circle(obj.m_imgResizeOrigin,obj.m_sCameraInfo.ptVanishingPoint,2,Scalar(0,0,255),2,2);
-		//ShowResults(obj,CENTER_ROI);
-		//ShowResults(obj,LEFT_ROI2);
-		//ShowResults(obj,LEFT_ROI3);
-		//ShowResults(obj,RIGHT_ROI2);
-		//ShowResults(obj,RIGHT_ROI3);
-		//ShowResults(obj,AUTOCALIB);
-		//////////////////////////////////////////////////////////////////////////
-		//Auto Calibration Data Push
-		//vecIpmFiltered.push_back(obj.m_ipmFiltered[CENTER_ROI].clone());
-		//obj.PushBackResult(AUTOCALIB,vecIpmFiltered);
-
-
-
-		//result & processing time show
-		//cout<<"		processing time  "<<(dEndTick-dStartTick) / getTickFrequency()*1000.0<<" msec"<<endl;
-
-		//imshow(g_strOriginalWindow,obj.m_imgResizeOrigin);
-		//imshow("origin",obj.m_imgOrigin);
-		//printf("frame num = %04d\n",obj.m_nFrameNum);
-		//g_dTotlaTick+=(dEndTick-dStartTick);
-		/*if('q'==waitKey(1)){
-		cout<<"Program quit, Total processing time  "<<(g_dTotlaTick) / getTickFrequency()*1000.0<<" msec"<<endl;
-		exit(0);
-		}*/
-
-		/*obj.m_lanes[CENTER_ROI].clear();
-		obj.m_laneScore[CENTER_ROI].clear();
-		obj.m_lanesResult[CENTER_ROI].clear();
-
-		obj.m_lanes[LEFT_ROI3].clear();
-		obj.m_laneScore[LEFT_ROI3].clear();
-		obj.m_lanesResult[LEFT_ROI3].clear();*/
-	}
 	//show 90fr 확인용
-	for (int i = 0; i<originImg.size(); i++){
+	for (int i = 0; i<originImg.size(); i++){ // originImg.size() = 90 fr
 		Mat imgOriginTemp = originImgClr[i].clone();
 		rectangle(imgOriginTemp, Rect(obj.m_sRoiInfo[AUTOCALIB].nLeft, obj.m_sRoiInfo[AUTOCALIB].nTop, obj.m_sRoiInfo[AUTOCALIB].sizeRoi.width, obj.m_sRoiInfo[AUTOCALIB].sizeRoi.height),
 			Scalar(0, 255, 0));
 		imshow("saved", imgOriginTemp);
 		cout << i << endl;
 		waitKey(1);
-	}
+	}//end of show 90fr
 	//	dTickTestTotal= 0.0;
 	int nNumberOfAutoCalibIter = 0;
 	//	double dStartTickTest_AutoCalib = (double)getTickCount();
+
 	FILE *fo;
 	fstream fout;
-	char txtPath[20] = "result_tilt6.txt";
+	char txtPath[20] = "result_tilt6.txt"; //#Q : [LYW_0824] :용도가 뭥미?
 	fout.open(txtPath, ios::out);
 	float fMaxPitch = 0;
 	float fMaxYaw = 0;
@@ -653,42 +587,35 @@ int main()
 	//	for (float pitch = 1; pitch<7.5; pitch += 1){
 	//		for (int yaw = -2; yaw <= 2; yaw++){
 	//for (float pitch = 0; pitch < 3; pitch += 0.3){ //pitch 0이 없을 경우 최초 라인 1개 밖에 못찾음 에러 미해결
-	for (float pitch = 0; pitch < 5; pitch += 0.3){
-		for (int yaw = -1; yaw <= 1; yaw++){
+
+	//for (float pitch = 0; pitch < 5; pitch += 0.3){
+	//	for (int yaw = -1; yaw <= 1; yaw++){
+	for (float pitch = 0; pitch < LAST_PITCH; pitch += INTERVAL_PITCH){
+		for (int yaw = -1; yaw <= LAST_YAW; yaw++){
 			double dStartTickTest_AutoCalib = (double)getTickCount();
-			obj.m_sCameraInfo.fPitch = (float)pitch * PI / 180;
+			
+			obj.m_sCameraInfo.fPitch = (float)pitch * PI / 180; //[LYW_0824] : radian
 			obj.m_sCameraInfo.fYaw = (float)yaw * PI / 180;
 			obj.SetRoiIpmCofig(AUTOCALIB); //
 
 
-			//			obj.InitialResizeFunction(sizeResizeImg);
-
 			Mat imgSum;// = Mat::zeros(obj.m_ipmFiltered[AUTOCALIB].size(),CV_32FC1);
-			for (int i = 0; i<originImg.size(); i++){
-				obj.m_imgResizeScaleGray = originImg[i];
+			for (int i = 0; i<originImg.size(); i++){ // 90 
+				obj.m_imgResizeScaleGray = originImg[i]; 
 
 				obj.GetIPM(AUTOCALIB);
 				obj.FilterLinesIPM(AUTOCALIB);
 				if (imgSum.empty())
 				{
 					imgSum = Mat::zeros(obj.m_ipmFiltered[AUTOCALIB].size(), CV_32FC1);
-					//printf("no\n");
 				}
-				//	imshow("ddd",originImg[i]);
-				//	waitKey(0);
-				imgSum += obj.m_ipmFiltered[AUTOCALIB].clone();
-				//imgSum += obj.m_filteredThreshold[AUTOCALIB].clone();
-				//if (i!=0)
-				//imgSum /= (2);
+				imgSum += obj.m_ipmFiltered[AUTOCALIB].clone(); //[LYW_0824] : Fitering된 결과들을 imgSum에 누적시킴
 			}
 			double dEndTickTest_AutoCalib = (double)getTickCount();
 			dTickTestTotal += (dEndTickTest_AutoCalib - dStartTickTest_AutoCalib);
 			imgSum /= originImg.size();
 			Mat rowMat;
-			rowMat = Mat(imgSum).reshape(0, 1); // 1-row로 압축
-
-
-
+			rowMat = Mat(imgSum).reshape(0, 1); // [LYW_0824] :누적된 영상을 또 1-row로 압축 (reshape)하고 또 quantile하는겨?? 
 
 			//get the quantile
 			float fQval;
@@ -732,16 +659,17 @@ int main()
 			}
 			fout << endl;
 			cout << endl;
-			ShowImageNormalize(namePitchYaw, imgSum); // [LYW_0724] : 확인용
+			if (pitch == LAST_PITCH - INTERVAL_PITCH && yaw == LAST_YAW) // 마지
+				ShowImageNormalize(namePitchYaw, imgSum); // [LYW_0724] : 확인용 - YAW/PITCH값에 따라 
 			//imshow(string(namePitchYaw), imgSum);
 			waitKey(1);
+			 
 
 
-
-		}
+		}// end of yaw loop [LYW_0824] : 콘솔창에 AutoCalibration Result (0,1)이 나오는 이유는 그때가 젤 스코어가 높고, 그 담부터는 안높아서.
 		fout << "AutoCalibration Result " << endl << "pitch : " << fMaxPitch << " yaw : " << fMaxYaw << endl;
 		cout << "AutoCalibration Result " << endl << "pitch : " << fMaxPitch << " yaw : " << fMaxYaw << endl;
-	}
+	}// end of pitch loop
 	fout.close();
 	//	double dEndTickTest_AutoCalib = (double)getTickCount();
 	//	cout<<AutoCalibLane[0].ptStartLine<<endl;
@@ -790,7 +718,13 @@ int main()
 	}// [LYW_0724] : 화면에 라인 2개 그려주기
 
 	imshow("origin", obj.m_imgResizeOrigin);
-	waitKey(0);
+	waitKey(0); // 무한대로 기다리는거야. 아무키나 입력해야 다음 단계로 넘어간다.
+
+	/*[LYW_0824] : Auto Calibration 결과 윈도우 끄기*/
+
+
+
+
 	obj.m_lanesResult[AUTOCALIB].clear();
 
 	// AUTOCALIB
@@ -855,7 +789,8 @@ int main()
 
 
 	imshow("origin", obj.m_imgResizeOrigin);
-	waitKey(0);
+	waitKey(0); // 
+
 	float fWidthScale = IPM_WIDTH_SCALE; //[LYW_0724] : 계산해야할 IPM이미지의 사이즈를 변경해주는 역할. 임베디드에서 계산양을 줄이기 위해 조절할 수도 있음
 	float fHeightScale = IPM_HEIGHT_SCALE;
 
@@ -900,7 +835,7 @@ int main()
 
 
 	//[LYW_0815]: ROI추가 시도
-
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//LEFT_ROI0
 	obj.m_sRoiInfo[LEFT_ROI0].nLeft = rectLeftTop.x - rectLeftTop.width / 2;
 	obj.m_sRoiInfo[LEFT_ROI0].nRight = rectLeftTop.x + rectLeftTop.width / 2;
@@ -916,7 +851,7 @@ int main()
 		(obj.m_sRoiInfo[LEFT_ROI0].nRight - obj.m_sRoiInfo[LEFT_ROI0].nLeft)*fWidthScale;
 	obj.m_sRoiInfo[LEFT_ROI0].sizeIPM.height =
 		(obj.m_sRoiInfo[LEFT_ROI0].nBottom - obj.m_sRoiInfo[LEFT_ROI0].nTop)*fHeightScale;
-
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -967,29 +902,6 @@ int main()
 	ptVanEnd.x = obj.m_imgResizeOrigin.cols - 1;
 	ptVanEnd.y = obj.m_sCameraInfo.ptVanishingPoint.y;
 
-	//GROUND 승준이가 테스트하기 위해 만들었데. ROI하나 더 만들어봐서 테스트해보싶었데. 사실 별로 상관 없는 영역.
-	obj.m_sRoiInfo[GROUND].nLeft = 0;
-	obj.m_sRoiInfo[GROUND].nRight = 640;
-	//obj.m_sRoiInfo[GROUND].nTop = rectRightTop.y - rectRightTop.height / 2-20;
-	//obj.m_sRoiInfo[GROUND].nBottom = 360;
-	obj.m_sRoiInfo[GROUND].nTop = ptVanSt.y;
-	obj.m_sRoiInfo[GROUND].nBottom = 360;
-	obj.m_sRoiInfo[GROUND].sizeRoi.width = obj.m_sRoiInfo[GROUND].nRight - obj.m_sRoiInfo[GROUND].nLeft;
-	obj.m_sRoiInfo[GROUND].sizeRoi.height = obj.m_sRoiInfo[GROUND].nBottom - obj.m_sRoiInfo[GROUND].nTop;
-	obj.m_sRoiInfo[GROUND].ptRoi.x = obj.m_sRoiInfo[GROUND].nLeft;
-	obj.m_sRoiInfo[GROUND].ptRoi.y = obj.m_sRoiInfo[GROUND].nTop;
-	obj.m_sRoiInfo[GROUND].ptRoiEnd.x = obj.m_sRoiInfo[GROUND].ptRoi.x + obj.m_sRoiInfo[GROUND].sizeRoi.width;
-	obj.m_sRoiInfo[GROUND].ptRoiEnd.y = obj.m_sRoiInfo[GROUND].ptRoi.y + obj.m_sRoiInfo[GROUND].sizeRoi.height;
-	obj.m_sRoiInfo[GROUND].sizeIPM.width =
-		(obj.m_sRoiInfo[GROUND].nRight - obj.m_sRoiInfo[GROUND].nLeft) / 3;
-	obj.m_sRoiInfo[GROUND].sizeIPM.height =
-		(obj.m_sRoiInfo[GROUND].nBottom - obj.m_sRoiInfo[GROUND].nTop) / 3;
-
-
-	obj.SetRoiIpmCofig(GROUND);
-	//for (int i = 0; i<originImg.size(); i++){
-
-
 	FILE *fp = fopen(szAnnotationSaveFile, "rt");
 	SEvaluation structEvaluation;
 
@@ -1005,7 +917,7 @@ int main()
 	obj.nCnt[0] = 0;
 	obj.nCnt[1] = 0;
 
-	obj.m_bDraw[2] = false; ////[LYW_0815]:roi추가
+	obj.m_bDraw[2] = true; ////[LYW_0815]:roi추가
 	obj.m_bDraw[0] = false;
 	obj.m_bDraw[1] = false;
 	//tracking 모듈 초기화
@@ -1065,11 +977,12 @@ int main()
 
 				//detection start
 				//[LYW]드디어 시작!!!
-				obj.StartLanedetection(LEFT_ROI0); //[LYW_0815] : ROI추가
+				
 				obj.StartLanedetection(LEFT_ROI2);
 				obj.StartLanedetection(LEFT_ROI3);
 				obj.StartLanedetection(RIGHT_ROI2);
 				obj.StartLanedetection(RIGHT_ROI3);
+				obj.StartLanedetection(LEFT_ROI0); //[LYW_0815] : ROI추가
 
 				//////////////////////////////////////////////////////////////////////////
 				double dTrackingSt = (double)getTickCount();
@@ -1090,11 +1003,12 @@ int main()
 				// 모듈을 추가하고 싶을 경우 아래와 같이 트렉킹 모듈을 추가시키면 된다.
 				//////////////////////////////////////////////////////////////////////////
 				
-				obj.TrackingStageGround(LEFT_ROI0, 2); //[LYW_0815] : ROI추가(1)
+				
 				obj.TrackingStageGround(LEFT_ROI2, 0);
 				obj.TrackingStageGround(LEFT_ROI3, 0);
 				obj.TrackingStageGround(RIGHT_ROI2, 1);
 				obj.TrackingStageGround(RIGHT_ROI3, 1);
+				//obj.TrackingStageGround(LEFT_ROI0, 2); //[LYW_0815] : ROI추가(1)
 
 				////tkm before		//Tracking continue 판별식
 				/*obj.TrackingContinue();*/
@@ -1102,12 +1016,9 @@ int main()
 				////tracking module
 				obj.TrackingContinue(0);
 				obj.TrackingContinue(1);
-				obj.TrackingContinue(2); //[LYW_0815] : ROI추가(2)
+				//obj.TrackingContinue(2); //[LYW_0815] : ROI추가(2)
 
 				////tracking module
-				if (obj.m_bTrackingFlag[obj.m_sTracking[LEFT_ROI0].nTargetTracker] == false){ 
-					obj.m_sTracking[LEFT_ROI0].bTracking = false;
-				}//[LYW_0815] : ROI추가(3)
 				if (obj.m_bTrackingFlag[obj.m_sTracking[LEFT_ROI2].nTargetTracker] == false){
 					obj.m_sTracking[LEFT_ROI2].bTracking = false;
 				}
@@ -1120,12 +1031,14 @@ int main()
 				if (obj.m_bTrackingFlag[obj.m_sTracking[RIGHT_ROI3].nTargetTracker] == false){
 					obj.m_sTracking[RIGHT_ROI3].bTracking = false;
 				}
-
+				//if (obj.m_bTrackingFlag[obj.m_sTracking[LEFT_ROI0].nTargetTracker] == false){
+				//	obj.m_sTracking[LEFT_ROI0].bTracking = false;
+				//}//[LYW_0815] : ROI추가(3)
 
 				////tracking module
 				obj.KalmanTrackingStage(0);
 				obj.KalmanTrackingStage(1);
-				obj.KalmanTrackingStage(2); //[LYW_0815] : ROI추가(4)
+				//obj.KalmanTrackingStage(2); //[LYW_0815] : ROI추가(4)
 
 
 				//tracking module
@@ -1137,7 +1050,7 @@ int main()
 					{
 						obj.ClearDetectionResult(0);
 						obj.ClearDetectionResult(1);
-						obj.ClearDetectionResult(2); //[LYW_0815] : ROI추가(5)
+						//obj.ClearDetectionResult(2); //[LYW_0815] : ROI추가(5)
 					}
 
 				}
@@ -1193,8 +1106,9 @@ int main()
 					int ssTemp = obj.m_sTrakingLane[2].fXcenter / 1000 * 100;
 					fLeftGround2 = float(ssTemp) / 100;
 					ssLeft2 << fLeftGround2;
-				}
+				} 
 				//Lane Draw & Lateral Distance Draw
+                //[LYW_0825] : m_imgResizeOrigin에 그린다.
 				if ((obj.m_bDraw[0] == true) && (obj.m_bDraw[1] == true)){
 				//if ((obj.m_bDraw[0] == true) && (obj.m_bDraw[1] == true) && (obj.m_bDraw[2]==true)){
 					if (obj.m_bTrackingFlag[0]){
@@ -1209,12 +1123,12 @@ int main()
 						putText(obj.m_imgResizeOrigin, ssRight.str(), obj.m_sTrakingLane[1].ptUvEndLine,
 							FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
 					}
-					if (obj.m_bTrackingFlag[2]){ //[LYW_0815] : ROI추가(11)
-						line(obj.m_imgResizeOrigin, obj.m_sTrakingLane[2].ptUvStartLine,
-							obj.m_sTrakingLane[2].ptUvEndLine, Scalar(0, 0, 255), 2);
-						putText(obj.m_imgResizeOrigin, ssLeft2.str(), obj.m_sTrakingLane[2].ptUvEndLine,
-							FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
-					}
+					//if (obj.m_bTrackingFlag[2]){ //[LYW_0815] : ROI추가(11)
+					//	line(obj.m_imgResizeOrigin, obj.m_sTrakingLane[2].ptUvStartLine,
+					//		obj.m_sTrakingLane[2].ptUvEndLine, Scalar(0, 0, 255), 2);
+					//	putText(obj.m_imgResizeOrigin, ssLeft2.str(), obj.m_sTrakingLane[2].ptUvEndLine,
+					//		FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
+					//}
 				}
 
 
@@ -1302,7 +1216,7 @@ int main()
 				char cTemp = waitKey(1);
 				if (cTemp == 'q'){
 					break;
-					i -= 2;
+					//i -= 2;
 				}
 			}// end of 하나의 frame에서 detection & tracking 다
 		//obj.ClearDetectionResult();

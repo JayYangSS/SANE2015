@@ -157,16 +157,16 @@ typedef struct SWorldLane{
 typedef struct SKalman
 {
 	KalmanFilter KF;
-	Mat_<float> matState;
-	Mat matProcessNoise;
+	Mat_<float> matState; // #Q: [LYW_0824] : 이게 뭘까? 어디에 쓰일까?
+	Mat matProcessNoise; // #Q: [LYW_0824] : 이게 뭘까? 어디에 쓰일까?
 	Mat_<float> matMeasurement;
 	SLine SKalmanTrackingLine;
 	SLine SKalmanTrackingLineBefore;
 	int cntNum;
 	int cntErase;
-	SKalman()
+	SKalman() //[LYW_0824] :  struct constructor??
 	{
-		KF = KalmanFilter(6, 4, 0);
+		KF = KalmanFilter(6, 4, 0); //// #Q: [LYW_0824] : 왜 6,4일까? 이건 OpenCV내장함수인듯???
 		matState = Mat_<float>(6, 1);
 		matMeasurement = Mat_<float>(4, 1);
 		cntNum = 0;
@@ -213,19 +213,17 @@ typedef struct STrackingFlag{
 }STrackingFlag;
 
 class CMultiROILaneDetection{
+
+///////////////////////////////////////start of variable declaration////////////////////////////////////////////
 public:
 
 	CMultiROILaneDetection();
 	Mat m_imgOrigin;
-
-
 	Mat m_imgResizeOrigin;
-
 	Mat m_imgOriginScale;
 	Mat m_imgResizeScaleGray;
 
-
-	SFileInformation m_sPreScanDB;
+	SFileInformation m_sPreScanDB;//클래스의 멤버로 struct가 있어.기억해. m(member)_s(struct)~~
 	unsigned int m_nFrameNum;
 
 	SCameraInformation m_sCameraInfo;
@@ -233,7 +231,7 @@ public:
 
 
 	SRoiInformation m_sRoiInfo[MULTIROINUMBER];
-	Mat m_matXYGrid[MULTIROINUMBER];
+	Mat m_matXYGrid[MULTIROINUMBER]; //[LYW_0824] : 아마 LUT에 쓰이는걸꺼야...
 	Mat m_matUVGrid[MULTIROINUMBER];
 	Mat m_imgIPM[MULTIROINUMBER];
 	Mat m_ipmFiltered[MULTIROINUMBER];
@@ -242,11 +240,11 @@ public:
 	vector<SLine> m_lanes[MULTIROINUMBER];
 	vector<float> m_laneScore[MULTIROINUMBER];
 	vector<SLine> m_lanesResult[MULTIROINUMBER];
-	vector<SLine> m_lanesGroundResult[MULTIROINUMBER];
+	vector<SLine> m_lanesGroundResult[MULTIROINUMBER]; //#Q: [LYW_0824] : GroundResult는 뭘까? 
 
 	//tracking module
-	STrackingFlag m_sTracking[MULTIROINUMBER]; //nFlag 각각이 어떤 tracking을 지칭하는지 가리키기 위함 ex. TrackingNumber 0은 LeftROI2&LeftROI3을 트랙킹함
-
+	STrackingFlag m_sTracking[MULTIROINUMBER]; 
+	//nFlag 각각이 어떤 tracking을 지칭하는지 가리키기 위함 ex. TrackingNumber 0은 LeftROI2&LeftROI3을 트랙킹함
 
 	bool m_bTracking[MULTIROINUMBER];
 	vector<SLine> m_leftTracking;
@@ -254,7 +252,7 @@ public:
 	vector<SLine> m_rightTracking;
 	vector<SLine>::iterator m_iterRight;
 
-	vector<SLine> m_leftGroundTracking;
+	vector<SLine> m_leftGroundTracking;// #Q: [LYW_0824] : Ground 또 나왔네??
 	vector<SLine>::iterator m_iterGroundLeft;
 	vector<SLine> m_rightGroundTracking;
 	vector<SLine>::iterator m_iterGroundRight;
@@ -269,7 +267,7 @@ public:
 
 	//Tracking module
 	bool m_bTrackingFlag[TRACKINGNUMBER];
-	vector<SLine> m_Tracking[TRACKINGNUMBER];
+	vector<SLine> m_Tracking[TRACKINGNUMBER]; // #Q: [LYW_0824] 저 위에 있는 트래킹멤버와는 무슨 차이야??
 	vector<SLine>::iterator m_iterTracking[TRACKINGNUMBER];
 	vector<SLine> m_GroundTracking[TRACKINGNUMBER];
 	vector<SLine>::iterator m_iterGroundTracking[TRACKINGNUMBER];
@@ -277,7 +275,7 @@ public:
 	SKalman m_SKalmanLane[TRACKINGNUMBER];
 	bool m_bDraw[TRACKINGNUMBER];
 	int nCnt[TRACKINGNUMBER];
-	vector<int> vecTrackingFlag[TRACKINGNUMBER];		//tracking 모듈에 포함되는 ROInumber 저장하기 위한 자료
+	vector<int> vecTrackingFlag[TRACKINGNUMBER]; //tracking 모듈에 포함되는 ROInumber 저장하기 위한 자료
 
 	//KalmanFilter m_kalmanRightLane;
 
@@ -290,14 +288,15 @@ private:
 	SVD m_SvdCalc;
 	Mat m_MatFx;
 	Mat m_MatFy;
+///////////////////////////////////////end of variable declaration//////////////////////////////////////////////
 
-
+///////////////////////////////////////start of variable declaration////////////////////////////////////////////
 public:
-	void SetRoiIpmCofig(EROINUMBER nFlag);
+	void SetRoiIpmCofig(EROINUMBER nFlag); //[LYW_0824]: Calibration 결과값을 이용한 ROI초기화셋팅--> VP,LUT만들기 
 
 	void StartLanedetection(EROINUMBER nFlag){
-		GetIPM(nFlag);
-		FilterLinesIPM(nFlag);					//input = m_imgIPM, Output1= m_ipmFiltered, Output2= m_ipmFilteredThreshold
+		GetIPM(nFlag); //input = grayImg,uvGrid & xyGrid LUT || output = IpmImg
+		FilterLinesIPM(nFlag);	//input = m_imgIPM, Output1= m_ipmFiltered, Output2= m_ipmFilteredThreshold
 		GetLinesIPM(nFlag);
 		LineFitting(nFlag);
 		IPM2ImLines(nFlag);
@@ -349,7 +348,6 @@ public:
 
 private:
 	void SetVanishingPoint();
-
 
 	//void TransformImage2Ground(const Mat &matInPoints,Mat &matOutPoints);
 	//void TransformGround2Image(const Mat &matInPoints,Mat &matOutPoints);
@@ -611,15 +609,15 @@ void CMultiROILaneDetection::TransformGround2Image(const Mat &matInPoints, Mat &
 	matInPoints2.copyTo(matOutPoints);
 }
 
-//[LYW_0724] : LUT를 만드는 함수
+//[LYW_0724] : LUT를 만드는 함수 uvGrid & xyGrid
 void CMultiROILaneDetection::SetRoiIpmCofig(EROINUMBER nFlag){
 	m_bTracking[nFlag] = false;
-	SetVanishingPoint();
+	SetVanishingPoint(); // (ptVanishingPoint.x, ptVanishingPoint.y)
 	Point_<float> ptVp = m_sCameraInfo.ptVanishingPoint;
 	ptVp.y = MAX(0, ptVp.y);
 	float fWidth = m_imgResizeOrigin.cols;
 	float fHeight = m_imgResizeOrigin.rows;
-	float fEps = m_sConfig.fVanishPortion * fHeight;
+	float fEps = m_sConfig.fVanishPortion * fHeight; //#Q: [LYW_0824] Eps는 뭘까?
 
 
 	//vanishing point validation
@@ -677,6 +675,8 @@ void CMultiROILaneDetection::SetRoiIpmCofig(EROINUMBER nFlag){
 
 	m_imgIPM[nFlag].create(m_sRoiInfo[nFlag].sizeIPM, CV_32FC1);
 
+
+    //#Q : [LYW_0824] :용도가 뭘까????
 	m_sRoiInfo[nFlag].dXLimit[0] = matXyGrid.at<float>(0, 0);
 	m_sRoiInfo[nFlag].dXLimit[1] = matXyGrid.at<float>(0, (outRow - 1)*outCol + outCol - 1);
 	m_sRoiInfo[nFlag].dYLimit[1] = matXyGrid.at<float>(1, 0);
@@ -692,6 +692,8 @@ void CMultiROILaneDetection::SetRoiIpmCofig(EROINUMBER nFlag){
 }
 
 //[LYW] : IPM이미지 만드는 함수
+//사용되는 변수 : 각ROI의 grayScaleIamge & uvGrid & xyGrid LUT
+//처리결과 : 각ROI의 IPM image
 void CMultiROILaneDetection::GetIPM(EROINUMBER nFlag){
 
 
@@ -702,9 +704,9 @@ void CMultiROILaneDetection::GetIPM(EROINUMBER nFlag){
 	int i, j;
 	float ui, vi;
 
-	float* ppMatOutImage = (float*)&m_imgIPM[nFlag].data[0];
+	float* ppMatOutImage = (float*)&m_imgIPM[nFlag].data[0]; //결과 : m_imgIPM
 	float* ppMatInImage = (float*)&m_imgResizeScaleGray.data[0];
-	float* pMatUvGrid = (float*)&m_matUVGrid[nFlag].data[0];
+	float* pMatUvGrid = (float*)&m_matUVGrid[nFlag].data[0]; //uvGrid(LUT, uv-->xy)
 	int nResizeImgWidth = m_imgResizeScaleGray.cols;
 	int nResizeImgHeight = m_imgResizeScaleGray.rows;
 	int nIpmWidth = m_sRoiInfo[nFlag].sizeIPM.width;
@@ -720,7 +722,7 @@ void CMultiROILaneDetection::GetIPM(EROINUMBER nFlag){
 			vi = pMatUvGrid[nUvGridWidth * 1 + i*nIpmWidth + j];
 			/*check if out-of-bounds*/
 			if (ui<m_sRoiInfo[nFlag].nLeft || ui>m_sRoiInfo[nFlag].nRight ||
-				vi<m_sRoiInfo[nFlag].nTop || vi>m_sRoiInfo[nFlag].nBottom) {
+				vi<m_sRoiInfo[nFlag].nTop || vi>m_sRoiInfo[nFlag].nBottom) { //#Q:[LYW_0824] : vi > m_sRoiInfo[nFlag].nTop 이거 아닌가?
 				ppMatOutImage[nIpmWidth*i + j] = (float)dmean;
 				//if()
 			}
@@ -759,77 +761,46 @@ void CMultiROILaneDetection::GetIPM(EROINUMBER nFlag){
 		}
 
 }
-
+//OriginImg : resize & normalized & RGB2GRAY
 void CMultiROILaneDetection::InitialResizeFunction(Size sizeResize){
 	resize(m_imgOrigin, m_imgResizeOrigin, sizeResize);
-	m_imgResizeOrigin.convertTo(m_imgOriginScale, CV_32FC1, 1.0 / 255);
-	cvtColor(m_imgOriginScale, m_imgResizeScaleGray, CV_RGB2GRAY);
+	m_imgResizeOrigin.convertTo(m_imgOriginScale, CV_32FC1, 1.0 / 255); //normalized
+	cvtColor(m_imgOriginScale, m_imgResizeScaleGray, CV_RGB2GRAY); //RGB2GRAY
 }
 
 
-// [LYW] : Line kernel filtering하기
+//[LYW_0824]
+//사용변수 : 각ROI의IPM image | derivative & smoothing kernel | Quantile param(0.97)
+//처리결과 : Filtered Threhold IPM image
 void CMultiROILaneDetection::FilterLinesIPM(EROINUMBER nFlag){
 	//define the two kernels
-
-	//Mat matFx;
-	//Mat matFy;
-	////create the convoultion kernel
-
-	//int derivLen = 33; //23; 13; 33;
-	//int smoothLen = 9; //9; 17;
-
-	////this is for 5-pixels wide
-	//float derivp[] = {
-	//	1.000000e-16, 1.280000e-14, 7.696000e-13, 2.886400e-11, 7.562360e-10, 
-	//	1.468714e-08, 2.189405e-07, 2.558828e-06, 2.374101e-05, 1.759328e-04, 
-	//	1.042202e-03, 4.915650e-03, 
-	//	1.829620e-02, 5.297748e-02, 
-	//	1.169560e-01, 1.918578e-01, 
-	//	2.275044e-01, 
-	//	1.918578e-01, 1.169560e-01, 
-	//	5.297748e-02, 1.829620e-02, 
-	//	4.915650e-03, 1.042202e-03, 
-	//	1.759328e-04, 2.374101e-05, 2.558828e-06, 2.189405e-07, 	1.468714e-08, 
-	//	7.562360e-10, 2.886400e-11, 7.696000e-13, 1.280000e-14, 1.000000e-16
-	//};
-
-	//float smoothp[] = {
-	//	-1.000000e-03,
-	//	-2.200000e-02,
-	//	-1.480000e-01, 
-	//	-1.940000e-01, 
-	//	7.300000e-01, 
-	//	-1.940000e-01, 
-	//	-1.480000e-01,
-	//	-2.200000e-02,
-	//	-1.000000e-03
-	//};
-	//matFx=Mat(derivLen,1,CV_32FC1,derivp);
-	//matFy=Mat(1,smoothLen,CV_32FC1,smoothp);
-	//if ((nFlag == LEFT_ROI3) || (nFlag == RIGHT_ROI3))
-	//	resize(matFx, matFx, Size(1, matFx.rows * 2));
 
 	Scalar dMean = mean(m_imgIPM[nFlag]);
 
 	subtract(m_imgIPM[nFlag], dMean, m_ipmFiltered[nFlag]);
 
+    //[LYW_0824] : m_MatFx : 2nd-oder derivative || m_MatFy : smoothing
 	filter2D(m_ipmFiltered[nFlag], m_ipmFiltered[nFlag], m_ipmFiltered[nFlag].depth(),
 		m_MatFx, Point(-1, -1), 0.0, BORDER_REPLICATE);
 	filter2D(m_ipmFiltered[nFlag], m_ipmFiltered[nFlag], m_ipmFiltered[nFlag].depth(),
 		m_MatFy, Point(-1, -1), 0.0, BORDER_REPLICATE);
 	//double dStartTick = (double)getTickCount();
-	Mat rowMat;
-	rowMat = Mat(m_ipmFiltered[nFlag]).reshape(0, 1); //1row로 누적시킴
+	
+    Mat rowMat;
+	rowMat = Mat(m_ipmFiltered[nFlag]).reshape(0, 1); //1row로 누적시킴 || num of channel = '0' 채널변경x, rows=1
+    //#Q : 각 열의 (idx,value)가 의미하는 바는? (영상의 col, 누적시킨 픽셀 intensity의 합?)
+
 	//get the quantile
 	float fQval;
-	fQval = quantile((float*)&rowMat.data[0], rowMat.cols, m_sConfig.fLowerQuantile);		//Quantile 97%
-	//필터링 결과 영상에서 threshold value를 Quantile함수를 이용하여 결정
+	fQval = quantile((float*)&rowMat.data[0], rowMat.cols, m_sConfig.fLowerQuantile);//Quantile 97%
+	//[LYW_0824] : 1row의 누적된 이미지에서 값이 상위97%인 row(??)를 찾음 --> threshold value로 지정
+    //#Q : [LYW_0824] : row값이 아냐... 그냥 pixel의 intensity값 같은데???? 맞나?? 그래야 다음줄이 이해가 되는데??
 	threshold(m_ipmFiltered[nFlag], m_filteredThreshold[nFlag], fQval, NULL, THRESH_TOZERO);	//Threshold 미만 value를 zero로, 나머지 그대로
 	//ThresholdLower(imgSubImage,imgSubImage, fQtileThreshold);
 	//double dEndTick = (double)getTickCount();
 	//cout<<"reshape & quantile & threshold time  "<<(dEndTick-dStartTick) / getTickFrequency()*1000.0<<" msec"<<endl;
-
 }
+
 void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 	Mat matImage;
 	matImage = m_filteredThreshold[nFlag].clone();
@@ -867,7 +838,7 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 	int nMaxLoc;
 	double nMax;
 	//필터 결과 영상을 누적시키고 노이즈 제거 이후 후보군에 대해서 누적값의 순위를 결정하여 벡터라이즈화
-	GetVectorMax(matSumLines, nMax, nMaxLoc, m_sConfig.nLocalMaxIgnore);
+	GetVectorMax(matSumLines, nMax, nMaxLoc, m_sConfig.nLocalMaxIgnore); //#Q : [LYW_0824] : 이건 뭐지?? 봐도 모름...
 
 	float *pfMatSumLinesData = (float*)matSumLines.data;
 	//pfMatSumLinesData[matSumLines.cols*j+i];
@@ -942,7 +913,7 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 			GetTrackingLineCandidateModule(nFlag);//이전에 추적한 결과가 있을 경우, 검출 대상 차선의 위치가 월드좌표상으로 멀리 떨어진 값인지 확인
 		}
 		else
-			GetMaxLineScore(nFlag);
+			GetMaxLineScore(nFlag); //[LYW_0825] : score가 가장 높은 line과 그것의 score를 저장 1개.
 	}
 
 	//cout<<"nFlag"<<nFlag<<endl;
@@ -955,21 +926,27 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 }
 void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 	vector<SLine> lines = m_lanes[nFlag]; // [LYW_0724] : line fitting해야할 후보들, m_laneScore와 짝을 이룬다. (같은 index에 score가 저장되어 있음)
-	vector<float> lineScores = m_laneScore[nFlag];
-	/*cout<<m_lanes[nFlag].at(1).ptStartLine<<endl;
+    
+    //#debug
+	if (nFlag == LEFT_ROI0) printf("LEFT_ROI0: numLines:%d in LineFitting_1\n", lines.size()); //result:1 여기까지는 잘 넘어온다.
+	if (nFlag == LEFT_ROI2) printf("LEFT_ROI2: numLines:%d in LineFitting_1\n", lines.size());
+    vector<float> lineScores = m_laneScore[nFlag];
+	
+    /*cout<<m_lanes[nFlag].at(1).ptStartLine<<endl;
 	cout<<lines.at(1).ptStartLine<<endl;
 	cout<<m_laneScore[nFlag].at(1)<<endl;
 	cout<<lineScores.at(1)<<endl;*/
 	int width = m_sRoiInfo[nFlag].sizeIPM.width - 1;
 	int height = m_sRoiInfo[nFlag].sizeIPM.height - 1;
 
+    //#Q : [LYW_0824] : GroupLines는 왜 하는지 --> 클러스터링하는건가?? 
 	GroupLines(lines, lineScores, m_sRoiInfo[nFlag].nGroupThreshold, Size_<float>((float)width, (float)height));
 	float overlapThreshold = m_sRoiInfo[nFlag].fOverlapThreshold; //0.5; //.8;
 
 	vector<Rect> vecRectBoxes;
 
 	GetLinesBoundingBoxes(lines, LINE_VERTICAL, Size_<int>(width, height), vecRectBoxes);
-	GroupBoundingBoxes(vecRectBoxes, LINE_VERTICAL, overlapThreshold);
+	GroupBoundingBoxes(vecRectBoxes, LINE_VERTICAL, overlapThreshold); //[LYW_0825] : 바운딩박스 클러스터링
 
 	int window = m_sRoiInfo[nFlag].nRansacLineWindow; //15;
 	vector<SLine> newLines;
@@ -1028,9 +1005,16 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 			if (nBorderX<(nBorderGap) || nBorderX>(m_sRoiInfo[nFlag].sizeIPM.width - nBorderGap))
 				put = false;
 
+            
 			if (put){
-				newLines.push_back(line);
+                newLines.push_back(line);
 				newScores.push_back(lineScore);
+				//#debug
+                if (nFlag == LEFT_ROI0)
+				{
+					printf("cnt in LineFitting\n");
+                    printf("numLines:%d in Linefitting\n", newLines.size());
+				}
 			}
 		} // if
 		//clear
@@ -1074,16 +1058,19 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 	else{ // [LYW_0724] : Auto Calib가 아닌 일반적인 detection단계에서 찾은 차선을 다 넣어주는거야! 이 부분 때문에 다차선검출이 가능할 수 있어!!
 		m_lanes[nFlag] = newLines;
 		m_laneScore[nFlag] = newScores;
+		//#debug
+        if (nFlag == LEFT_ROI0) printf("numLines:%d in LineFitting\n", m_lanes[nFlag].size()); // 출력해봤더니 0으로 찍혀...-_-;;
 	}
-
-
 
 	//clean
 	//	boxes.clear();
 	newLines.clear();
 	newScores.clear();
 }
+
+//IPM에서 검출된 lines --> Image로
 void CMultiROILaneDetection::IPM2ImLines(EROINUMBER nFlag){ // 
+//[LYW_0825] : lines --> mat -( TransformGround2Image() )-> mat - ( Mat2Lines() ) -> Lines ( m_lanesResult )
 
 	if (m_lanes[nFlag].size() != 0){
 		//PointImIPM2World
@@ -1094,13 +1081,14 @@ void CMultiROILaneDetection::IPM2ImLines(EROINUMBER nFlag){ //
 			//cout<<m_lanes[nFlag].at(i).ptStartLine<<endl;
 			//cout<<m_lanesResult[nFlag].at(i).ptStartLine<<endl;
 
+
+            //#Q : [LYW_0825] : IPMLines --> ImageLines로 변환하는 과정인 것 같지??? 
 			//x-direction
 			m_lanesResult[nFlag].at(i).ptStartLine.x = m_lanes[nFlag].at(i).ptStartLine.x / (m_sRoiInfo[nFlag].dXScale);
 			m_lanesResult[nFlag].at(i).ptStartLine.x += m_sRoiInfo[nFlag].dXLimit[0];
 			//y-direction
 			m_lanesResult[nFlag].at(i).ptStartLine.y = m_lanes[nFlag].at(i).ptStartLine.y / (m_sRoiInfo[nFlag].dYScale);
 			m_lanesResult[nFlag].at(i).ptStartLine.y = m_sRoiInfo[nFlag].dYLimit[1] - m_lanesResult[nFlag].at(i).ptStartLine.y;
-
 			//x-direction
 			m_lanesResult[nFlag].at(i).ptEndLine.x = m_lanes[nFlag].at(i).ptEndLine.x / m_sRoiInfo[nFlag].dXScale;
 			m_lanesResult[nFlag].at(i).ptEndLine.x += m_sRoiInfo[nFlag].dXLimit[0];
@@ -1110,11 +1098,13 @@ void CMultiROILaneDetection::IPM2ImLines(EROINUMBER nFlag){ //
 			//record ground location
 			m_lanesGroundResult[nFlag].push_back(m_lanesResult[nFlag].at(i));
 		}
+
+        //#Q : dummy line은 왜 넣는거지?? 근데 main detection할 때는 안하나봐???
 		//WORLD2IMAGE
 		//convert them from world frame into camera frame
-		//
 		//put a dummy line at the beginning till we check that cvDiv bug
-		if ((nFlag != LEFT_ROI2) && (nFlag != LEFT_ROI3)){
+		printf("m_lanesReuslt size : %d in Lines2ImLines\n", m_lanesResult[nFlag].size() );
+		if ((nFlag != LEFT_ROI2) && (nFlag != LEFT_ROI3) && (nFlag != LEFT_ROI0)){
 			SLine dummy;
 			dummy.ptStartLine.x = 1.0;
 			dummy.ptStartLine.y = 1.0;
@@ -1214,6 +1204,8 @@ void CMultiROILaneDetection::GetMaxLineScore(EROINUMBER nFlag){
 	//reload
 	m_lanes[nFlag].push_back(SMAxLane);
 	m_laneScore[nFlag].push_back(fMaxScore);
+    //#debug
+	if (nFlag == LEFT_ROI0) printf("numLines:%d in GetMaxLinesScore\n", m_lanes[nFlag].size()); //result : 1개 나옮.
 }
 //tracking module
 //m_sTracking[nflag].bTracking
@@ -1222,6 +1214,7 @@ void CMultiROILaneDetection::GetTrackingLineCandidateModule(EROINUMBER nFlag){
 	vector<SWorldLane> vecWorldLane;
 	SLine sLineTemp;
 	SWorldLane sWorldLaneTemp;
+    //#Q : [LYW_0825] : dXScale로 나누고, dXLimit더하는 이유는 뭘까???
 	for (int i = 0; i < m_lanes[nFlag].size(); i++){//m_lanes는 각각의 ROI에 대한 line fitting 결과임
 		sLineTemp.ptStartLine.x = m_lanes[nFlag].at(i).ptStartLine.x / m_sRoiInfo[nFlag].dXScale; //IPM image 2 World 변환을 위한 계산
 		sLineTemp.ptStartLine.x += m_sRoiInfo[nFlag].dXLimit[0]; //IPM image 2 World 변환을 위한 계산
@@ -1233,6 +1226,7 @@ void CMultiROILaneDetection::GetTrackingLineCandidateModule(EROINUMBER nFlag){
 		sLineTemp.ptEndLine.y = m_lanes[nFlag].at(i).ptEndLine.y / m_sRoiInfo[nFlag].dYScale;
 		sLineTemp.ptEndLine.y = m_sRoiInfo[nFlag].dYLimit[1] - m_lanes[nFlag].at(i).ptEndLine.y;
 
+        // [LYW_0825] : fXcenter, fXderiv는 tracking 때 쓰려고 하는 변수인가???
 		sWorldLaneTemp.fXcenter = (sLineTemp.ptStartLine.x + sLineTemp.ptEndLine.x) / 2;
 		sWorldLaneTemp.fXderiv = sLineTemp.ptStartLine.x - sLineTemp.ptEndLine.x;
 		//20150519/////////////////////////////////////////////////////////////////////////////
@@ -1247,7 +1241,8 @@ void CMultiROILaneDetection::GetTrackingLineCandidateModule(EROINUMBER nFlag){
 	float fTempComp;
 	int nTargetTracker = m_sTracking[nFlag].nTargetTracker;
 
-	//ROI 내에서 검출된 여러 라인을 추적한 차선과의 거리를 비교하여 가장 가까운 라인을 남김
+	//ROI 내에서 검출된 여러 라인을 추적한 차선과의 거리를 비교하여 가장 가까운 라인을 남김 --> false alaram제거하는 기능
+    //[LYW_0825] :#Q : m_SKalmanLane[nTargetTracker].SKalmanTrackingLine.fXcenter는 estimated된 값인가???
 	for (int i = 0; i < vecWorldLane.size(); i++){
 		fTempComp = abs(m_SKalmanLane[nTargetTracker].SKalmanTrackingLine.fXcenter - vecWorldLane.at(i).fXcenter);
 		if (fTempComp < fMinDist){
@@ -1263,8 +1258,6 @@ void CMultiROILaneDetection::GetTrackingLineCandidateModule(EROINUMBER nFlag){
 	//reload
 	m_lanes[nFlag].push_back(SMAxLane);
 	m_laneScore[nFlag].push_back(fMaxScore);
-
-
 
 	if (fMinDist > DIST_TRACKING_WIDTH){
 		m_lanes[nFlag].clear();
@@ -1399,6 +1392,7 @@ void CMultiROILaneDetection::GroupLines(vector<SLine> &lines, vector<float> &lin
 {
 
 	//convert the lines into r-theta parameters
+    //#Q : [LYW_0825] : GroupLines이건 왜 하는걸까?? line2R-theta왜 하는거야?
 	int numInLines = lines.size();
 	vector<float> rs(numInLines);
 	vector<float> thetas(numInLines);
@@ -1608,6 +1602,8 @@ void CMultiROILaneDetection::GetLinesBoundingBoxes(const vector<SLine> &lines, L
 		break;
 	}
 }
+//[LYW_0825]
+//바운딩박스 클러스터링
 void CMultiROILaneDetection::GroupBoundingBoxes(vector<Rect> &boxes, LineType type, float groupThreshold){
 	bool cont = true;
 
@@ -2955,7 +2951,8 @@ void ShowResults(CMultiROILaneDetection &obj, EROINUMBER nflag){
 	Scalar(0,0,255),2);*/
 	if (nflag == LEFT_ROI0) //[LYW_0815]:LEFT_ROI0
 	{
-		for(unsigned int i=0; i< obj.m_lanesResult[nflag].size();i++)
+		printf("in LEFT_ROI0|| numLanes : %d in ShowResults\n", obj.m_lanesResult[nflag].size());
+        for(unsigned int i=0; i< obj.m_lanesResult[nflag].size();i++)
 		line(obj.m_imgResizeOrigin,
 		Point((int)obj.m_lanesResult[nflag][i].ptStartLine.x,(int)obj.m_lanesResult[nflag][i].ptStartLine.y),
 		Point((int)obj.m_lanesResult[nflag][i].ptEndLine.x,(int)obj.m_lanesResult[nflag][i].ptEndLine.y),
@@ -2971,7 +2968,7 @@ void ShowResults(CMultiROILaneDetection &obj, EROINUMBER nflag){
 	sprintf(strImg, "FT%d", nNum);
 	ShowImageNormalize(strImg, obj.m_filteredThreshold[nflag]);
 	sprintf(strImg, "Filt%d", nNum);
-	imshow(strImg, obj.m_ipmFiltered[nflag]);
+	imshow(strImg, obj.m_ipmFiltered[nflag]); //#Q : [LYW_0825] : RANSAC의 결과를 그려줘야되는거아냐?? m_ipmFiltered 이것을 왜 또 그려?
 
 
 }
