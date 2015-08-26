@@ -13,7 +13,7 @@ public:
 	CPedestrianDetection();
 	~CPedestrianDetection();
 
-	bool LoadClassifier(string strFilterFile);
+	bool LoadClassifier(string strClassifierFile);
 	vector<Rect_<int> > Detect(Mat& imgSrc);
 	void DrawBoundingBox(Mat& imgDisp);
 	void DrawBoundingBox(Mat& imgDisp, vector<Rect_<int> >& rectBB);

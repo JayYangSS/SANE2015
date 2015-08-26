@@ -54,10 +54,10 @@ CPedestrianDetection::~CPedestrianDetection()
 }
 
 // public
-bool CPedestrianDetection::LoadClassifier(string strFilterFile)
+bool CPedestrianDetection::LoadClassifier(string strClassifierFile)
 {
 	FILE *fp;
-	fopen_s(&fp, strFilterFile.c_str(), "rt");
+	fopen_s(&fp, strClassifierFile.c_str(), "rt");
 	if (fp == NULL) return false;
 
 	for (int i = 0; i < m_nTreeNodes*m_nTrees; i++)

@@ -22,9 +22,14 @@ int main()
 		Mat imgInput2;
 		resize(imgInput, imgInput2, Size(640, 360));
 
+		double t = (double)getTickCount();
+		
 		objPD.Detect(imgInput2);
+		
+		t = ((double)getTickCount() - t) / getTickFrequency();
+		printf("%.2lf\n", t * 1000);
+		
 		objPD.DrawBoundingBox(imgInput2);
-
 		imshow("asdf", imgInput2);
 
 		int nKey = waitKey(nDelayms);
