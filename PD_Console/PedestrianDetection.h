@@ -13,9 +13,72 @@ public:
 	CPedestrianDetection();
 	~CPedestrianDetection();
 
+	bool LoadClassifier(string strClassifierFile);
 	vector<Rect_<int> > Detect(Mat& imgSrc);
 	void DrawBoundingBox(Mat& imgDisp);
 	void DrawBoundingBox(Mat& imgDisp, vector<Rect_<int> >& rectBB);
+
+private:
+	static bool Comparator(const pair<float, Rect_<float> >& l, const pair<float, Rect_<float> >& r);
+	void GetChild(float *chns1, unsigned int *cids, unsigned int *fids, float *thrs, unsigned int offset, unsigned int &k0, unsigned int &k);
+	void AcfDetect(vector<Mat>& matData, vector<pair<float, Rect_<float> > >& vecRetVal);
+	vector<Rect_<int> > bbNMS(vector<pair<float, Rect_<float> > >& bbs);
+
+	void BuildPyramid(Mat& imgSrc, vector<vector<Mat> >& matData);
+	void RgbConvertTo(Mat& imgSrc, Mat& imgDst);
+	void GetPyramidScales();
+	void ResampleImg(Mat& imgSrc, Mat& imgDst, int nReHeight, int nReWidth, float ratioVal = 1.0f);
+	void ComputeChannelFeature(Mat& imgChn, vector<Mat>& vecimgChns);
+	void AddChannel(Mat& imgChn, vector<Mat>& vecimgChns, int h, int w);
+	void CalculateGradMag(Mat& imgSrc, Mat& imgDstMag, Mat& imgDstOrient);
+	void ConvTriangle(Mat& imgSrc, Mat& imgDst);
+	void NormalizeGradMag(Mat& imgSrc, Mat& imgDst);
+	void CalculateGradHist(Mat& imgSrcMag, Mat& imgSrcOrient, Mat& imgDstHist);
+	void SmoothAndPadChannels(vector<vector<Mat> >& matData);
+	void ConvFilterChannels(vector<vector<Mat> >& matData, float* chns);
+
+	vector<Rect_<int> > m_vecrectDetectedBB;
+	Size_<float> m_sizeInputImage;
+	int m_nScales;
+	vector<float> m_vecfScales;
+	vector<pair<float, float> > m_vecfScalesHW;
+	float m_fOverlap;
+
+	// classifier data
+	Size_<int> m_sizeModelPad;
+	int m_nStride;
+	float m_fCascadeThresh;
+	int m_nTreeDepth;
+	int m_nTreeNodes;
+	int m_nTrees;
+	float *m_pThrs;
+	float *m_pHs;
+	unsigned int *m_pFids;
+	unsigned int *m_pChild;
+
+	// filter data from file
+	vector<Mat> m_matFilter;
+
+	// params
+	float m_fShrink;
+	float m_fPerOct;
+	int m_nAppox;
+	int m_nChns;
+	Size_<float> m_sizeSmallestPyramid; // smallest scale of the pyramid
+	int m_nColorFlag; // rgb2luv
+	float m_fLambda[10];
+	Size2i m_sizePad;
+
+	// gradient params
+	bool m_bFullOrient;
+	float m_fNormConst;
+	int m_nBinSize;
+	int m_nOrients;
+	int m_nSoftBin;
+
+	// conv_tri params
+	int m_nDownSampling;
+	int m_nRadius;
 
 private:
 
@@ -96,6 +159,8 @@ private:
 	template<class T> void resampleCoef(int ha, int hb, int &n, int *&yas, int *&ybs, T *&wts, int bd[2], int pad = 0);
 	template<class T> void resample(T *A, T *B, int ha, int hb, int wa, int wb, int d, T r);
 
+	template<class T> void imPad(T *A, T *B, int h, int w, int d, int pt, int pb, int pl, int pr, int flag, T val);
+
 	// implemented into "gradientMex2.cpp"
 	void grad1(float *I, float *Gx, float *Gy, int h, int w, int x);
 	void grad2(float *I, float *Gx, float *Gy, int h, int w, int d);
@@ -120,26 +185,6 @@ private:
 	void convTri1(float *I, float *O, int h, int w, int d, float p, int s);
 	void convMaxY(float *I, float *O, float *T, int h, int r);
 	void convMax(float *I, float *O, int h, int w, int d, int r);
-
-private:
-	void BuildPyramid(Mat& imgSrc);
-	void RgbConvertTo(Mat& imgSrc, Mat& imgDst);
-	void GetPyramidScales();
-	void ResampleImg(Mat& imgSrc, Mat& imgDst, int nReHeight, int nReWidth, float ratioVal = 1.0f);
-	void CalculateGradMag(Mat& imgSrc, Mat& imgDstMag, Mat& imgDstOrient);
-	void ComputeChannelFeature(Mat& imgPyramid, vector<Mat>& vecimgChns);
-	void AddChannel(Mat& imgSrc, vector<Mat>& vecimgChns, int h, int w);
-	void ConvTriangle(Mat& imgSrc, Mat& imgDst);
-	void NormalizeGradMag(Mat& imgSrcMag, Mat& imgSrcSmooth, Mat& imgDstMag);
-	void CalculateGradHist(Mat& imgSrcMag, Mat& imgSrcOrient, Mat& imgDstHist);
-
-	Size_<double> m_sizeInputImage;
-	int m_nScales;
-	vector<double> m_vecdScales;
-	vector<Size_<double> > m_vecdScalesHW;
-	double m_lambdas[10];
-
-	vector<Rect_<int> > m_vecrectDetectedBB;////////////////////
 };
 
 // Constants for rgb2luv conversion and lookup table for y-> l conversion
@@ -187,8 +232,6 @@ template<class iT, class oT> void CPedestrianDetection::rgb2luv(iT *I, oT *J, in
 // Convert from rgb to luv using sse
 template<class iT> void CPedestrianDetection::rgb2luv_sse(iT *I, float *J, int n, float nrm) {
 	const int k = 256; float R[k], G[k], B[k];
-
-	printf("%d %d %d %d %d\n", size_t(R) & 15, size_t(G) & 15, size_t(B) & 15, size_t(I) & 15, size_t(J) & 15);
 
 	if ((size_t(R) & 15 || size_t(G) & 15 || size_t(B) & 15 || size_t(I) & 15 || size_t(J) & 15)
 		|| n % 4>0) {
@@ -435,4 +478,68 @@ void CPedestrianDetection::resample(T *A, T *B, int ha, int hb, int wa, int wb, 
 	}
 	alFree(xas); alFree(xbs); alFree(xwts); alFree(C);
 	alFree(yas); alFree(ybs); alFree(ywts);
+}
+
+// pad A by [pt,pb,pl,pr] and store result in B
+template<class T> void CPedestrianDetection::imPad(T *A, T *B, int h, int w, int d, int pt, int pb,
+	int pl, int pr, int flag, T val)
+{
+	int h1 = h + pt, hb = h1 + pb, w1 = w + pl, wb = w1 + pr, x, y, z, mPad;
+	int ct = 0, cb = 0, cl = 0, cr = 0;
+	if (pt<0) { ct = -pt; pt = 0; } if (pb < 0) { h1 += pb; cb = -pb; pb = 0; }
+	if (pl < 0) { cl = -pl; pl = 0; } if (pr < 0) { w1 += pr; cr = -pr; pr = 0; }
+	int *xs, *ys; x = pr > pl ? pr : pl; y = pt > pb ? pt : pb; mPad = x > y ? x : y;
+	bool useLookup = ((flag == 2 || flag == 3) && (mPad>h || mPad>w))
+		|| (flag == 3 && (ct || cb || cl || cr));
+	// helper macro for padding
+#define PAD(XL,XM,XR,YT,YM,YB) \
+  for(x=0;  x<pl; x++) for(y=0;  y<pt; y++) B[x*hb+y]=A[(XL+cl)*h+YT+ct]; \
+  for(x=0;  x<pl; x++) for(y=pt; y<h1; y++) B[x*hb+y]=A[(XL+cl)*h+YM+ct]; \
+  for(x=0;  x<pl; x++) for(y=h1; y<hb; y++) B[x*hb+y]=A[(XL+cl)*h+YB-cb]; \
+  for(x=pl; x<w1; x++) for(y=0;  y<pt; y++) B[x*hb+y]=A[(XM+cl)*h+YT+ct]; \
+  for(x=pl; x<w1; x++) for(y=h1; y<hb; y++) B[x*hb+y]=A[(XM+cl)*h+YB-cb]; \
+  for(x=w1; x<wb; x++) for(y=0;  y<pt; y++) B[x*hb+y]=A[(XR-cr)*h+YT+ct]; \
+  for(x=w1; x<wb; x++) for(y=pt; y<h1; y++) B[x*hb+y]=A[(XR-cr)*h+YM+ct]; \
+  for(x=w1; x<wb; x++) for(y=h1; y<hb; y++) B[x*hb+y]=A[(XR-cr)*h+YB-cb];
+	// build lookup table for xs and ys if necessary
+	if (useLookup) {
+		xs = (int*)wrMalloc(wb*sizeof(int)); int h2 = (pt + 1) * 2 * h;
+		ys = (int*)wrMalloc(hb*sizeof(int)); int w2 = (pl + 1) * 2 * w;
+		if (flag == 2) {
+			for (x = 0; x < wb; x++) { z = (x - pl + w2) % (w * 2); xs[x] = z < w ? z : w * 2 - z - 1; }
+			for (y = 0; y < hb; y++) { z = (y - pt + h2) % (h * 2); ys[y] = z < h ? z : h * 2 - z - 1; }
+		}
+		else if (flag == 3) {
+			for (x = 0; x < wb; x++) xs[x] = (x - pl + w2) % w;
+			for (y = 0; y < hb; y++) ys[y] = (y - pt + h2) % h;
+		}
+	}
+	// pad by appropriate value
+	for (z = 0; z < d; z++) {
+		// copy over A to relevant region in B
+		for (x = 0; x < w - cr - cl; x++)
+			memcpy(B + (x + pl)*hb + pt, A + (x + cl)*h + ct, sizeof(T)*(h - ct - cb));
+		// set boundaries of B to appropriate values
+		if (flag == 0 && val != 0) { // "constant"
+			for (x = 0; x < pl; x++) for (y = 0; y < hb; y++) B[x*hb + y] = val;
+			for (x = pl; x < w1; x++) for (y = 0; y < pt; y++) B[x*hb + y] = val;
+			for (x = pl; x < w1; x++) for (y = h1; y < hb; y++) B[x*hb + y] = val;
+			for (x = w1; x < wb; x++) for (y = 0; y < hb; y++) B[x*hb + y] = val;
+		}
+		else if (useLookup) { // "lookup"
+			PAD(xs[x], xs[x], xs[x], ys[y], ys[y], ys[y]);
+		}
+		else if (flag == 1) {  // "replicate"
+			PAD(0, x - pl, w - 1, 0, y - pt, h - 1);
+		}
+		else if (flag == 2) { // "symmetric"
+			PAD(pl - x - 1, x - pl, w + w1 - 1 - x, pt - y - 1, y - pt, h + h1 - 1 - y);
+		}
+		else if (flag == 3) { // "circular"
+			PAD(x - pl + w, x - pl, x - pl - w, y - pt + h, y - pt, y - pt - h);
+		}
+		A += h*w;  B += hb*wb;
+	}
+	if (useLookup) { wrFree(xs); wrFree(ys); }
+#undef PAD
 }
