@@ -282,7 +282,7 @@ int main()
 	//fileInformation_t preScanDB_t2;
 	strcpy(obj.m_sPreScanDB.szDataDir, szPrescanDB_dir);
 
-	unsigned int nTotalFrame = 90;
+	unsigned int nTotalFrame = 50;
 
 	obj.m_nFrameNum = FIRSTFRAMENUM; // 1
 	//first frame read
@@ -309,146 +309,7 @@ int main()
 //#Q : [LYW_0824] : 아래에 나열되는 CENTER_ROI, LEFT/RIGHT_ROI 2,3는 지워도 되는코드 아냐?? Auto Calib.에서는 결국 flag:AUTOCALIB 이거 쓰잖아
 	//근데 지워봤더니 검출결과가 안그려져... 이상하네... 승준이에게 물어보자
 
-	// CENTER_ROI
-	obj.m_sRoiInfo[CENTER_ROI].nLeft = 216;
-	obj.m_sRoiInfo[CENTER_ROI].nRight = 433;
-	obj.m_sRoiInfo[CENTER_ROI].nTop = 185;
-	obj.m_sRoiInfo[CENTER_ROI].nBottom = 220;
-	obj.m_sRoiInfo[CENTER_ROI].sizeRoi.width = obj.m_sRoiInfo[CENTER_ROI].nRight - obj.m_sRoiInfo[CENTER_ROI].nLeft;
-	obj.m_sRoiInfo[CENTER_ROI].sizeRoi.height = obj.m_sRoiInfo[CENTER_ROI].nBottom - obj.m_sRoiInfo[CENTER_ROI].nTop;
-	obj.m_sRoiInfo[CENTER_ROI].ptRoi.x = obj.m_sRoiInfo[CENTER_ROI].nLeft;
-	obj.m_sRoiInfo[CENTER_ROI].ptRoi.y = obj.m_sRoiInfo[CENTER_ROI].nTop;
-	obj.m_sRoiInfo[CENTER_ROI].ptRoiEnd.x = obj.m_sRoiInfo[CENTER_ROI].ptRoi.x + obj.m_sRoiInfo[CENTER_ROI].sizeRoi.width;
-	obj.m_sRoiInfo[CENTER_ROI].ptRoiEnd.y = obj.m_sRoiInfo[CENTER_ROI].ptRoi.y + obj.m_sRoiInfo[CENTER_ROI].sizeRoi.height;
 
-	obj.m_sRoiInfo[CENTER_ROI].sizeIPM.width = 213;
-	obj.m_sRoiInfo[CENTER_ROI].sizeIPM.height = 80;
-	//[LYW_0824] : 아래 4개는 워따 쓰는물건이고??
-	obj.m_sRoiInfo[CENTER_ROI].nDetectionThreshold = 4;
-	obj.m_sRoiInfo[CENTER_ROI].nGetEndPoint = 0;
-	obj.m_sRoiInfo[CENTER_ROI].nGroupThreshold = 10;
-	obj.m_sRoiInfo[CENTER_ROI].fOverlapThreshold = 0.3;
-	//[LYW_0824] : 이건 승준이도 건들지말라고 했음.
-	obj.m_sRoiInfo[CENTER_ROI].nRansacNumSamples = 2;	//Ransac
-	obj.m_sRoiInfo[CENTER_ROI].nRansacNumIterations = 40;
-	obj.m_sRoiInfo[CENTER_ROI].nRansacNumGoodFit = 10;
-	obj.m_sRoiInfo[CENTER_ROI].fRansacThreshold = 0.2;
-	obj.m_sRoiInfo[CENTER_ROI].nRansacScoreThreshold = 0;
-	obj.m_sRoiInfo[CENTER_ROI].nRansacLineWindow = 15;
-
-
-
-	//LEFT_ROI2
-	obj.m_sRoiInfo[LEFT_ROI2].nLeft = 216 + 10 + 40;
-	obj.m_sRoiInfo[LEFT_ROI2].nRight = 216 + 80 + 20;
-	obj.m_sRoiInfo[LEFT_ROI2].nTop = 205 - 30;
-	obj.m_sRoiInfo[LEFT_ROI2].nBottom = 205 + 15 - 30;
-	obj.m_sRoiInfo[LEFT_ROI2].sizeRoi.width = obj.m_sRoiInfo[LEFT_ROI2].nRight - obj.m_sRoiInfo[LEFT_ROI2].nLeft;
-	obj.m_sRoiInfo[LEFT_ROI2].sizeRoi.height = obj.m_sRoiInfo[LEFT_ROI2].nBottom - obj.m_sRoiInfo[LEFT_ROI2].nTop;
-	obj.m_sRoiInfo[LEFT_ROI2].ptRoi.x = obj.m_sRoiInfo[LEFT_ROI2].nLeft;
-	obj.m_sRoiInfo[LEFT_ROI2].ptRoi.y = obj.m_sRoiInfo[LEFT_ROI2].nTop;
-	obj.m_sRoiInfo[LEFT_ROI2].ptRoiEnd.x = obj.m_sRoiInfo[LEFT_ROI2].ptRoi.x + obj.m_sRoiInfo[LEFT_ROI2].sizeRoi.width;
-	obj.m_sRoiInfo[LEFT_ROI2].ptRoiEnd.y = obj.m_sRoiInfo[LEFT_ROI2].ptRoi.y + obj.m_sRoiInfo[LEFT_ROI2].sizeRoi.height;
-
-	obj.m_sRoiInfo[LEFT_ROI2].sizeIPM.width =
-		(obj.m_sRoiInfo[LEFT_ROI2].nRight - obj.m_sRoiInfo[LEFT_ROI2].nLeft)*1.5;
-	obj.m_sRoiInfo[LEFT_ROI2].sizeIPM.height =
-		(obj.m_sRoiInfo[LEFT_ROI2].nBottom - obj.m_sRoiInfo[LEFT_ROI2].nTop) * 2;
-	obj.m_sRoiInfo[LEFT_ROI2].nDetectionThreshold = 1.5;
-	obj.m_sRoiInfo[LEFT_ROI2].nGetEndPoint = 0;
-	obj.m_sRoiInfo[LEFT_ROI2].nGroupThreshold = 10;
-	obj.m_sRoiInfo[LEFT_ROI2].fOverlapThreshold = 0.3;
-
-	obj.m_sRoiInfo[LEFT_ROI2].nRansacNumSamples = 2;	//Ransac
-	obj.m_sRoiInfo[LEFT_ROI2].nRansacNumIterations = 40;
-	obj.m_sRoiInfo[LEFT_ROI2].nRansacNumGoodFit = 10;
-	obj.m_sRoiInfo[LEFT_ROI2].fRansacThreshold = 0.2;
-	obj.m_sRoiInfo[LEFT_ROI2].nRansacScoreThreshold = 0;
-	obj.m_sRoiInfo[LEFT_ROI2].nRansacLineWindow = 15;
-
-	//LEFT_ROI3
-	obj.m_sRoiInfo[LEFT_ROI3].nLeft = 216;
-	obj.m_sRoiInfo[LEFT_ROI3].nRight = 216 + 80;
-	obj.m_sRoiInfo[LEFT_ROI3].nTop = 205 - 5;
-	obj.m_sRoiInfo[LEFT_ROI3].nBottom = 205 + 15 - 5;
-	obj.m_sRoiInfo[LEFT_ROI3].sizeRoi.width = obj.m_sRoiInfo[LEFT_ROI3].nRight - obj.m_sRoiInfo[LEFT_ROI3].nLeft;
-	obj.m_sRoiInfo[LEFT_ROI3].sizeRoi.height = obj.m_sRoiInfo[LEFT_ROI3].nBottom - obj.m_sRoiInfo[LEFT_ROI3].nTop;
-	obj.m_sRoiInfo[LEFT_ROI3].ptRoi.x = obj.m_sRoiInfo[LEFT_ROI3].nLeft;
-	obj.m_sRoiInfo[LEFT_ROI3].ptRoi.y = obj.m_sRoiInfo[LEFT_ROI3].nTop;
-	obj.m_sRoiInfo[LEFT_ROI3].ptRoiEnd.x = obj.m_sRoiInfo[LEFT_ROI3].ptRoi.x + obj.m_sRoiInfo[LEFT_ROI3].sizeRoi.width;
-	obj.m_sRoiInfo[LEFT_ROI3].ptRoiEnd.y = obj.m_sRoiInfo[LEFT_ROI3].ptRoi.y + obj.m_sRoiInfo[LEFT_ROI3].sizeRoi.height;
-
-	obj.m_sRoiInfo[LEFT_ROI3].sizeIPM.width =
-		(obj.m_sRoiInfo[LEFT_ROI3].nRight - obj.m_sRoiInfo[LEFT_ROI3].nLeft)*1.5;
-	obj.m_sRoiInfo[LEFT_ROI3].sizeIPM.height =
-		(obj.m_sRoiInfo[LEFT_ROI3].nBottom - obj.m_sRoiInfo[LEFT_ROI3].nTop) * 2;
-	obj.m_sRoiInfo[LEFT_ROI3].nDetectionThreshold = 2;
-	obj.m_sRoiInfo[LEFT_ROI3].nGetEndPoint = 0;
-	obj.m_sRoiInfo[LEFT_ROI3].nGroupThreshold = 10;
-	obj.m_sRoiInfo[LEFT_ROI3].fOverlapThreshold = 0.3;
-
-	obj.m_sRoiInfo[LEFT_ROI3].nRansacNumSamples = 2;	//Ransac
-	obj.m_sRoiInfo[LEFT_ROI3].nRansacNumIterations = 40;
-	obj.m_sRoiInfo[LEFT_ROI3].nRansacNumGoodFit = 10;
-	obj.m_sRoiInfo[LEFT_ROI3].fRansacThreshold = 0.2;
-	obj.m_sRoiInfo[LEFT_ROI3].nRansacScoreThreshold = 0;
-	obj.m_sRoiInfo[LEFT_ROI3].nRansacLineWindow = 15;
-
-	//RIGHT_ROI2
-	obj.m_sRoiInfo[RIGHT_ROI2].nLeft = 433 - 80 - 20;
-	obj.m_sRoiInfo[RIGHT_ROI2].nRight = 433 - 10 - 40;
-	obj.m_sRoiInfo[RIGHT_ROI2].nTop = 205 - 30;
-	obj.m_sRoiInfo[RIGHT_ROI2].nBottom = 205 + 15 - 30;
-	obj.m_sRoiInfo[RIGHT_ROI2].sizeRoi.width = obj.m_sRoiInfo[RIGHT_ROI2].nRight - obj.m_sRoiInfo[RIGHT_ROI2].nLeft;
-	obj.m_sRoiInfo[RIGHT_ROI2].sizeRoi.height = obj.m_sRoiInfo[RIGHT_ROI2].nBottom - obj.m_sRoiInfo[RIGHT_ROI2].nTop;
-	obj.m_sRoiInfo[RIGHT_ROI2].ptRoi.x = obj.m_sRoiInfo[RIGHT_ROI2].nLeft;
-	obj.m_sRoiInfo[RIGHT_ROI2].ptRoi.y = obj.m_sRoiInfo[RIGHT_ROI2].nTop;
-	obj.m_sRoiInfo[RIGHT_ROI2].ptRoiEnd.x = obj.m_sRoiInfo[RIGHT_ROI2].ptRoi.x + obj.m_sRoiInfo[RIGHT_ROI2].sizeRoi.width;
-	obj.m_sRoiInfo[RIGHT_ROI2].ptRoiEnd.y = obj.m_sRoiInfo[RIGHT_ROI2].ptRoi.y + obj.m_sRoiInfo[RIGHT_ROI2].sizeRoi.height;
-
-	obj.m_sRoiInfo[RIGHT_ROI2].sizeIPM.width =
-		(obj.m_sRoiInfo[RIGHT_ROI2].nRight - obj.m_sRoiInfo[RIGHT_ROI2].nLeft)*1.5;
-	obj.m_sRoiInfo[RIGHT_ROI2].sizeIPM.height =
-		(obj.m_sRoiInfo[RIGHT_ROI2].nBottom - obj.m_sRoiInfo[RIGHT_ROI2].nTop) * 2;
-	obj.m_sRoiInfo[RIGHT_ROI2].nDetectionThreshold = 1.5;
-	obj.m_sRoiInfo[RIGHT_ROI2].nGetEndPoint = 0;
-	obj.m_sRoiInfo[RIGHT_ROI2].nGroupThreshold = 10;
-	obj.m_sRoiInfo[RIGHT_ROI2].fOverlapThreshold = 0.3;
-
-	obj.m_sRoiInfo[RIGHT_ROI2].nRansacNumSamples = 5;	//Ransac 정확도 parameter
-	obj.m_sRoiInfo[RIGHT_ROI2].nRansacNumIterations = 40;
-	obj.m_sRoiInfo[RIGHT_ROI2].nRansacNumGoodFit = 10;
-	obj.m_sRoiInfo[RIGHT_ROI2].fRansacThreshold = 0.2;
-	obj.m_sRoiInfo[RIGHT_ROI2].nRansacScoreThreshold = 0;
-	obj.m_sRoiInfo[RIGHT_ROI2].nRansacLineWindow = 15; 
-
-	//RIGHT_ROI3
-	obj.m_sRoiInfo[RIGHT_ROI3].nLeft = 433 - 80;
-	obj.m_sRoiInfo[RIGHT_ROI3].nRight = 433;
-	obj.m_sRoiInfo[RIGHT_ROI3].nTop = 205 - 5;
-	obj.m_sRoiInfo[RIGHT_ROI3].nBottom = 205 + 15 - 5;
-	obj.m_sRoiInfo[RIGHT_ROI3].sizeRoi.width = obj.m_sRoiInfo[RIGHT_ROI3].nRight - obj.m_sRoiInfo[RIGHT_ROI3].nLeft;
-	obj.m_sRoiInfo[RIGHT_ROI3].sizeRoi.height = obj.m_sRoiInfo[RIGHT_ROI3].nBottom - obj.m_sRoiInfo[RIGHT_ROI3].nTop;
-	obj.m_sRoiInfo[RIGHT_ROI3].ptRoi.x = obj.m_sRoiInfo[RIGHT_ROI3].nLeft;
-	obj.m_sRoiInfo[RIGHT_ROI3].ptRoi.y = obj.m_sRoiInfo[RIGHT_ROI3].nTop;
-	obj.m_sRoiInfo[RIGHT_ROI3].ptRoiEnd.x = obj.m_sRoiInfo[RIGHT_ROI3].ptRoi.x + obj.m_sRoiInfo[RIGHT_ROI3].sizeRoi.width;
-	obj.m_sRoiInfo[RIGHT_ROI3].ptRoiEnd.y = obj.m_sRoiInfo[RIGHT_ROI3].ptRoi.y + obj.m_sRoiInfo[RIGHT_ROI3].sizeRoi.height;
-
-	obj.m_sRoiInfo[RIGHT_ROI3].sizeIPM.width =
-		(obj.m_sRoiInfo[RIGHT_ROI3].nRight - obj.m_sRoiInfo[RIGHT_ROI3].nLeft)*1.5;
-	obj.m_sRoiInfo[RIGHT_ROI3].sizeIPM.height =
-		(obj.m_sRoiInfo[RIGHT_ROI3].nBottom - obj.m_sRoiInfo[RIGHT_ROI3].nTop) * 2;
-	obj.m_sRoiInfo[RIGHT_ROI3].nDetectionThreshold = 2;
-	obj.m_sRoiInfo[RIGHT_ROI3].nGetEndPoint = 0;
-	obj.m_sRoiInfo[RIGHT_ROI3].nGroupThreshold = 10;
-	obj.m_sRoiInfo[RIGHT_ROI3].fOverlapThreshold = 0.3;
-
-	obj.m_sRoiInfo[RIGHT_ROI3].nRansacNumSamples = 2;	//Ransac
-	obj.m_sRoiInfo[RIGHT_ROI3].nRansacNumIterations = 40;
-	obj.m_sRoiInfo[RIGHT_ROI3].nRansacNumGoodFit = 10;
-	obj.m_sRoiInfo[RIGHT_ROI3].fRansacThreshold = 0.2;
-	obj.m_sRoiInfo[RIGHT_ROI3].nRansacScoreThreshold = 0;
-	obj.m_sRoiInfo[RIGHT_ROI3].nRansacLineWindow = 15;
 
 
 	// AUTOCALIB
@@ -816,6 +677,18 @@ int main()
 		(obj.m_sRoiInfo[LEFT_ROI2].nRight - obj.m_sRoiInfo[LEFT_ROI2].nLeft)*fWidthScale;
 	obj.m_sRoiInfo[LEFT_ROI2].sizeIPM.height =
 		(obj.m_sRoiInfo[LEFT_ROI2].nBottom - obj.m_sRoiInfo[LEFT_ROI2].nTop)*fHeightScale;
+	
+	obj.m_sRoiInfo[LEFT_ROI2].nDetectionThreshold = 1.5;
+	obj.m_sRoiInfo[LEFT_ROI2].nGetEndPoint = 0;
+	obj.m_sRoiInfo[LEFT_ROI2].nGroupThreshold = 10;
+	obj.m_sRoiInfo[LEFT_ROI2].fOverlapThreshold = 0.3;
+
+	obj.m_sRoiInfo[LEFT_ROI2].nRansacNumSamples = 2;	//Ransac
+	obj.m_sRoiInfo[LEFT_ROI2].nRansacNumIterations = 40;
+	obj.m_sRoiInfo[LEFT_ROI2].nRansacNumGoodFit = 10;
+	obj.m_sRoiInfo[LEFT_ROI2].fRansacThreshold = 0.2;
+	obj.m_sRoiInfo[LEFT_ROI2].nRansacScoreThreshold = 0;
+	obj.m_sRoiInfo[LEFT_ROI2].nRansacLineWindow = 15;
 
 	//LEFT_ROI3
 	obj.m_sRoiInfo[LEFT_ROI3].nLeft = rectLeftBottom.x - rectLeftBottom.width / 2;
@@ -833,24 +706,51 @@ int main()
 	obj.m_sRoiInfo[LEFT_ROI3].sizeIPM.height =
 		(obj.m_sRoiInfo[LEFT_ROI3].nBottom - obj.m_sRoiInfo[LEFT_ROI3].nTop)*fHeightScale;
 
+	obj.m_sRoiInfo[LEFT_ROI3].nDetectionThreshold = 2;
+	obj.m_sRoiInfo[LEFT_ROI3].nGetEndPoint = 0;
+	obj.m_sRoiInfo[LEFT_ROI3].nGroupThreshold = 10;
+	obj.m_sRoiInfo[LEFT_ROI3].fOverlapThreshold = 0.3;
+
+	obj.m_sRoiInfo[LEFT_ROI3].nRansacNumSamples = 2;	//Ransac
+	obj.m_sRoiInfo[LEFT_ROI3].nRansacNumIterations = 40;
+	obj.m_sRoiInfo[LEFT_ROI3].nRansacNumGoodFit = 10;
+	obj.m_sRoiInfo[LEFT_ROI3].fRansacThreshold = 0.2;
+	obj.m_sRoiInfo[LEFT_ROI3].nRansacScoreThreshold = 0;
+	obj.m_sRoiInfo[LEFT_ROI3].nRansacLineWindow = 15;
+
 
 	//[LYW_0815]: ROI추가 시도
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//LEFT_ROI0
-	obj.m_sRoiInfo[LEFT_ROI0].nLeft = rectLeftTop.x - rectLeftTop.width / 2;
-	obj.m_sRoiInfo[LEFT_ROI0].nRight = rectLeftTop.x + rectLeftTop.width / 2;
+	obj.m_sRoiInfo[LEFT_ROI0].nLeft = obj.m_sRoiInfo[LEFT_ROI2].nLeft - obj.m_sRoiInfo[LEFT_ROI2].sizeRoi.width;
+	obj.m_sRoiInfo[LEFT_ROI0].nRight = obj.m_sRoiInfo[LEFT_ROI2].nLeft;
 	obj.m_sRoiInfo[LEFT_ROI0].nTop = rectLeftTop.y - rectLeftTop.height / 2;
 	obj.m_sRoiInfo[LEFT_ROI0].nBottom = rectLeftTop.y + rectLeftTop.height / 2;
-	obj.m_sRoiInfo[LEFT_ROI0].sizeRoi.width = obj.m_sRoiInfo[LEFT_ROI0].nRight - obj.m_sRoiInfo[LEFT_ROI0].nLeft;
-	obj.m_sRoiInfo[LEFT_ROI0].sizeRoi.height = obj.m_sRoiInfo[LEFT_ROI0].nBottom - obj.m_sRoiInfo[LEFT_ROI0].nTop;
-	obj.m_sRoiInfo[LEFT_ROI0].ptRoi.x = obj.m_sRoiInfo[LEFT_ROI2].ptRoi.x - obj.m_sRoiInfo[LEFT_ROI0].sizeRoi.width;
+	obj.m_sRoiInfo[LEFT_ROI0].sizeRoi.width = obj.m_sRoiInfo[LEFT_ROI2].sizeRoi.width;
+	obj.m_sRoiInfo[LEFT_ROI0].sizeRoi.height = obj.m_sRoiInfo[LEFT_ROI2].sizeRoi.height;
+	obj.m_sRoiInfo[LEFT_ROI0].ptRoi.x = obj.m_sRoiInfo[LEFT_ROI0].nLeft;
 	obj.m_sRoiInfo[LEFT_ROI0].ptRoi.y = obj.m_sRoiInfo[LEFT_ROI0].nTop;
-	obj.m_sRoiInfo[LEFT_ROI0].ptRoiEnd.x = obj.m_sRoiInfo[LEFT_ROI0].ptRoi.x + obj.m_sRoiInfo[LEFT_ROI0].sizeRoi.width;
-	obj.m_sRoiInfo[LEFT_ROI0].ptRoiEnd.y = obj.m_sRoiInfo[LEFT_ROI0].ptRoi.y + obj.m_sRoiInfo[LEFT_ROI0].sizeRoi.height;
+	obj.m_sRoiInfo[LEFT_ROI0].ptRoiEnd.x = obj.m_sRoiInfo[LEFT_ROI0].nRight;
+	obj.m_sRoiInfo[LEFT_ROI0].ptRoiEnd.y = obj.m_sRoiInfo[LEFT_ROI0].nBottom;
 	obj.m_sRoiInfo[LEFT_ROI0].sizeIPM.width =
 		(obj.m_sRoiInfo[LEFT_ROI0].nRight - obj.m_sRoiInfo[LEFT_ROI0].nLeft)*fWidthScale;
 	obj.m_sRoiInfo[LEFT_ROI0].sizeIPM.height =
 		(obj.m_sRoiInfo[LEFT_ROI0].nBottom - obj.m_sRoiInfo[LEFT_ROI0].nTop)*fHeightScale;
+	
+	//[LYW_0829] : RANSAC line fitting에 쓰이는 파라미터
+	obj.m_sRoiInfo[LEFT_ROI0].nDetectionThreshold = 2;
+	obj.m_sRoiInfo[LEFT_ROI0].nGetEndPoint = 0;
+	obj.m_sRoiInfo[LEFT_ROI0].nGroupThreshold = 10;
+	obj.m_sRoiInfo[LEFT_ROI0].fOverlapThreshold = 0.3;
+
+	obj.m_sRoiInfo[LEFT_ROI0].nRansacNumSamples = 2;	//Ransac
+	obj.m_sRoiInfo[LEFT_ROI0].nRansacNumIterations = 40;
+	obj.m_sRoiInfo[LEFT_ROI0].nRansacNumGoodFit = 10;
+	obj.m_sRoiInfo[LEFT_ROI0].fRansacThreshold = 0.2;
+	obj.m_sRoiInfo[LEFT_ROI0].nRansacScoreThreshold = 0;
+	obj.m_sRoiInfo[LEFT_ROI0].nRansacLineWindow = 15;
+
+
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -871,6 +771,19 @@ int main()
 	obj.m_sRoiInfo[RIGHT_ROI2].sizeIPM.height =
 		(obj.m_sRoiInfo[RIGHT_ROI2].nBottom - obj.m_sRoiInfo[RIGHT_ROI2].nTop)*fHeightScale;
 
+	obj.m_sRoiInfo[RIGHT_ROI2].nDetectionThreshold = 1.5;
+	obj.m_sRoiInfo[RIGHT_ROI2].nGetEndPoint = 0;
+	obj.m_sRoiInfo[RIGHT_ROI2].nGroupThreshold = 10;
+	obj.m_sRoiInfo[RIGHT_ROI2].fOverlapThreshold = 0.3;
+
+	obj.m_sRoiInfo[RIGHT_ROI2].nRansacNumSamples = 5;	//Ransac 정확도 parameter
+	obj.m_sRoiInfo[RIGHT_ROI2].nRansacNumIterations = 40;
+	obj.m_sRoiInfo[RIGHT_ROI2].nRansacNumGoodFit = 10;
+	obj.m_sRoiInfo[RIGHT_ROI2].fRansacThreshold = 0.2;
+	obj.m_sRoiInfo[RIGHT_ROI2].nRansacScoreThreshold = 0;
+	obj.m_sRoiInfo[RIGHT_ROI2].nRansacLineWindow = 15;
+
+
 	//RIGHT_ROI3
 	obj.m_sRoiInfo[RIGHT_ROI3].nLeft = rectRightBottom.x - rectRightBottom.width / 2;
 	obj.m_sRoiInfo[RIGHT_ROI3].nRight = rectRightBottom.x + rectRightBottom.width / 2;
@@ -886,6 +799,19 @@ int main()
 		(obj.m_sRoiInfo[RIGHT_ROI3].nRight - obj.m_sRoiInfo[RIGHT_ROI3].nLeft)*fWidthScale;
 	obj.m_sRoiInfo[RIGHT_ROI3].sizeIPM.height =
 		(obj.m_sRoiInfo[RIGHT_ROI3].nBottom - obj.m_sRoiInfo[RIGHT_ROI3].nTop)*fHeightScale;
+	
+	//[LYW_0829] : RANSAC line fitting에 쓰이는 파라미터
+	obj.m_sRoiInfo[RIGHT_ROI3].nDetectionThreshold = 2;
+	obj.m_sRoiInfo[RIGHT_ROI3].nGetEndPoint = 0;
+	obj.m_sRoiInfo[RIGHT_ROI3].nGroupThreshold = 10;
+	obj.m_sRoiInfo[RIGHT_ROI3].fOverlapThreshold = 0.3;
+
+	obj.m_sRoiInfo[RIGHT_ROI3].nRansacNumSamples = 2;	//Ransac
+	obj.m_sRoiInfo[RIGHT_ROI3].nRansacNumIterations = 40;
+	obj.m_sRoiInfo[RIGHT_ROI3].nRansacNumGoodFit = 10;
+	obj.m_sRoiInfo[RIGHT_ROI3].fRansacThreshold = 0.2;
+	obj.m_sRoiInfo[RIGHT_ROI3].nRansacScoreThreshold = 0;
+	obj.m_sRoiInfo[RIGHT_ROI3].nRansacLineWindow = 15;
 
 
 
@@ -1004,6 +930,7 @@ int main()
 				//////////////////////////////////////////////////////////////////////////
 				
 				
+				// m_lanesGroundResult --> m_GroundTracking
 				obj.TrackingStageGround(LEFT_ROI2, 0);
 				obj.TrackingStageGround(LEFT_ROI3, 0);
 				obj.TrackingStageGround(RIGHT_ROI2, 1);
@@ -1078,7 +1005,7 @@ int main()
 				ShowResults(obj, RIGHT_ROI2);
 				ShowResults(obj, RIGHT_ROI3);
 
-				obj.ClearResultVector(LEFT_ROI0); //[LYW_0815] : ROI추가(7)
+			//	obj.ClearResultVector(LEFT_ROI0); //[LYW_0815] : ROI추가(7)
 				obj.ClearResultVector(LEFT_ROI2);
 				obj.ClearResultVector(LEFT_ROI3);
 				obj.ClearResultVector(RIGHT_ROI2);
@@ -1091,6 +1018,7 @@ int main()
 
 
 				////tracking module
+				//#Q:[LYW_0829] : lateral distance계산하는 것 같은데 어떻게 계산하는거지?
 				if (obj.m_bTrackingFlag[0]){
 
 					int ssTemp = obj.m_sTrakingLane[0].fXcenter / 1000 * 100;
@@ -1107,6 +1035,7 @@ int main()
 					fLeftGround2 = float(ssTemp) / 100;
 					ssLeft2 << fLeftGround2;
 				} 
+
 				//Lane Draw & Lateral Distance Draw
                 //[LYW_0825] : m_imgResizeOrigin에 그린다.
 				if ((obj.m_bDraw[0] == true) && (obj.m_bDraw[1] == true)){
@@ -1224,7 +1153,7 @@ int main()
 		////tracking module
 		obj.ClearDetectionResult(0);
 		obj.ClearDetectionResult(1);
-		obj.ClearDetectionResult(2);//[LYW_0815] : ROI추가(12)
+	//	obj.ClearDetectionResult(2);//[LYW_0815] : ROI추가(12)
 
 
 	}
