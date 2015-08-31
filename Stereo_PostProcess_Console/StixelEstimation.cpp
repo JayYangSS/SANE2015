@@ -17,8 +17,9 @@ CStixelEstimation::CStixelEstimation()
 	m_dMaxDist = 30.;
 	m_nNumberOfDisp = 160;
 	m_nStereoAlg = STEREO_SGBM;
-	
+
 	help();
+	MakePseudoColorLUT();
 }
 
 void CStixelEstimation::help()
@@ -92,9 +93,85 @@ void CStixelEstimation::cvtPseudoColorImage(Mat& srcGray, Mat& dstColor)
 	}
 }
 
+int CStixelEstimation::GetVanishingPointY(int nVanishingPointY){
 
+	m_nVanishingY = nVanishingPointY;
+	m_dPitchDeg = fastAtan2(nVanishingPointY - m_sizeSrc.height / 2, m_nFocalLength);
+}
+void CStixelEstimation::SetParam(){
+	m_dBaseLine = 0.;
+	m_nFocalLength = 0;
+	m_dPitchDeg = 0.;
+	m_dMaxDist = 30.;
+	m_nNumberOfDisp = 160;
+	m_nStereoAlg = STEREO_SGBM;
+	m_nStixelWidth = 1;
+}
+void CStixelEstimation::SetParamStereo(int nNumOfDisp, int nWindowSize, int nStereoAlg){
+	m_nNumberOfDisp = nNumOfDisp;
+	m_nWindowSize = nWindowSize;
+	m_nStereoAlg = nStereoAlg;
 
-int CreateDisparity(){
+	SetParamOCVStereo();
+}
+void CStixelEstimation::SetParam(int nDataSetName){
+	if (nDataSetName == Daimler){
+		m_dBaseLine = 0.25;
+		m_nFocalLength = 1200;
+		m_dPitchDeg = -1.89;
+		m_dMaxDist = 60.;
+		m_nNumberOfDisp = 48;
+		m_nStereoAlg = STEREO_SGBM;
+		m_nWindowSize = 7;
+		m_sizeSrc = Size(640, 480);
+	}
+	else if (nDataSetName == KITTI){
+		printf("Not available\n");
+	}
+	else
+		printf("Just Daimler avaiilable\n");
+
+	SetParamOCVStereo();
+}
+void CStixelEstimation::SetParamOCVStereo()
+{
+	bm.state->preFilterCap = 31;
+	bm.state->SADWindowSize = m_nWindowSize > 0 ? m_nWindowSize : 11;
+	bm.state->minDisparity = 1;
+	bm.state->numberOfDisparities = m_nNumberOfDisp;
+	bm.state->textureThreshold = 10;
+	bm.state->uniquenessRatio = 15;
+	bm.state->speckleWindowSize = 25;//9;
+	bm.state->speckleRange = 32;//4;
+	bm.state->disp12MaxDiff = 1;
+
+	sgbm.preFilterCap = 63;
+	sgbm.SADWindowSize = m_nWindowSize > 0 ? m_nWindowSize : 7;
+
+	int cn = 1;//imgLeftInput.channels();
+
+	sgbm.P1 = 8 * cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
+	sgbm.P2 = 32 * cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
+	sgbm.minDisparity = 1;
+	sgbm.numberOfDisparities = m_nNumberOfDisp;//numberOfDisparities;
+	sgbm.uniquenessRatio = 10;
+	sgbm.speckleWindowSize = bm.state->speckleWindowSize;
+	sgbm.speckleRange = bm.state->speckleRange;
+	sgbm.disp12MaxDiff = 1;
+}
+
+void CStixelEstimation::SetImage(Mat& imgLeftInput, Mat& imgRightInput){
+	m_imgLeftInput = imgLeftInput;
+	m_imgRightInput = imgRightInput;
+}
+
+int CStixelEstimation::CreateDisparity(){
+	if (m_nStereoAlg == STEREO_BM){
+
+	}
+	else if (m_nStereoAlg == STEREO_SGBM){
+
+	}
 
 	return 0;
 }

@@ -341,6 +341,7 @@ int main()
 	//PostProcess(imgDisp8Temp, 48);
 	PostProcess(disp8, 48);
 	//imshow("post process", imgDisp8Temp);
+	imshow("post process disparity", disp8);
 
 	t = getTickCount() - t;
 	dtime = t * 1000 / getTickFrequency();
@@ -418,7 +419,8 @@ int main()
 
 	t = getTickCount() - t;
 
-	Mat imgDispfilter3 = FilterHeight3m(-1.842016, 220.22857, dispFiltered2);// 1m
+	//Mat imgDispfilter3 = FilterHeight3m(-1.842016, 200.22857, dispFiltered2);// 1m
+	Mat imgDispfilter3 = FilterHeight3m(0.1016, 192.696210, dispFiltered2);// 1m
 	imshow("remove sky", imgDispfilter3);
 
 	t = getTickCount() - t;
@@ -491,7 +493,7 @@ int main()
 	//printf("image , Time elapsed: %fms\n", dtime);
 
 	// Display images and wait for a key press
-	waitKey();
+	//waitKey();
 	return 0;
 }
 
