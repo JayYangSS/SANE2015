@@ -165,6 +165,12 @@ void CStixelEstimation::SetImage(Mat& imgLeftInput, Mat& imgRightInput){
 	m_imgRightInput = imgRightInput;
 }
 
+void CStixelEstimation::Display(){
+	imshow("Disparity", m_imgGrayDisp8);
+
+	waitKey(0);
+}
+
 int CStixelEstimation::CreateDisparity(){
 	if (m_nStereoAlg == STEREO_BM){
 		bm(m_imgLeftInput, m_imgRightInput, m_matDisp16, CV_16S);
@@ -187,4 +193,22 @@ int CStixelEstimation::ImproveDisparity(){
 		}
 	}
 	return 0;
+}
+
+int CStixelEstimation::ComputeVDisparity()
+{
+	int maxDisp = 255;
+	m_imgVDisp = Mat(m_imgGrayDisp8.rows, 255, CV_8U, Scalar(0));
+	for (int u = 0; u<m_imgGrayDisp8.rows; u++){
+		if (u < 200) continue; // we are finding ground. therefore we check pixels below vanishing point 
+		for (int v = 0; v<m_imgGrayDisp8.cols; v++){
+			int disp = (m_imgGrayDisp8.at<uchar>(u, v));// / 8;
+			//if(disp>0 && disp < maxDisp){
+			if (disp>6 && disp < maxDisp - 2){ //We remove pixels of sky and car to compute the roadline
+				m_imgVDisp.at<unsigned char>(u, disp) += 1;
+			}
+		}
+	}
+	return 0;
+
 }

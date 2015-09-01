@@ -86,6 +86,7 @@ private:
 	Mat m_matDisp16;		//16bit disparity
 	Mat m_imgGrayDisp8;		//8bit disparity image
 	Mat m_imgColorDisp8;	//8bit 3ch disparity image
+	Mat m_imgVDisp;			//v-disparity image
 
 	//LUT
 	unsigned char m_pseudoColorLUT[256][3]; // RGB

@@ -18,7 +18,7 @@ int main()
 	objStixelEstimation.SetImage(imgLeftInput, imgRightInput);
 	objStixelEstimation.CreateDisparity();
 
-
+	objStixelEstimation.Display();
 
 	return 0;
 }
