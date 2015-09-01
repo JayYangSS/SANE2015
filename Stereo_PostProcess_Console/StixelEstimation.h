@@ -120,6 +120,7 @@ public:
 	void Display();
 	
 	int CreateDisparity();				//make disparity(16bit, 8bit)
+	int ImproveDisparity();
 	int ComputeVDisparity();
 	int RmVDisparityNoise();
 	int StoreGroundPoint();				//Vector<Point2f>

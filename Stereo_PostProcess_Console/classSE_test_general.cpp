@@ -16,6 +16,7 @@ int main()
 	//imgLeftInput = imread();
 	//imgRightInput = imread();
 	objStixelEstimation.SetImage(imgLeftInput, imgRightInput);
+	objStixelEstimation.CreateDisparity();
 
 
 

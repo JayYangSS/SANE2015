@@ -167,11 +167,24 @@ void CStixelEstimation::SetImage(Mat& imgLeftInput, Mat& imgRightInput){
 
 int CStixelEstimation::CreateDisparity(){
 	if (m_nStereoAlg == STEREO_BM){
-
+		bm(m_imgLeftInput, m_imgRightInput, m_matDisp16, CV_16S);
 	}
 	else if (m_nStereoAlg == STEREO_SGBM){
-
+		sgbm(m_imgLeftInput, m_imgRightInput, m_matDisp16);
 	}
+	m_matDisp16.convertTo(m_imgGrayDisp8, CV_8U, 255 / (m_nNumberOfDisp*16.));
 
+	return 0;
+}
+int CStixelEstimation::ImproveDisparity(){
+	uchar chTempCur = 0;
+	uchar chTempPrev = 0;
+	for (int v = 0; v < m_imgGrayDisp8.rows; v++){
+		for (int u = m_nNumberOfDisp; u < m_imgGrayDisp8.cols; u++){
+			chTempCur = m_imgGrayDisp8.at<uchar>(v, u);
+			if (chTempCur == 0) m_imgGrayDisp8.at<uchar>(v, u) = chTempPrev;
+			else chTempPrev = chTempCur;
+		}
+	}
 	return 0;
 }
