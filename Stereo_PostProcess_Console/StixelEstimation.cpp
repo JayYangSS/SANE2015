@@ -121,7 +121,7 @@ void CStixelEstimation::SetParam(int nDataSetName){
 		m_dPitchDeg = -1.89;
 		m_dMaxDist = 60.;
 		m_nNumberOfDisp = 48;
-		m_nStereoAlg = STEREO_SGBM;
+		m_nStereoAlg = STEREO_BM;
 		m_nWindowSize = 7;
 		m_sizeSrc = Size(640, 480);
 	}
@@ -166,6 +166,7 @@ void CStixelEstimation::SetImage(Mat& imgLeftInput, Mat& imgRightInput){
 }
 
 void CStixelEstimation::Display(){
+	imshow("Left Input", m_imgLeftInput);
 	imshow("Disparity", m_imgGrayDisp8);
 
 	waitKey(0);
