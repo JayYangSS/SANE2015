@@ -108,16 +108,10 @@ vector<Rect_<int> > CPedestrianDetection::Detect(Mat& imgSrc)
 }
 
 // public
-void CPedestrianDetection::DrawBoundingBox(Mat& imgDisp, vector<Rect_<int> >& rectBB)
+void CPedestrianDetection::DrawBoundingBox(Mat& imgDisp, const Scalar color)
 {
-	for (int i = 0; i < (int)rectBB.size(); i++)
-		rectangle(imgDisp, rectBB[i], CV_RGB(0, 255, 0), 2);
-}
-
-// public
-void CPedestrianDetection::DrawBoundingBox(Mat& imgDisp)
-{
-	DrawBoundingBox(imgDisp, m_vecrectDetectedBB);
+	for (int i = 0; i < (int)m_vecrectDetectedBB.size(); i++)
+		rectangle(imgDisp, m_vecrectDetectedBB[i], color, 2);
 }
 
 //////////////////////////////////////////////////////////////////////////

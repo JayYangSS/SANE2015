@@ -2,7 +2,7 @@
 
 int main()
 {
-	VideoCapture vcap("PD_sunny.mp4");
+	VideoCapture vcap("../CVLAB_dataset/data/$$2015-03-18-09h-59m-40s_F_normal.mp4");
 	if (!vcap.isOpened())
 		return -1;
 
@@ -12,25 +12,29 @@ int main()
 	Mat imgInput;
 	Mat imgDisp;
 	int nDelayms = 1;
+	int cntFrames = 0;
 
 	while (1)
 	{
 		vcap >> imgInput;
 		if (imgInput.empty()) break;
 
-		imgDisp = imgInput.clone();
-		Mat imgInput2;
-		resize(imgInput, imgInput2, Size(640, 360));
+		Mat imgInputResz;
+		Rect rectROI = Rect(1280 / 4, 720 / 4, 1280 / 2, 720 / 2);
+		imgInputResz = imgInput(rectROI).clone();
+		imgDisp = imgInputResz.clone();
 
 		double t = (double)getTickCount();
 		
-		objPD.Detect(imgInput2);
+		objPD.Detect(imgInputResz);
 		
 		t = ((double)getTickCount() - t) / getTickFrequency();
-		printf("%.2lf\n", t * 1000);
-		
-		objPD.DrawBoundingBox(imgInput2);
-		imshow("asdf", imgInput2);
+		printf("%.2lf ms  %.1lf fps\n", t * 1000, 1 / t);
+
+		objPD.DrawBoundingBox(imgDisp, CV_RGB(0, 0, 255));
+
+		imshow("Display", imgDisp);
+		cntFrames++;
 
 		int nKey = waitKey(nDelayms);
 		if (nKey == 27) break;
