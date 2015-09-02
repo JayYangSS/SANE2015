@@ -167,11 +167,38 @@ int StixelEstimation_img(Mat& imgDispRm, stixel_t* objStixels)
 // calcul the disparity map between two images
 int calculDisp(Mat& im1, Mat& im2, Mat& imgDisp16){
 	
-	StereoSGBM sgbm (0, 48, 5, 8 * 5 * 5, 32 * 5 * 5, 1, 0, 5, 100, 32, false);
+	StereoBM bm;
+	bm.state->preFilterCap = 31;
+	bm.state->SADWindowSize = 13;
+	bm.state->minDisparity = 1;
+	bm.state->numberOfDisparities = 48;
+	bm.state->textureThreshold = 10;
+	bm.state->uniquenessRatio = 15;
+	bm.state->speckleWindowSize = 25;//9;
+	bm.state->speckleRange = 32;//4;
+	bm.state->disp12MaxDiff = 1;
+
+	//StereoSGBM sgbm (0, 48, 5, 8 * 5 * 5, 32 * 5 * 5, 1, 0, 5, 100, 32, false);
 	//sgbm = StereoSGBM(0, 32, 5, 8 * 5 * 5, 8 * 5 * 5, 1, 5, 10, 9, 4, false);
 	
-	sgbm(im1, im2, imgDisp16);
+	bm(im1, im2, imgDisp16, CV_16S);
+	//sgbm(im1, im2, imgDisp16);
 	//disp.convertTo(disp8, CV_8U);
+	return 0;
+}
+
+int PostProcess(Mat& imgDisp8, int nNumOfDisp)
+{
+	uchar chTempCur = 0;
+	uchar chTempPrev = 0;
+	for (int v = 0; v < imgDisp8.rows; v++){
+		for (int u = nNumOfDisp; u < imgDisp8.cols; u++){
+			chTempCur = imgDisp8.at<uchar>(v, u);
+			if (chTempCur == 0) imgDisp8.at<uchar>(v, u)=chTempPrev;
+			else chTempPrev = chTempCur;
+		}
+	}
+	
 	return 0;
 }
 
@@ -273,14 +300,15 @@ Mat FilterHeight3m(double slope, double orig, Mat& img)
 		for (int v = 0; v<img.cols; v++){
 			int value = img.at<unsigned char>(u, v);
 			//double test = orig + slope*value - u;
-			if (u > (orig+slope*value)){
-				img.at<unsigned char>(u, v) = value;
+			if (u < (orig+slope*value)){
+				//img.at<unsigned char>(u, v) = value;
+				img.at<unsigned char>(u, v) = 0;
 				//res.at<unsigned char>(u, v) = value;
 			}
-			else{
-				img.at<unsigned char>(u, v) = 0;
-				//res.at<unsigned char>(u, v) = 0;
-			}
+			//else{
+			//	img.at<unsigned char>(u, v) = 0;
+			//	//res.at<unsigned char>(u, v) = 0;
+			//}
 		}
 	}
 	return img;
@@ -290,6 +318,7 @@ int main()
 {
 	double dtime = 0;
 	int64 t = getTickCount();
+	int64 tp = getTickCount();
 
 	// Open image from input file in grayscale
 	Mat img1 = imread("Left_923730u.pgm", 0);
@@ -304,6 +333,14 @@ int main()
 	calculDisp(img1, img2, disp);
 	disp.convertTo(disp8, CV_8U, 255 / (48*16.));
 	imshow("diparity map", disp8);
+	
+
+	
+
+	//Mat imgDisp8Temp = disp8.clone();
+	//PostProcess(imgDisp8Temp, 48);
+	PostProcess(disp8, 48);
+	//imshow("post process", imgDisp8Temp);
 
 	t = getTickCount() - t;
 	dtime = t * 1000 / getTickFrequency();
@@ -375,16 +412,32 @@ int main()
 	imshow("Final Disparity filtered", dispFiltered2);
 	t = getTickCount() - t;
 	dtime = t * 1000 / getTickFrequency();
-	printf("fitRansac Time elapsed: %fms\n", dtime);
+	printf("fitRansac Ground remove Time elapsed: %fms\n", dtime);
 	if (waitKey(0) == 27) return 0;
-	return 0;
+	//return 0;
+
+	t = getTickCount() - t;
 
 	Mat imgDispfilter3 = FilterHeight3m(-1.842016, 220.22857, dispFiltered2);// 1m
 	imshow("remove sky", imgDispfilter3);
 
+	t = getTickCount() - t;
+	dtime = t * 1000 / getTickFrequency();
+	printf("sky remove Time elapsed: %fms\n", dtime);
+
+	t = getTickCount() - t;
+
 	stixel_t objStixels[WIDTH];
 	StixelEstimation_img(imgDispfilter3, objStixels);
 	//cout << objStixels << endl;
+
+	t = getTickCount() - t;
+	dtime = t * 1000 / getTickFrequency();
+	printf("Stixel estimation Time elapsed: %fms\n", dtime);
+
+	tp = getTickCount() - tp;
+	dtime = tp * 1000 / getTickFrequency();
+	printf("Total Time elapsed: %fms\n", dtime);
 
 	/*Mat imgSobel;
 	Sobel(imgDispfilter3, imgSobel, -1, 0, 2);

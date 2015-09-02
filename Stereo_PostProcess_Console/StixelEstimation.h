@@ -16,17 +16,19 @@
 using namespace std;
 using namespace cv;
 
+struct stixel_t{
+	int nGround;
+	int nHeight;
+	uchar chDistance;
+	stixel_t(){
+		nGround = -1;
+		nHeight = -1;
+		chDistance = 0;
+	}
+};
+
 class CStixelEstimation{
-	struct stixel_t{
-		int nGround;
-		int nHeight;
-		uchar chDistance;
-		stixel_t(){
-			nGround = -1;
-			nHeight = -1;
-			chDistance = 0;
-		}
-	};
+	
 private:
 	//input
 	Mat m_imgLeftInput; //retified image

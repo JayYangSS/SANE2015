@@ -10,7 +10,7 @@ int main()
 	objDistMeasure.SetParam(CDistMeasure::Daimler);//if you use KITTI, write "KITTI" instead of Daimler
 	objDistMeasure.m_flgVideo = false;	// video or image
 	objDistMeasure.m_flgDisplay = false;// image show or not
-		//objDistMeasure.SetParam(BASELINE, FOCAL, 0, -1.8907);
+	//objDistMeasure.SetParam(BASELINE, FOCAL, 0, -1.8907);
 	//objDistMeasure.m_nDistAlg = CDistMeasure::STEREOBM;
 	//objDistMeasure.m_flgVideo = false; // video or image
 

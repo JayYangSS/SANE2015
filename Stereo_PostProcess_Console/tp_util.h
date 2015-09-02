@@ -24,7 +24,7 @@
 
 void fitLineRansac(const std::vector<cv::Point2f> points,
 	cv::Vec4f &line,
-	int iterations = 1000,
+	int iterations = 100,
 	double sigma = 1.,
 	double a_max = 7.);
 
