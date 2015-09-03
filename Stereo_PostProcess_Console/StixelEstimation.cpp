@@ -132,8 +132,8 @@ void CStixelEstimation::SetParam(int nDataSetName)
 		m_dPitchDeg = -1.89;
 		m_dMaxDist = 60.;
 		m_nNumberOfDisp = 48;
-		m_nStereoAlg = STEREO_BM;
-		m_nWindowSize = 11;
+		m_nStereoAlg = STEREO_SGBM;
+		m_nWindowSize = 7;
 		m_sizeSrc = Size(640, 480);
 	}
 	else if (nDataSetName == KITTI){
@@ -172,26 +172,43 @@ void CStixelEstimation::SetParamOCVStereo()
 	sgbm.disp12MaxDiff = 1;
 }
 
-void CStixelEstimation::SetStixelWidth(int nStixelWidth)
+int CStixelEstimation::SetStixelWidth(int nStixelWidth)
 {
 	if (nStixelWidth == 1 || nStixelWidth == 2 || nStixelWidth == 4)
 	{
 		m_nStixelWidth = nStixelWidth;
 		m_fScaleFactor = 1. / m_nStixelWidth;
+		m_sizeSrc.height = m_sizeSrc.height / m_nStixelWidth;
+		m_sizeSrc.width = m_sizeSrc.width / m_nStixelWidth;
+		m_nNumberOfDisp /= m_nStixelWidth;
+		if (m_sizeSrc.width <= 100) {
+			printf("Stixel width is less than %d in this image\n",nStixelWidth); return -1;
+		}
 		//cout << m_fScaleFactor << endl;
 	}
 	else
 	{
 		printf("Stixel width is only 1, 2 or 4\nAutomatically set up '1'\n");
 		m_nStixelWidth = 1;
-		return;
+		return -1;
 	}
+	return 0;
 }
 
 void CStixelEstimation::SetImage(Mat& imgLeftInput, Mat& imgRightInput)
 {
-	m_imgLeftInput = imgLeftInput;
-	m_imgRightInput = imgRightInput;
+	if (m_nStixelWidth == 1){
+		m_imgLeftInput = imgLeftInput;
+		m_imgRightInput = imgRightInput;
+	}
+	else
+	{
+		m_imgOriLeft = imgLeftInput;
+		m_imgOriRight = imgRightInput;
+		int method = m_fScaleFactor < 1 ? INTER_AREA : INTER_CUBIC;
+		resize(imgLeftInput, m_imgLeftInput, Size(), m_fScaleFactor, m_fScaleFactor, method);
+		resize(imgRightInput, m_imgRightInput, Size(), m_fScaleFactor, m_fScaleFactor, method);
+	}
 }
 
 void CStixelEstimation::Display()
@@ -239,7 +256,6 @@ int CStixelEstimation::CreateDisparity(bool flgColor, bool flgDense)
 		cvtPseudoColorImage(m_imgGrayDisp8, m_imgColorDisp8);
 		addWeighted(m_imgColorDisp8, 0.5, imgTemp, 0.5, 0.0, m_imgColorDisp8);
 	}
-
 	return 0;
 }
 int CStixelEstimation::ImproveDisparity(){
@@ -259,7 +275,7 @@ int CStixelEstimation::ComputeVDisparity()
 	int maxDisp = 255;
 	m_imgVDisp = Mat(m_imgGrayDisp8.rows, 255, CV_8U, Scalar(0));
 	for (int u = 0; u<m_imgGrayDisp8.rows; u++){
-		if (u < 200) continue; // we are finding ground. therefore we check pixels below vanishing point 
+		if (u < 200/m_nStixelWidth) continue; // we are finding ground. therefore we check pixels below vanishing point 
 		for (int v = 0; v<m_imgGrayDisp8.cols; v++){
 			int disp = (m_imgGrayDisp8.at<uchar>(u, v));// / 8;
 			//if(disp>0 && disp < maxDisp){
@@ -273,14 +289,14 @@ int CStixelEstimation::ComputeVDisparity()
 }
 int CStixelEstimation::RmVDisparityNoise()
 {
-	int nThresh = 50;
+	int nThresh = 50/m_nStixelWidth;
 	threshold(m_imgVDisp, m_imgVDisp, nThresh, 255, 3);
 	return 0;
 }
 int CStixelEstimation::StoreGroundPoint()
 {
 	m_vecLinePoint.clear();
-	for (int u = 200; u<m_imgVDisp.rows; u++){//200 is the vanishing row in image : It will be fixed 150901
+	for (int u = 200/m_nStixelWidth; u<m_imgVDisp.rows; u++){//200 is the vanishing row in image : It will be fixed 150901
 		for (int v = 0; v<m_imgVDisp.cols; v++){
 			int value = m_imgVDisp.at<unsigned char>(u, v);
 			if (value > 0){
@@ -344,14 +360,16 @@ int CStixelEstimation::FilterRansac()
 {
 	double slope = m_vec4fLine[0] / m_vec4fLine[1];
 	double orig = m_vec4fLine[2] - slope*m_vec4fLine[3];
+	m_dGroundVdispOrig = orig;
+	m_dGroundVdispSlope = slope;
 	//printf("v=%lf * d + %lf\n", slope, orig); // print line eq.
 	//slope = -0.7531;
 	//orig = 200.;
-	for (int u = 200; u<m_imgGrayDisp8.rows; u++){//200 is the vanishing row in image : It will be fixed 150901
+	for (int u = orig; u<m_imgGrayDisp8.rows; u++){//200 is the vanishing row in image : It will be fixed 150901
 		for (int v = 0; v<m_imgGrayDisp8.cols; v++){
 			int value = m_imgGrayDisp8.at<unsigned char>(u, v);
 			double test = orig + slope*value - u;
-			if (test > 15){
+			if (test > 15/m_nStixelWidth){
 				m_imgGrayDisp8.at<unsigned char>(u, v) = value;
 				//res.at<unsigned char>(u, v) = value;
 			}
@@ -379,8 +397,10 @@ int CStixelEstimation::GroundEstimation()
 }
 int CStixelEstimation::HeightEstimation()
 {
-	double slope = -0.5016;
-	double orig = 191.696210;
+	/*double slope = -0.5016;
+	double orig = 191.696210;*/
+	double orig = m_dGroundVdispOrig - 1;
+	double slope = -0.5016/m_nStixelWidth;
 
 	for (int u = 0; u<m_imgGrayDisp8.rows; u++){
 		for (int v = 0; v<m_imgGrayDisp8.cols; v++){

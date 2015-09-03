@@ -74,6 +74,8 @@ private:
 	double m_dMaxDist;	//Maximum distance in program
 	int m_nNumberOfDisp;//must be multiple of 16
 	int m_nWindowSize;	//odd number
+	double m_dGroundVdispSlope;
+	double m_dGroundVdispOrig;
 	Size m_sizeSrc;		//source image size
 	
 	Vector<Point2f> m_vecLinePoint; //v-disparity point : ground point
@@ -88,6 +90,8 @@ private:
 	Mat m_imgGrayDisp8;		//8bit disparity image
 	Mat m_imgColorDisp8;	//8bit 3ch disparity image
 	Mat m_imgVDisp;			//v-disparity image
+	Mat m_imgOriLeft;		//original left image
+	Mat m_imgOriRight;		//original right image
 
 	//LUT
 	unsigned char m_pseudoColorLUT[256][3]; // RGB
@@ -118,7 +122,7 @@ public:
 	void SetParam(int nDataSetName);	//open data set parameter set up
 	void SetParamOCVStereo();			//Do not use it. It will be private.
 
-	void SetStixelWidth(int nStixelWidth);
+	int SetStixelWidth(int nStixelWidth);
 	
 	void MakePseudoColorLUT();			//pseudo color LUT
 	void cvtPseudoColorImage(Mat& srcGray, Mat& dstColor); // input : gray image, output : color image
