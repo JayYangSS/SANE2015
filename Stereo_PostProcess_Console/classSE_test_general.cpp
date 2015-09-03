@@ -13,6 +13,7 @@ int main()
 
 	//off-line param setting
 	objStixelEstimation.SetParam(CStixelEstimation::Daimler);
+	objStixelEstimation.SetStixelWidth(4);
 	objStixelEstimation.m_flgDisplay = true;
 	objStixelEstimation.m_flgVideo = true;
 	objStixelEstimation.m_flgColor = false;
@@ -26,19 +27,26 @@ int main()
 
 		int64 t = getTickCount();
 
-		objStixelEstimation.SetImage(imgLeftInput, imgRightInput);
-		//objStixelEstimation.CreateDisparity();
-		objStixelEstimation.CreateDisparity(CStixelEstimation::COLOR,true);
-		//objStixelEstimation.ImproveDisparity(); // image hole removal
-		nError = objStixelEstimation.GroundEstimation();
-		if (nError == -1){
-			printf("Error!!\n");
-			return -1;
-		}
-		objStixelEstimation.HeightEstimation();
-		objStixelEstimation.StixelDistanceEstimation();
-		objStixelEstimation.DrawStixelsColor();
-		//objStixelEstimation.DrawStixelsGray();
+		//case 1: if you want to see the stixel using one line
+		objStixelEstimation.StixelEstimation(imgLeftInput, imgRightInput, true);
+
+		////case 2: you can also control each function
+		//objStixelEstimation.SetImage(imgLeftInput, imgRightInput);
+		////objStixelEstimation.CreateDisparity();
+		//objStixelEstimation.CreateDisparity(CStixelEstimation::COLOR,true);
+		////objStixelEstimation.ImproveDisparity(); // image hole removal
+		//nError = objStixelEstimation.GroundEstimation();
+		//if (nError == -1){
+		//	printf("Error!!\n");
+		//	return -1;
+		//}
+		//objStixelEstimation.HeightEstimation();
+		//objStixelEstimation.StixelDistanceEstimation();
+		//objStixelEstimation.DrawStixelsColor();
+		
+		////case 3: if you want fastest stixel method. It can not draw stixel on image.
+		//objStixelEstimation.CreateStixels(imgLeftInput, imgRightInput, true);
+
 
 		t = getTickCount() - t;
 		dtime = t * 1000 / getTickFrequency();

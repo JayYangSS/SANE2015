@@ -10,6 +10,7 @@
 
 CStixelEstimation::CStixelEstimation()
 {
+	m_nStixelWidth = 1;
 	m_dBaseLine = 0.;
 	m_nFocalLength = 0;
 	m_nVanishingY = 0;
@@ -171,6 +172,22 @@ void CStixelEstimation::SetParamOCVStereo()
 	sgbm.disp12MaxDiff = 1;
 }
 
+void CStixelEstimation::SetStixelWidth(int nStixelWidth)
+{
+	if (nStixelWidth == 1 || nStixelWidth == 2 || nStixelWidth == 4)
+	{
+		m_nStixelWidth = nStixelWidth;
+		m_fScaleFactor = 1. / m_nStixelWidth;
+		//cout << m_fScaleFactor << endl;
+	}
+	else
+	{
+		printf("Stixel width is only 1, 2 or 4\nAutomatically set up '1'\n");
+		m_nStixelWidth = 1;
+		return;
+	}
+}
+
 void CStixelEstimation::SetImage(Mat& imgLeftInput, Mat& imgRightInput)
 {
 	m_imgLeftInput = imgLeftInput;
@@ -212,13 +229,7 @@ int CStixelEstimation::CreateDisparity(bool flgColor, bool flgDense)
 		printf("Flag is wrong\n");
 		return -1;
 	}
-	if (m_nStereoAlg == STEREO_BM){
-		bm(m_imgLeftInput, m_imgRightInput, m_matDisp16, CV_16S);
-	}
-	else if (m_nStereoAlg == STEREO_SGBM){
-		sgbm(m_imgLeftInput, m_imgRightInput, m_matDisp16);
-	}
-	m_matDisp16.convertTo(m_imgGrayDisp8, CV_8U, 255 / (m_nNumberOfDisp*16.));
+	CreateDisparity();
 
 	if (flgDense) ImproveDisparity();	
 	if (m_flgColor == 1){
@@ -449,8 +460,23 @@ int CStixelEstimation::DrawStixelsGray()
 	return 0;
 }
 
-int CStixelEstimation::CreateStixels(Mat& imgLeftInput, Mat& imgRightInput)
+int CStixelEstimation::CreateStixels(Mat& imgLeftInput, Mat& imgRightInput, bool flgDense)
 {
 	SetImage(imgLeftInput, imgRightInput);
+	CreateDisparity();
+	if(flgDense) ImproveDisparity();
+	GroundEstimation();
+	HeightEstimation();
+	StixelDistanceEstimation();
 
+	return 0;
+}
+int CStixelEstimation::StixelEstimation(Mat& imgLeftInput, Mat& imgRightInput, bool flgColor)
+{
+	m_flgColor = flgColor;
+	CreateStixels(imgLeftInput, imgRightInput);
+	if (m_flgColor) DrawStixelsColor();
+	else DrawStixelsGray();
+
+	return 0;
 }

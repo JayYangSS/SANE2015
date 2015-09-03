@@ -70,6 +70,7 @@ private:
 	
 	//param
 	int m_nStixelWidth;
+	float m_fScaleFactor;	//It is a inverse num of nStixelWidth
 	double m_dMaxDist;	//Maximum distance in program
 	int m_nNumberOfDisp;//must be multiple of 16
 	int m_nWindowSize;	//odd number
@@ -116,6 +117,8 @@ public:
 	void SetParam(StereoCamParam_t& objStereoCamParam);
 	void SetParam(int nDataSetName);	//open data set parameter set up
 	void SetParamOCVStereo();			//Do not use it. It will be private.
+
+	void SetStixelWidth(int nStixelWidth);
 	
 	void MakePseudoColorLUT();			//pseudo color LUT
 	void cvtPseudoColorImage(Mat& srcGray, Mat& dstColor); // input : gray image, output : color image
@@ -138,6 +141,6 @@ public:
 	int DrawStixelsColor();
 	int DrawStixelsGray();
 
-	int CreateStixels(Mat& imgLeftInput, Mat& imgRightInput);
-	int StixelEstimation();
+	int CreateStixels(Mat& imgLeftInput, Mat& imgRightInput, bool flgDense = true);
+	int StixelEstimation(Mat& imgLeftInput, Mat& imgRightInput, bool flgColor=0);
 };
