@@ -132,8 +132,8 @@ void CStixelEstimation::SetParam(int nDataSetName)
 		m_dPitchDeg = -1.89;
 		m_dMaxDist = 60.;
 		m_nNumberOfDisp = 48;
-		m_nStereoAlg = STEREO_SGBM;
-		m_nWindowSize = 7;
+		m_nStereoAlg = STEREO_BM;
+		m_nWindowSize = 11;
 		m_sizeSrc = Size(640, 480);
 	}
 	else if (nDataSetName == KITTI){
@@ -143,7 +143,7 @@ void CStixelEstimation::SetParam(int nDataSetName)
 		printf("Just Daimler avaiilable\n");
 
 	SetParamOCVStereo();
-	m_ptobjStixels = new stixel_t[640];
+	//m_ptobjStixels = new stixel_t[640];
 }
 void CStixelEstimation::SetParamOCVStereo()
 {
@@ -184,6 +184,10 @@ int CStixelEstimation::SetStixelWidth(int nStixelWidth)
 		if (m_sizeSrc.width <= 100) {
 			printf("Stixel width is less than %d in this image\n",nStixelWidth); return -1;
 		}
+		else if (m_sizeSrc.width < 320){
+			m_nStereoAlg = STEREO_SGBM;
+			m_nWindowSize = 5;
+		}
 		//cout << m_fScaleFactor << endl;
 	}
 	else
@@ -192,6 +196,8 @@ int CStixelEstimation::SetStixelWidth(int nStixelWidth)
 		m_nStixelWidth = 1;
 		return -1;
 	}
+
+	m_ptobjStixels = new stixel_t[m_sizeSrc.width];
 	return 0;
 }
 
