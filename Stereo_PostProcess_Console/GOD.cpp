@@ -339,7 +339,7 @@ int main()
 
 	//Mat imgDisp8Temp = disp8.clone();
 	//PostProcess(imgDisp8Temp, 48);
-	PostProcess(disp8, 48);
+	//PostProcess(disp8, 48);
 	//imshow("post process", imgDisp8Temp);
 	imshow("post process disparity", disp8);
 
@@ -420,7 +420,7 @@ int main()
 	t = getTickCount() - t;
 
 	//Mat imgDispfilter3 = FilterHeight3m(-1.842016, 200.22857, dispFiltered2);// 1m
-	Mat imgDispfilter3 = FilterHeight3m(0.1016, 192.696210, dispFiltered2);// 1m
+	Mat imgDispfilter3 = FilterHeight3m(-1.1016, 192.696210, dispFiltered2);// 1m
 	imshow("remove sky", imgDispfilter3);
 
 	t = getTickCount() - t;

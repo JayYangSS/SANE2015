@@ -17,9 +17,16 @@ CStixelEstimation::CStixelEstimation()
 	m_dMaxDist = 30.;
 	m_nNumberOfDisp = 160;
 	m_nStereoAlg = STEREO_SGBM;
+	m_flgColor = false;
+	m_flgDisplay = true;
+	m_flgVideo = false;
 
 	help();
 	MakePseudoColorLUT();
+}
+CStixelEstimation::~CStixelEstimation(){
+
+	delete m_ptobjStixels;
 }
 
 void CStixelEstimation::help()
@@ -98,7 +105,8 @@ int CStixelEstimation::GetVanishingPointY(int nVanishingPointY){
 	m_nVanishingY = nVanishingPointY;
 	m_dPitchDeg = fastAtan2(nVanishingPointY - m_sizeSrc.height / 2, m_nFocalLength);
 }
-void CStixelEstimation::SetParam(){
+void CStixelEstimation::SetParam()
+{
 	m_dBaseLine = 0.;
 	m_nFocalLength = 0;
 	m_dPitchDeg = 0.;
@@ -107,14 +115,16 @@ void CStixelEstimation::SetParam(){
 	m_nStereoAlg = STEREO_SGBM;
 	m_nStixelWidth = 1;
 }
-void CStixelEstimation::SetParamStereo(int nNumOfDisp, int nWindowSize, int nStereoAlg){
+void CStixelEstimation::SetParamStereo(int nNumOfDisp, int nWindowSize, int nStereoAlg)
+{
 	m_nNumberOfDisp = nNumOfDisp;
 	m_nWindowSize = nWindowSize;
 	m_nStereoAlg = nStereoAlg;
 
 	SetParamOCVStereo();
 }
-void CStixelEstimation::SetParam(int nDataSetName){
+void CStixelEstimation::SetParam(int nDataSetName)
+{
 	if (nDataSetName == Daimler){
 		m_dBaseLine = 0.25;
 		m_nFocalLength = 1200;
@@ -122,7 +132,7 @@ void CStixelEstimation::SetParam(int nDataSetName){
 		m_dMaxDist = 60.;
 		m_nNumberOfDisp = 48;
 		m_nStereoAlg = STEREO_BM;
-		m_nWindowSize = 7;
+		m_nWindowSize = 11;
 		m_sizeSrc = Size(640, 480);
 	}
 	else if (nDataSetName == KITTI){
@@ -132,6 +142,7 @@ void CStixelEstimation::SetParam(int nDataSetName){
 		printf("Just Daimler avaiilable\n");
 
 	SetParamOCVStereo();
+	m_ptobjStixels = new stixel_t[640];
 }
 void CStixelEstimation::SetParamOCVStereo()
 {
@@ -160,19 +171,30 @@ void CStixelEstimation::SetParamOCVStereo()
 	sgbm.disp12MaxDiff = 1;
 }
 
-void CStixelEstimation::SetImage(Mat& imgLeftInput, Mat& imgRightInput){
+void CStixelEstimation::SetImage(Mat& imgLeftInput, Mat& imgRightInput)
+{
 	m_imgLeftInput = imgLeftInput;
 	m_imgRightInput = imgRightInput;
 }
 
-void CStixelEstimation::Display(){
+void CStixelEstimation::Display()
+{
 	imshow("Left Input", m_imgLeftInput);
-	imshow("Disparity", m_imgGrayDisp8);
+	if(!m_imgGrayDisp8.empty()) imshow("Disparity", m_imgGrayDisp8);
+	if(!m_imgColorDisp8.empty()) imshow("Disparity Color", m_imgColorDisp8);
+	if(!m_imgVDisp.empty()) imshow("VDisparity", m_imgVDisp);
 
-	waitKey(0);
+	if (m_flgVideo){
+		if (waitKey(1) == 27){
+			m_flgVideo = false;
+			return;
+		}
+	}
+	else waitKey(0);
 }
 
-int CStixelEstimation::CreateDisparity(){
+int CStixelEstimation::CreateDisparity()
+{
 	if (m_nStereoAlg == STEREO_BM){
 		bm(m_imgLeftInput, m_imgRightInput, m_matDisp16, CV_16S);
 	}
@@ -180,6 +202,32 @@ int CStixelEstimation::CreateDisparity(){
 		sgbm(m_imgLeftInput, m_imgRightInput, m_matDisp16);
 	}
 	m_matDisp16.convertTo(m_imgGrayDisp8, CV_8U, 255 / (m_nNumberOfDisp*16.));
+
+	return 0;
+}
+int CStixelEstimation::CreateDisparity(bool flgColor, bool flgDense)
+{
+	m_flgColor = flgColor;
+	if (m_flgColor != 1 && m_flgColor != 0){
+		printf("Flag is wrong\n");
+		return -1;
+	}
+	if (m_nStereoAlg == STEREO_BM){
+		bm(m_imgLeftInput, m_imgRightInput, m_matDisp16, CV_16S);
+	}
+	else if (m_nStereoAlg == STEREO_SGBM){
+		sgbm(m_imgLeftInput, m_imgRightInput, m_matDisp16);
+	}
+	m_matDisp16.convertTo(m_imgGrayDisp8, CV_8U, 255 / (m_nNumberOfDisp*16.));
+
+	if (flgDense) ImproveDisparity();	
+	if (m_flgColor == 1){
+		Mat imgTemp;
+		cvtColor(m_imgLeftInput, imgTemp, CV_GRAY2BGR);
+		cvtColor(m_imgGrayDisp8, m_imgColorDisp8, CV_GRAY2BGR);
+		cvtPseudoColorImage(m_imgGrayDisp8, m_imgColorDisp8);
+		addWeighted(m_imgColorDisp8, 0.5, imgTemp, 0.5, 0.0, m_imgColorDisp8);
+	}
 
 	return 0;
 }
@@ -195,7 +243,6 @@ int CStixelEstimation::ImproveDisparity(){
 	}
 	return 0;
 }
-
 int CStixelEstimation::ComputeVDisparity()
 {
 	int maxDisp = 255;
@@ -211,5 +258,199 @@ int CStixelEstimation::ComputeVDisparity()
 		}
 	}
 	return 0;
+
+}
+int CStixelEstimation::RmVDisparityNoise()
+{
+	int nThresh = 50;
+	threshold(m_imgVDisp, m_imgVDisp, nThresh, 255, 3);
+	return 0;
+}
+int CStixelEstimation::StoreGroundPoint()
+{
+	m_vecLinePoint.clear();
+	for (int u = 200; u<m_imgVDisp.rows; u++){//200 is the vanishing row in image : It will be fixed 150901
+		for (int v = 0; v<m_imgVDisp.cols; v++){
+			int value = m_imgVDisp.at<unsigned char>(u, v);
+			if (value > 0){
+				m_vecLinePoint.push_back(Point2f(u, v));
+			}
+		}
+	}
+	return 0;
+}
+int CStixelEstimation::FitLineRansac()
+{
+	int iterations = 100;
+	double sigma = 1.;
+	double a_max = 7.;
+
+	int n = m_vecLinePoint.size();
+	//cout <<"point size : "<< n << endl;
+	if (n<2)
+	{
+		printf("Points must be more than 2 EA\n");
+		return -1;
+	}
+
+	RNG rng;
+	double bestScore = -1.;
+	for (int k = 0; k<iterations; k++)
+	{
+		int i1 = 0, i2 = 0;
+		double dx = 0;
+		while (i1 == i2)
+		{
+			i1 = rng(n);
+			i2 = rng(n);
+		}
+		Point2f p1 = m_vecLinePoint[i1];
+		Point2f p2 = m_vecLinePoint[i2];
+
+		Point2f dp = p2 - p1;
+		dp *= 1. / norm(dp);
+		double score = 0;
+
+		if (fabs(dp.x / 1.e-5f) && fabs(dp.y / dp.x) <= a_max)
+		{
+			for (int i = 0; i<n; i++)
+			{
+				Point2f v = m_vecLinePoint[i] - p1;
+				double d = v.y*dp.x - v.x*dp.y;
+				score += exp(-0.5*d*d / (sigma*sigma));
+			}
+		}
+		if (score > bestScore)
+		{
+			m_vec4fLine = Vec4f(dp.x, dp.y, p1.x, p1.y);
+			bestScore = score;
+		}
+	}
+
+	return 0;
+}
+int CStixelEstimation::FilterRansac()
+{
+	double slope = m_vec4fLine[0] / m_vec4fLine[1];
+	double orig = m_vec4fLine[2] - slope*m_vec4fLine[3];
+	//printf("v=%lf * d + %lf\n", slope, orig); // print line eq.
+	//slope = -0.7531;
+	//orig = 200.;
+	for (int u = 200; u<m_imgGrayDisp8.rows; u++){//200 is the vanishing row in image : It will be fixed 150901
+		for (int v = 0; v<m_imgGrayDisp8.cols; v++){
+			int value = m_imgGrayDisp8.at<unsigned char>(u, v);
+			double test = orig + slope*value - u;
+			if (test > 15){
+				m_imgGrayDisp8.at<unsigned char>(u, v) = value;
+				//res.at<unsigned char>(u, v) = value;
+			}
+			else{
+				m_imgGrayDisp8.at<unsigned char>(u, v) = 0;
+				//res.at<unsigned char>(u, v) = 0;
+			}
+		}
+	}
+	return 0;
+}
+int CStixelEstimation::GroundEstimation()
+{
+	if (m_imgGrayDisp8.empty()){
+		printf("Disparity is empty\n");
+		return -1;
+	}
+	ComputeVDisparity();
+	RmVDisparityNoise();
+	StoreGroundPoint();
+	FitLineRansac();
+	FilterRansac();
+
+	return 0;
+}
+int CStixelEstimation::HeightEstimation()
+{
+	double slope = -0.5016;
+	double orig = 191.696210;
+
+	for (int u = 0; u<m_imgGrayDisp8.rows; u++){
+		for (int v = 0; v<m_imgGrayDisp8.cols; v++){
+			int value = m_imgGrayDisp8.at<unsigned char>(u, v);
+			//double test = orig + slope*value - u;
+			if (u < (orig + slope*value)){
+				//img.at<unsigned char>(u, v) = value;
+				m_imgGrayDisp8.at<unsigned char>(u, v) = 0;
+				//res.at<unsigned char>(u, v) = value;
+			}
+			//else{
+			//	img.at<unsigned char>(u, v) = 0;
+			//	//res.at<unsigned char>(u, v) = 0;
+			//}
+		}
+	}
+	return 0;
+}
+int CStixelEstimation::StixelDistanceEstimation()
+{
+	for (int u = 0; u < m_imgGrayDisp8.cols; u++){
+		if (u < 30) { //Removal manually left 30 cols because of paralax
+			m_ptobjStixels[u].chDistance = 0;
+			m_ptobjStixels[u].nGround = 0;
+			m_ptobjStixels[u].nHeight = 0;
+		}
+		else StixelDistanceEstimation_col(u, m_ptobjStixels[u]);
+	}
+	return 0;
+}
+int CStixelEstimation::StixelDistanceEstimation_col(int col, stixel_t& objStixel)
+{
+	int nIter = m_imgGrayDisp8.rows / 2;
+	uchar chDisp;
+
+	for (int v = 1; v < nIter; v++){
+		chDisp = m_imgGrayDisp8.at<uchar>(m_imgGrayDisp8.rows - v, col);
+
+		if (m_imgGrayDisp8.at<uchar>(v, col)>0 && objStixel.nHeight == -1){ objStixel.nHeight = v; nIter = m_imgGrayDisp8.rows - v; }
+		if (chDisp > 0 && objStixel.nGround == -1){
+			objStixel.nGround = m_imgGrayDisp8.rows - v + 10; //10 is manually
+			objStixel.chDistance = chDisp; // 2015.08.11 have to fix
+			nIter = m_imgGrayDisp8.rows - v;
+		}
+	}
+	//cout << col << " : " << objStixel.nGround << ", " << objStixel.nHeight << endl;
+	
+	return 0;
+}
+int CStixelEstimation::DrawStixelsColor()
+{
+	DrawStixelsGray();
+	if (m_flgColor == 1){
+		Mat imgTemp;
+		cvtColor(m_imgLeftInput, imgTemp, CV_GRAY2BGR);
+		cvtColor(m_imgGrayDisp8, m_imgColorDisp8, CV_GRAY2BGR);
+		cvtPseudoColorImage(m_imgGrayDisp8, m_imgColorDisp8);
+		addWeighted(m_imgColorDisp8, 0.5, imgTemp, 0.5, 0.0, m_imgColorDisp8);
+	}
+
+	/*for (int u = 0; u < m_imgColorDisp8.cols; u++){
+		line(m_imgColorDisp8,
+			Point(u, m_ptobjStixels[u].nGround),
+			Point(u, m_ptobjStixels[u].nHeight),
+			Scalar(0, 255 - m_ptobjStixels[u].chDistance, m_ptobjStixels[u].chDistance));
+	}*/
+	return 0;
+}
+int CStixelEstimation::DrawStixelsGray()
+{
+	for (int u = 0; u < m_imgGrayDisp8.cols; u++){
+		line(m_imgGrayDisp8,
+			Point(u, m_ptobjStixels[u].nGround),
+			Point(u, m_ptobjStixels[u].nHeight),
+			Scalar(m_ptobjStixels[u].chDistance));
+	}
+	return 0;
+}
+
+int CStixelEstimation::CreateStixels(Mat& imgLeftInput, Mat& imgRightInput)
+{
+	SetImage(imgLeftInput, imgRightInput);
 
 }

@@ -93,16 +93,19 @@ private:
 
 public:
 	enum { STEREO_BM = 0, STEREO_SGBM = 1 };
+	enum { GRAY, COLOR };
 	enum { Daimler, KITTI };
 
 	bool m_flgVideo;	//dispaly flag
 	bool m_flgDisplay;	//dispaly flag
+	bool m_flgColor;
 
 	//output
 	stixel_t* m_ptobjStixels;
 
 	//functions
 	CStixelEstimation();
+	~CStixelEstimation();
 	void help();
 	
 	//Set parameters
@@ -121,15 +124,20 @@ public:
 	void Display();
 	
 	int CreateDisparity();				//make disparity(16bit, 8bit)
+	int CreateDisparity(bool flgColor, bool flgDense=0);	//0:gray, 1:pseudo color
 	int ImproveDisparity();
 	int ComputeVDisparity();
 	int RmVDisparityNoise();
-	int StoreGroundPoint();				//Vector<Point2f>
+	int StoreGroundPoint();				//store line point in v-disparity image : Vector<Point2f> type data
 	int FitLineRansac();
-	int filterRansac();
+	int FilterRansac();
 	int GroundEstimation();				//v-disp, line fitting, ransac warping
 	int HeightEstimation();
 	int StixelDistanceEstimation();
+	int StixelDistanceEstimation_col(int col, stixel_t& objStixel);
+	int DrawStixelsColor();
+	int DrawStixelsGray();
 
-	int CreateStixels();
+	int CreateStixels(Mat& imgLeftInput, Mat& imgRightInput);
+	int StixelEstimation();
 };
