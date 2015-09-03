@@ -25,6 +25,23 @@ CStixelEstimation::CStixelEstimation()
 	help();
 	MakePseudoColorLUT();
 }
+CStixelEstimation::CStixelEstimation(bool flgPrintHelp)
+{
+	m_nStixelWidth = 1;
+	m_dBaseLine = 0.;
+	m_nFocalLength = 0;
+	m_nVanishingY = 0;
+	m_dPitchDeg = 0.;
+	m_dMaxDist = 30.;
+	m_nNumberOfDisp = 160;
+	m_nStereoAlg = STEREO_SGBM;
+	m_flgColor = false;
+	m_flgDisplay = true;
+	m_flgVideo = false;
+
+	if(flgPrintHelp) help();
+	MakePseudoColorLUT();
+}
 CStixelEstimation::~CStixelEstimation(){
 
 	delete m_ptobjStixels;
@@ -32,9 +49,25 @@ CStixelEstimation::~CStixelEstimation(){
 
 void CStixelEstimation::help()
 {
-	
+	cout << "=========================STIXEL ESTIMATION========================" << endl;
+	cout << "This class is the Stixel world code for Autonomous vehicle system." << endl;
+	cout << "The author is 'T.K.Woo' where is Inha Univ. in Korea." << endl << endl;
+	cout << "============================HOW TO USE============================" << endl;
+	cout << "If you are first time of this class, I recommend compiling \"classSE_test_general.cpp\"" << endl;
+	cout << "This class must be started at setting the parameters using 'SetParam' function. It is overrided as many as possible." << endl;
+	cout << "And you must set display, video, color flg." << endl;
+	cout << "It is most important that For using this class, YOU MUST SET THE STIXEL WIDTH.('SetStixelWidth(...)')" << endl;
+	cout << "It can be '1', '2' or '4'." << endl;
+	cout << "After you set up the parameters, you can use stixel estimation in real time." << endl;
+	cout << "Maybe, the function 'StixelEstimation(...)' is easiest way you can use." << endl;
+	cout << "Finally, 'Display()' function will display STIXEL in your image." << endl;
+	cout << "Thank you." << endl << endl;
+	cout << "==============================CONTACT=============================" << endl;
+	cout << "If you have any idea in this code, please contact me" << endl;
+	cout << "E-mail : tkwoo@vision.inha.ac.kr" << endl;
+	cout << "This code released at 'Sep. 15. 2015'" << endl;
+	cout << "==================================================================" << endl << endl;
 }
-
 //
 void CStixelEstimation::MakePseudoColorLUT()
 {
@@ -186,7 +219,7 @@ int CStixelEstimation::SetStixelWidth(int nStixelWidth)
 		}
 		else if (m_sizeSrc.width < 320){
 			m_nStereoAlg = STEREO_SGBM;
-			m_nWindowSize = 5;
+			m_nWindowSize = 3;
 		}
 		//cout << m_fScaleFactor << endl;
 	}

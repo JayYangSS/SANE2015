@@ -62,9 +62,9 @@ private:
 	//input
 	Mat m_imgLeftInput; //retified image
 	Mat m_imgRightInput;//retified image
-	int m_nVanishingY;
-	double m_dPitchDeg;
-	int m_nStereoAlg;
+	int m_nVanishingY;	//Vanishing row coor.
+	double m_dPitchDeg;	//camera pitch degree
+	int m_nStereoAlg;	//STEREO_BM, STEREO_SGBM
 	double m_dBaseLine;	//unit : meter
 	int m_nFocalLength; //unit : pixel
 	
@@ -74,16 +74,16 @@ private:
 	double m_dMaxDist;	//Maximum distance in program
 	int m_nNumberOfDisp;//must be multiple of 16
 	int m_nWindowSize;	//odd number
-	double m_dGroundVdispSlope;
-	double m_dGroundVdispOrig;
+	double m_dGroundVdispSlope;	//The ground line slope in v-disparity
+	double m_dGroundVdispOrig;	//The ground line orien in v-disparity
 	Size m_sizeSrc;		//source image size
 	
 	Vector<Point2f> m_vecLinePoint; //v-disparity point : ground point
-	Vec4f m_vec4fLine;	//ground line
+	Vec4f m_vec4fLine;				//ground line
 
-	StereoCamParam_t objStereoParam;
-	StereoBM bm;
-	StereoSGBM sgbm;
+	StereoCamParam_t objStereoParam;//Camera intrinsic, extrinsic parameter
+	StereoBM bm;					//opencv stereoBM class
+	StereoSGBM sgbm;				//opencv stereoSGBM class
 
 	//member image
 	Mat m_matDisp16;		//16bit disparity
@@ -94,28 +94,29 @@ private:
 	Mat m_imgOriRight;		//original right image
 
 	//LUT
-	unsigned char m_pseudoColorLUT[256][3]; // RGB
+	unsigned char m_pseudoColorLUT[256][3]; // RGB pseudo color
 
 public:
 	enum { STEREO_BM = 0, STEREO_SGBM = 1 };
 	enum { GRAY, COLOR };
 	enum { Daimler, KITTI };
 
-	bool m_flgVideo;	//dispaly flag
+	bool m_flgVideo;	//video play flag
 	bool m_flgDisplay;	//dispaly flag
-	bool m_flgColor;
+	bool m_flgColor;	//color flag
 
 	//output
 	stixel_t* m_ptobjStixels;
 
 	//functions
 	CStixelEstimation();
+	CStixelEstimation(bool flgPrintHelp);
 	~CStixelEstimation();
 	void help();
 	
 	//Set parameters
-	int GetVanishingPointY(int nVanishingPointY);//vanishing point:"y" coor.
-	void SetImage(Mat& imgLeftInput, Mat& imgRightInput);
+	int GetVanishingPointY(int nVanishingPointY);				//vanishing point:"y" coor.
+	void SetImage(Mat& imgLeftInput, Mat& imgRightInput);		//image setting function of class
 	void SetParam();
 	void SetParamStereo(int nNumOfDisp = 48 , int nWindowSize = 9, int nStereoAlg = STEREO_BM);
 	void SetParam(StereoCamParam_t& objStereoCamParam);

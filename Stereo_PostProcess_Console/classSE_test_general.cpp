@@ -9,7 +9,7 @@ int main()
 
 	//Declaration
 	Mat imgLeftInput, imgRightInput;
-	CStixelEstimation objStixelEstimation;
+	CStixelEstimation objStixelEstimation(true);
 
 	//off-line param setting
 	objStixelEstimation.m_flgDisplay = true;
@@ -17,7 +17,7 @@ int main()
 	objStixelEstimation.m_flgColor = false;
 
 	objStixelEstimation.SetParam(CStixelEstimation::Daimler);
-	nError = objStixelEstimation.SetStixelWidth(4);
+	nError = objStixelEstimation.SetStixelWidth(2);
 	if (nError == -1){
 		printf("Error!!\n");
 		return -1;
