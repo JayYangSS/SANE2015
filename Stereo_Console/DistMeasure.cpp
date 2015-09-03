@@ -136,6 +136,7 @@ void CDistMeasure::SetParam(int nDataBaseParamSetFlag)
 //Calculate distance function
 int CDistMeasure::CalcDistImg(int nflag) // Flag seq : FVLM, MONO, STEREOBM, STEREOSGBM
 {
+	m_vecdDistance.clear();
 	for (unsigned int i = 0; i < m_vecrectRoi.size(); i++){
 		double dDistTemp = 0;
 		if (nflag == FVLM)

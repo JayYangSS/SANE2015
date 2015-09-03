@@ -207,6 +207,10 @@ int main()
 			objDistMeasure.CalcDistImg(CDistMeasure::FVLM);
 		}
 
+		for (int i = 0; i < objDistMeasure.m_vecdDistance.size(); i++)
+		{
+			cout << "dist : " << objDistMeasure.m_vecdDistance[i] << endl;
+		}
 		
 		t = getTickCount() - t;
 		dtime = t * 1000 / getTickFrequency();
