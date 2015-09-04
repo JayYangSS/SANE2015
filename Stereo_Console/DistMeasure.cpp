@@ -118,11 +118,27 @@ void CDistMeasure::SetParam(int nDataBaseParamSetFlag)
 		m_dPitchDeg = 0.;	// TBD
 		m_dBoundDist = 20.;
 		m_dMaxDist = 50.;
-		m_nNumberOfDisp = 48;
+		m_nNumberOfDisp = 80;
 		m_nWindowSize = 13;
 		m_nStereoAlg = STEREO_BM;
 		m_nDistAlg = FVLM;
 		m_dCameraHeight = 1.65;
+		//m_dFOVDeg=0.;
+	}
+	else if (nDataBaseParamSetFlag == WITHROBOT){
+		m_sizeSrc.height = 960;
+		m_sizeSrc.width = 1280;
+		m_dBaseLine = 0.12;
+		m_dFocalLength = 1750;
+		//m_nVanishingY = 0;
+		m_dPitchDeg = 0.0;
+		m_dBoundDist = 20.;
+		m_dMaxDist = 50.;
+		m_nNumberOfDisp = 80;
+		m_nWindowSize = 13;
+		m_nStereoAlg = STEREO_BM;
+		m_nDistAlg = FVLM;
+		m_dCameraHeight = 1.20;
 		//m_dFOVDeg=0.;
 	}
 	else

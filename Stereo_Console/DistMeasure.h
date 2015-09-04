@@ -74,7 +74,7 @@ public:
 	//parameters
 	enum { STEREO_BM = 0, STEREO_SGBM = 1 };
 	enum { FVLM, MONO, STEREOBM, STEREOSGBM };
-	enum { Manually, Daimler, KITTI };
+	enum { Manually, Daimler, KITTI, WITHROBOT };
 
 	double m_dBaseLine;
 	double m_dFocalLength; //re
