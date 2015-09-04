@@ -1,6 +1,6 @@
 //승준 다차선모드 복붙
 
-/* 
+/*
 [LYW_0815]
 영완 코드 다차선 시도 시작 :
 [LYW_0829]
@@ -12,7 +12,7 @@ why??
 
 1more_test
 
-*/ 
+*/
 
 #include "highgui.h"
 #include "cv.h"
@@ -57,7 +57,7 @@ using namespace std;
 #define LAST_YAW 1
 #define INTERVAL_PITCH 0.3
 #define INTERVAL_YAW 1
- 
+
 // 0:png, 1:Video
 enum FRAMETYPE{
 	PNG,
@@ -309,13 +309,13 @@ int main()
 	sizeOrigImg.width = obj.m_imgOrigin.cols;
 	sizeOrigImg.height = obj.m_imgOrigin.rows;
 	sizeResizeImg = Size(sizeOrigImg.width / g_nResizeFacor, sizeOrigImg.height / g_nResizeFacor); //[LYW_0824] : HD급은 반띵 g_nResizeFacor=2
-	obj.m_sCameraInfo.sizeCameraImage = sizeResizeImg;  
+	obj.m_sCameraInfo.sizeCameraImage = sizeResizeImg;
 	resize(obj.m_imgOrigin, obj.m_imgResizeOrigin, sizeResizeImg); //[LYW_0824] : 원본영상을 reSizing HD는 반띵 ( 640,360 )
 	cout << obj.m_imgResizeOrigin.size() << endl;
 
 	//ROI IPM Transform make
 
-//#Q : [LYW_0824] : 아래에 나열되는 CENTER_ROI, LEFT/RIGHT_ROI 2,3는 지워도 되는코드 아냐?? Auto Calib.에서는 결국 flag:AUTOCALIB 이거 쓰잖아
+	//#Q : [LYW_0824] : 아래에 나열되는 CENTER_ROI, LEFT/RIGHT_ROI 2,3는 지워도 되는코드 아냐?? Auto Calib.에서는 결국 flag:AUTOCALIB 이거 쓰잖아
 	//근데 지워봤더니 검출결과가 안그려져... 이상하네... 승준이에게 물어보자
 
 
@@ -463,7 +463,7 @@ int main()
 	for (float pitch = 0; pitch < LAST_PITCH; pitch += INTERVAL_PITCH){
 		for (int yaw = -1; yaw <= LAST_YAW; yaw++){
 			double dStartTickTest_AutoCalib = (double)getTickCount();
-			
+
 			obj.m_sCameraInfo.fPitch = (float)pitch * PI / 180; //[LYW_0824] : radian
 			obj.m_sCameraInfo.fYaw = (float)yaw * PI / 180;
 			obj.SetRoiIpmCofig(AUTOCALIB); //
@@ -471,7 +471,7 @@ int main()
 
 			Mat imgSum;// = Mat::zeros(obj.m_ipmFiltered[AUTOCALIB].size(),CV_32FC1);
 			for (int i = 0; i<originImg.size(); i++){ // 90 
-				obj.m_imgResizeScaleGray = originImg[i]; 
+				obj.m_imgResizeScaleGray = originImg[i];
 
 				obj.GetIPM(AUTOCALIB);
 				obj.FilterLinesIPM(AUTOCALIB);
@@ -533,7 +533,7 @@ int main()
 				ShowImageNormalize(namePitchYaw, imgSum); // [LYW_0724] : 확인용 - YAW/PITCH값에 따라 
 			//imshow(string(namePitchYaw), imgSum);
 			waitKey(1);
-			 
+
 
 
 		}// end of yaw loop [LYW_0824] : 콘솔창에 AutoCalibration Result (0,1)이 나오는 이유는 그때가 젤 스코어가 높고, 그 담부터는 안높아서.
@@ -686,7 +686,7 @@ int main()
 		(obj.m_sRoiInfo[LEFT_ROI2].nRight - obj.m_sRoiInfo[LEFT_ROI2].nLeft)*fWidthScale;
 	obj.m_sRoiInfo[LEFT_ROI2].sizeIPM.height =
 		(obj.m_sRoiInfo[LEFT_ROI2].nBottom - obj.m_sRoiInfo[LEFT_ROI2].nTop)*fHeightScale;
-	
+
 	obj.m_sRoiInfo[LEFT_ROI2].nDetectionThreshold = 1.5;
 	obj.m_sRoiInfo[LEFT_ROI2].nGetEndPoint = 0;
 	obj.m_sRoiInfo[LEFT_ROI2].nGroupThreshold = 10;
@@ -745,7 +745,7 @@ int main()
 		(obj.m_sRoiInfo[LEFT_ROI0].nRight - obj.m_sRoiInfo[LEFT_ROI0].nLeft)*fWidthScale;
 	obj.m_sRoiInfo[LEFT_ROI0].sizeIPM.height =
 		(obj.m_sRoiInfo[LEFT_ROI0].nBottom - obj.m_sRoiInfo[LEFT_ROI0].nTop)*fHeightScale;
-	
+
 	//[LYW_0829] : RANSAC line fitting에 쓰이는 파라미터
 	obj.m_sRoiInfo[LEFT_ROI0].nDetectionThreshold = 2;
 	obj.m_sRoiInfo[LEFT_ROI0].nGetEndPoint = 0;
@@ -808,7 +808,7 @@ int main()
 		(obj.m_sRoiInfo[RIGHT_ROI3].nRight - obj.m_sRoiInfo[RIGHT_ROI3].nLeft)*fWidthScale;
 	obj.m_sRoiInfo[RIGHT_ROI3].sizeIPM.height =
 		(obj.m_sRoiInfo[RIGHT_ROI3].nBottom - obj.m_sRoiInfo[RIGHT_ROI3].nTop)*fHeightScale;
-	
+
 	//[LYW_0829] : RANSAC line fitting에 쓰이는 파라미터
 	obj.m_sRoiInfo[RIGHT_ROI3].nDetectionThreshold = 2;
 	obj.m_sRoiInfo[RIGHT_ROI3].nGetEndPoint = 0;
@@ -912,7 +912,7 @@ int main()
 
 				//detection start
 				//[LYW]드디어 시작!!!
-				
+
 				obj.StartLanedetection(LEFT_ROI2);
 				obj.StartLanedetection(LEFT_ROI3);
 				obj.StartLanedetection(RIGHT_ROI2);
@@ -937,8 +937,8 @@ int main()
 				//LEFT_ROI2와 LEFT_ROI3를 트렉킹 모듈 0에 , RIGHT_ROI2와 RIGHT_ROI3를 트렉킹 모듈 1에 적용하여 시작한다
 				// 모듈을 추가하고 싶을 경우 아래와 같이 트렉킹 모듈을 추가시키면 된다.
 				//////////////////////////////////////////////////////////////////////////
-				
-				
+
+
 				// m_lanesGroundResult --> m_GroundTracking
 				obj.TrackingStageGround(LEFT_ROI2, 0);
 				obj.TrackingStageGround(LEFT_ROI3, 0);
@@ -1006,7 +1006,7 @@ int main()
 
 				//vanishing line draw
 				line(obj.m_imgResizeOrigin, ptVanSt, ptVanEnd, Scalar(0, 255, 0), 2);
-				
+
 				//each roi result draw
 				ShowResults(obj, LEFT_ROI0);//[LYW_0815] : ROI추가(6)
 				ShowResults(obj, LEFT_ROI2);
@@ -1014,7 +1014,7 @@ int main()
 				ShowResults(obj, RIGHT_ROI2);
 				ShowResults(obj, RIGHT_ROI3);
 
-			//	obj.ClearResultVector(LEFT_ROI0); //[LYW_0815] : ROI추가(7)
+				//	obj.ClearResultVector(LEFT_ROI0); //[LYW_0815] : ROI추가(7)
 				obj.ClearResultVector(LEFT_ROI2);
 				obj.ClearResultVector(LEFT_ROI3);
 				obj.ClearResultVector(RIGHT_ROI2);
@@ -1043,12 +1043,12 @@ int main()
 					int ssTemp = obj.m_sTrakingLane[2].fXcenter / 1000 * 100;
 					fLeftGround2 = float(ssTemp) / 100;
 					ssLeft2 << fLeftGround2;
-				} 
+				}
 
 				//Lane Draw & Lateral Distance Draw
-                //[LYW_0825] : m_imgResizeOrigin에 그린다.
+				//[LYW_0825] : m_imgResizeOrigin에 그린다.
 				if ((obj.m_bDraw[0] == true) && (obj.m_bDraw[1] == true)){
-				//if ((obj.m_bDraw[0] == true) && (obj.m_bDraw[1] == true) && (obj.m_bDraw[2]==true)){
+					//if ((obj.m_bDraw[0] == true) && (obj.m_bDraw[1] == true) && (obj.m_bDraw[2]==true)){
 					if (obj.m_bTrackingFlag[0]){
 						line(obj.m_imgResizeOrigin, obj.m_sTrakingLane[0].ptUvStartLine,
 							obj.m_sTrakingLane[0].ptUvEndLine, Scalar(0, 0, 255), 2);
@@ -1162,7 +1162,7 @@ int main()
 		////tracking module
 		obj.ClearDetectionResult(0);
 		obj.ClearDetectionResult(1);
-	//	obj.ClearDetectionResult(2);//[LYW_0815] : ROI추가(12)
+		//	obj.ClearDetectionResult(2);//[LYW_0815] : ROI추가(12)
 
 
 	}
