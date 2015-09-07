@@ -15,6 +15,7 @@ CPedestrianDetection::CPedestrianDetection()
 	m_fPerOct = 8;
 	m_nAppox = 8;
 	m_sizeSmallestPyramid = Size_<float>(20.5, 50); // smallest scale of the pyramid
+	//m_sizeSmallestPyramid = Size_<float>(15, 37); // smallest scale of the pyramid
 	m_sizePad = Size_<int>(6, 8);
 	m_nChns = 10;
 
@@ -54,10 +55,10 @@ CPedestrianDetection::~CPedestrianDetection()
 }
 
 // public
-bool CPedestrianDetection::LoadClassifier(string strFilterFile)
+bool CPedestrianDetection::LoadClassifier(string strClassifierFile)
 {
 	FILE *fp;
-	fopen_s(&fp, strFilterFile.c_str(), "rt");
+	fopen_s(&fp, strClassifierFile.c_str(), "rt");
 	if (fp == NULL) return false;
 
 	for (int i = 0; i < m_nTreeNodes*m_nTrees; i++)
@@ -87,11 +88,13 @@ vector<Rect_<int> > CPedestrianDetection::Detect(Mat& imgSrc)
 
 	vector<pair<float, Rect_<float> > > vecRawBB;
 	vector<pair<float, Rect_<float> > > vecShiftBB;
+	double t = (double)getTickCount();
 	for (int i = 0; i < m_nChns; i++)
 	{
 		vecRawBB.clear();
-		AcfDetect(chnsFtrs[i], vecRawBB);
 
+		AcfDetect(chnsFtrs[i], vecRawBB);
+		
 		for (int j = 0; j < (int)vecRawBB.size(); j++)
 		{
 			vecRawBB[j].second.x /= m_vecfScalesHW[i].second;
@@ -108,16 +111,10 @@ vector<Rect_<int> > CPedestrianDetection::Detect(Mat& imgSrc)
 }
 
 // public
-void CPedestrianDetection::DrawBoundingBox(Mat& imgDisp, vector<Rect_<int> >& rectBB)
+void CPedestrianDetection::DrawBoundingBox(Mat& imgDisp, const Scalar color)
 {
-	for (int i = 0; i < (int)rectBB.size(); i++)
-		rectangle(imgDisp, rectBB[i], CV_RGB(0, 255, 0), 2);
-}
-
-// public
-void CPedestrianDetection::DrawBoundingBox(Mat& imgDisp)
-{
-	DrawBoundingBox(imgDisp, m_vecrectDetectedBB);
+	for (int i = 0; i < (int)m_vecrectDetectedBB.size(); i++)
+		rectangle(imgDisp, m_vecrectDetectedBB[i], color, 2);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -274,7 +271,8 @@ void CPedestrianDetection::AcfDetect(vector<Mat>& matData, vector<pair<float, Re
 	for (int i = 0; i < m; i++)
 	{
 		pair1.first = hs1[i];
-		pair1.second = Rect_<float>(Rect_<int>(cs[i] * m_nStride, rs[i] * m_nStride, m_sizeModelPad.width, m_sizeModelPad.height));
+		//pair1.second = Rect_<float>(Rect_<int>(cs[i] * m_nStride, rs[i] * m_nStride, m_sizeModelPad.width, m_sizeModelPad.height));
+		pair1.second = Rect_<float>(Rect_<int>(cs[i] * m_nStride+5, rs[i] * m_nStride+5, m_sizeModelPad.width, m_sizeModelPad.height));
 		vecRetVal.push_back(pair1);
 	}
 }
@@ -306,7 +304,7 @@ void CPedestrianDetection::BuildPyramid(Mat& imgSrc, vector<vector<Mat> >& matDa
 			imgOneScale = imgLUV32f.clone();
 		else
 		{
-			//resize(imgLUV16b, imgPyramid, Size(tWidth, tHeight));
+			//resize(imgLUV32f, imgOneScale, Size(nDownWidth, nDownHeight));
 			ResampleImg(imgLUV32f, imgOneScale, nDownHeight, nDownWidth);
 		}
 
@@ -354,7 +352,7 @@ void CPedestrianDetection::BuildPyramid(Mat& imgSrc, vector<vector<Mat> >& matDa
 	}
 
 	// step 5 : smooth and padding channels
-	SmoothAndPadChannels(matData);
+	//SmoothAndPadChannels(matData); // 이것이 속도를 꽤 잡아먹는다. 별거 아닌것같은데...
 }
 
 // private
@@ -547,6 +545,7 @@ void CPedestrianDetection::AddChannel(Mat& imgChn, vector<Mat>& vecimgChns, int 
 	{
 		Mat imgShrink;
 		if (h1 != h || w1 != w)
+			//resize(vecimgSrc[i], imgShrink, Size(w, h));
 			ResampleImg(vecimgSrc[i], imgShrink, h, w);
 		else
 			imgShrink = vecimgSrc[i].clone();
@@ -698,6 +697,7 @@ void CPedestrianDetection::SmoothAndPadChannels(vector<vector<Mat> >& matData)
 			imPad(B, C, h, w, d, m_sizePad.height / nShrink, m_sizePad.height / nShrink,
 				m_sizePad.width / nShrink, m_sizePad.width / nShrink, boundary, 0.0f);
 
+			
 			transpose(temp3, matData[i][j]);
 		}
 	}

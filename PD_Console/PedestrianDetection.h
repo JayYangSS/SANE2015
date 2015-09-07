@@ -13,10 +13,11 @@ public:
 	CPedestrianDetection();
 	~CPedestrianDetection();
 
-	bool LoadClassifier(string strFilterFile);
+	bool LoadClassifier(string strClassifierFile);
 	vector<Rect_<int> > Detect(Mat& imgSrc);
-	void DrawBoundingBox(Mat& imgDisp);
-	void DrawBoundingBox(Mat& imgDisp, vector<Rect_<int> >& rectBB);
+	void DrawBoundingBox(Mat& imgDisp, const Scalar color = CV_RGB(255, 0, 0));
+
+	vector<Rect_<int> > m_vecrectDetectedBB;
 
 private:
 	static bool Comparator(const pair<float, Rect_<float> >& l, const pair<float, Rect_<float> >& r);
@@ -37,7 +38,6 @@ private:
 	void SmoothAndPadChannels(vector<vector<Mat> >& matData);
 	void ConvFilterChannels(vector<vector<Mat> >& matData, float* chns);
 
-	vector<Rect_<int> > m_vecrectDetectedBB;
 	Size_<float> m_sizeInputImage;
 	int m_nScales;
 	vector<float> m_vecfScales;

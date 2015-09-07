@@ -228,6 +228,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "opencv249_inc", "opencv249_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Stereo_PostProcess_Console", "Stereo_PostProcess_Console\Stereo_PostProcess_Console.vcxproj", "{5BFB3923-7DCD-4767-A1F5-84189DE4400F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PD_VJ_HOG", "PD_VJ_HOG\PD_VJ_HOG.vcxproj", "{37EBB428-E3B2-4DBF-9B1E-2911B7937F54}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -258,6 +260,10 @@ Global
 		{5BFB3923-7DCD-4767-A1F5-84189DE4400F}.Debug|Win32.Build.0 = Debug|Win32
 		{5BFB3923-7DCD-4767-A1F5-84189DE4400F}.Release|Win32.ActiveCfg = Release|Win32
 		{5BFB3923-7DCD-4767-A1F5-84189DE4400F}.Release|Win32.Build.0 = Release|Win32
+		{37EBB428-E3B2-4DBF-9B1E-2911B7937F54}.Debug|Win32.ActiveCfg = Debug|Win32
+		{37EBB428-E3B2-4DBF-9B1E-2911B7937F54}.Debug|Win32.Build.0 = Debug|Win32
+		{37EBB428-E3B2-4DBF-9B1E-2911B7937F54}.Release|Win32.ActiveCfg = Release|Win32
+		{37EBB428-E3B2-4DBF-9B1E-2911B7937F54}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

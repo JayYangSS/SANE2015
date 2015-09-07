@@ -18,30 +18,13 @@
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="convConst2.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="gradientMex2.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="PedestrianDetection.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="MultiKalmanTracker.cpp">
+    <ClCompile Include="PedestrianDetector.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PedestrianDetection.h">
+    <ClInclude Include="PedestrianDetector.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="MultiKalmanTracker.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="acf_classifier.txt">
-      <Filter>리소스 파일</Filter>
-    </Text>
   </ItemGroup>
 </Project>
