@@ -27,9 +27,15 @@
     <ClCompile Include="PedestrianDetection.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="MultiKalmanTracker.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PedestrianDetection.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="MultiKalmanTracker.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
