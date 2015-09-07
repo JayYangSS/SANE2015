@@ -135,7 +135,7 @@ int kalmanfilter(Mat img, SKalman& MultiKF, Rect& rec, Rect& ROIset, vector<Rect
 	MultiKF.smeasurement(5) = rec.height;
 
 
-	cout << "MultiKF.smeasurement : " << MultiKF.smeasurement << endl;
+//	cout << "MultiKF.smeasurement : " << MultiKF.smeasurement << endl;
 	//// generate measurement
 	//     MultiKF.smeasurement += MultiKF.KF.measurementMatrix*MultiKF.state;
 
@@ -174,7 +174,7 @@ int kalmanfilter(Mat img, SKalman& MultiKF, Rect& rec, Rect& ROIset, vector<Rect
 		//	resize(imageMatches,imageMatches,Size2i(960,360));
 
 		Mat prediction = MultiKF.KF.predict();
-		cout << "prediction : " << prediction << endl;
+//		cout << "prediction : " << prediction << endl;
 		//putText(img,timeInfo,Point2i(10,30),FONT_HERSHEY_SIMPLEX,0.7,CV_RGB(0,255,0),2);
 		MultiKF.ptPredict = Point(prediction.at<float>(0), prediction.at<float>(1));
 		//MultiKF.speedX = prediction.at<float>(2);
