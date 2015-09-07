@@ -14,6 +14,10 @@ why??
 
 */
 
+
+//#define _ADD_ROI_1_
+#define _ORIGINAL_
+
 #include "highgui.h"
 #include "cv.h"
 #include "opencv2/opencv.hpp"
@@ -585,7 +589,7 @@ int main()
 			Point((int)AutoCalibLane[i].ptStartLine.x, (int)AutoCalibLane[i].ptStartLine.y),
 			Point((int)AutoCalibLane[i].ptEndLine.x, (int)AutoCalibLane[i].ptEndLine.y),
 			Scalar(0, 255, 0), 2);
-	}// [LYW_0724] : 화면에 라인 2개 그려주기
+	}// [LYW_0724] : 화면에 라인 2개 그려주기q
 
 	imshow("origin", obj.m_imgResizeOrigin);
 	waitKey(0); // 무한대로 기다리는거야. 아무키나 입력해야 다음 단계로 넘어간다.
@@ -728,6 +732,9 @@ int main()
 	obj.m_sRoiInfo[LEFT_ROI3].nRansacLineWindow = 15;
 
 
+
+#ifdef _ADD_ROI_1_
+
 	//[LYW_0815]: ROI추가 시도
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//LEFT_ROI0
@@ -761,6 +768,8 @@ int main()
 
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#endif
 
 
 
@@ -828,9 +837,12 @@ int main()
 	//[LYW_0724] : LUT만들기
 	obj.SetRoiIpmCofig(LEFT_ROI2);
 	obj.SetRoiIpmCofig(LEFT_ROI3);
-	obj.SetRoiIpmCofig(LEFT_ROI0);//[LYW_0815] : ROI추가
 	obj.SetRoiIpmCofig(RIGHT_ROI2);
 	obj.SetRoiIpmCofig(RIGHT_ROI3);
+#ifdef _ADD_ROI_
+	obj.SetRoiIpmCofig(LEFT_ROI0);//[LYW_0815] : ROI추가
+#endif
+
 	Point ptVanSt, ptVanEnd;
 	ptVanSt.x = 0;
 	ptVanSt.y = obj.m_sCameraInfo.ptVanishingPoint.y;
@@ -848,13 +860,18 @@ int main()
 
 
 	//tracking 모듈 초기화
-	obj.nCnt[2] = 0;//[LYW_0815]:roi추가
 	obj.nCnt[0] = 0;
 	obj.nCnt[1] = 0;
+#ifdef _ADD_ROI_
+	obj.nCnt[2] = 0;//[LYW_0815]:roi추가
+#endif
 
-	obj.m_bDraw[2] = true; ////[LYW_0815]:roi추가
+	
 	obj.m_bDraw[0] = false;
 	obj.m_bDraw[1] = false;
+#ifdef _ADD_ROI_
+	obj.m_bDraw[2] = false; ////[LYW_0815]:roi추가
+#endif
 	//tracking 모듈 초기화
 
 	int jMax = 5;
@@ -917,8 +934,9 @@ int main()
 				obj.StartLanedetection(LEFT_ROI3);
 				obj.StartLanedetection(RIGHT_ROI2);
 				obj.StartLanedetection(RIGHT_ROI3);
+#ifdef _ADD_ROI_1_
 				obj.StartLanedetection(LEFT_ROI0); //[LYW_0815] : ROI추가
-
+#endif
 				//////////////////////////////////////////////////////////////////////////
 				double dTrackingSt = (double)getTickCount();
 
@@ -940,20 +958,22 @@ int main()
 
 
 				// m_lanesGroundResult --> m_GroundTracking
-				obj.TrackingStageGround(LEFT_ROI2, 0);
-				obj.TrackingStageGround(LEFT_ROI3, 0);
-				obj.TrackingStageGround(RIGHT_ROI2, 1);
-				obj.TrackingStageGround(RIGHT_ROI3, 1);
-				//obj.TrackingStageGround(LEFT_ROI0, 2); //[LYW_0815] : ROI추가(1)
-
+				obj.TrackingStageGround(LEFT_ROI2, 0); // [LYW_0907] : drving_left_trackingFlag : 0 
+				obj.TrackingStageGround(LEFT_ROI3, 0); // [LYW_0907] : drving_left_trackingFlag : 0 
+				obj.TrackingStageGround(RIGHT_ROI2, 1); // [LYW_0907] : driving_right_trackingFlag : 1
+				obj.TrackingStageGround(RIGHT_ROI3, 1); //[LYW_0907] : driving_right_trackingFlag : 1
+#ifdef _ADD_ROI_1_
+				obj.TrackingStageGround(LEFT_ROI0, 2); //[LYW_0815] : ROI추가(1) [LYW_0907] : left_adjacent_tracking : 2
+#endif
 				////tkm before		//Tracking continue 판별식
 				/*obj.TrackingContinue();*/
 
 				////tracking module
 				obj.TrackingContinue(0);
 				obj.TrackingContinue(1);
-				//obj.TrackingContinue(2); //[LYW_0815] : ROI추가(2)
-
+#ifdef _ADD_ROI_1_
+				obj.TrackingContinue(2); //[LYW_0815] : ROI추가(2)
+#endif
 				////tracking module
 				if (obj.m_bTrackingFlag[obj.m_sTracking[LEFT_ROI2].nTargetTracker] == false){
 					obj.m_sTracking[LEFT_ROI2].bTracking = false;
@@ -967,15 +987,17 @@ int main()
 				if (obj.m_bTrackingFlag[obj.m_sTracking[RIGHT_ROI3].nTargetTracker] == false){
 					obj.m_sTracking[RIGHT_ROI3].bTracking = false;
 				}
-				//if (obj.m_bTrackingFlag[obj.m_sTracking[LEFT_ROI0].nTargetTracker] == false){
-				//	obj.m_sTracking[LEFT_ROI0].bTracking = false;
-				//}//[LYW_0815] : ROI추가(3)
-
+#ifdef _ADD_ROI_1_
+				if (obj.m_bTrackingFlag[obj.m_sTracking[LEFT_ROI0].nTargetTracker] == false){
+					obj.m_sTracking[LEFT_ROI0].bTracking = false;
+				}//[LYW_0815] : ROI추가(3)
+#endif
 				////tracking module
 				obj.KalmanTrackingStage(0);
 				obj.KalmanTrackingStage(1);
-				//obj.KalmanTrackingStage(2); //[LYW_0815] : ROI추가(4)
-
+#ifdef _ADD_ROI_1_
+				obj.KalmanTrackingStage(2); //[LYW_0815] q : ROI추가(4)
+#endif
 
 				//tracking module
 				//[LYW_0815] : 이건 예외처리한 것 같음. 좌우 차선의 간격이 좁아지면 제거
@@ -986,10 +1008,17 @@ int main()
 					{
 						obj.ClearDetectionResult(0);
 						obj.ClearDetectionResult(1);
-						//obj.ClearDetectionResult(2); //[LYW_0815] : ROI추가(5)
 					}
-
 				}
+				//if ((obj.m_bDraw[0] == true) && (obj.m_bDraw[2] == true)){ // driving left lane vs. left adjacent lane
+				//	float fRightGround = obj.m_sTrakingLane[1].fXcenter / 1000;
+				//	float fLeftGround = obj.m_sTrakingLane[0].fXcenter / 1000;
+				//	if ((fRightGround - fLeftGround) < MIN_WORLD_WIDTH)
+				//	{
+				//		obj.ClearDetectionResult(0);
+				//		obj.ClearDetectionResult(2); // [LYW_0907] : 
+				//	}
+				//}
 
 				//###########end of Image processing & Tracking processing################
 				//////////////////////////////////////////////////////////////////////////
@@ -1008,17 +1037,22 @@ int main()
 				line(obj.m_imgResizeOrigin, ptVanSt, ptVanEnd, Scalar(0, 255, 0), 2);
 
 				//each roi result draw
-				ShowResults(obj, LEFT_ROI0);//[LYW_0815] : ROI추가(6)
 				ShowResults(obj, LEFT_ROI2);
 				ShowResults(obj, LEFT_ROI3);
 				ShowResults(obj, RIGHT_ROI2);
 				ShowResults(obj, RIGHT_ROI3);
 
-				//	obj.ClearResultVector(LEFT_ROI0); //[LYW_0815] : ROI추가(7)
+#ifdef _ADD_ROI_1_
+				ShowResults(obj, LEFT_ROI0);//[LYW_0815] : ROI추가(6)
+#endif
+				
 				obj.ClearResultVector(LEFT_ROI2);
 				obj.ClearResultVector(LEFT_ROI3);
 				obj.ClearResultVector(RIGHT_ROI2);
 				obj.ClearResultVector(RIGHT_ROI3);
+#ifdef _ADD_ROI_1_
+				obj.ClearResultVector(LEFT_ROI0); //[LYW_0815] : ROI추가(7)
+#endif
 				stringstream ssLeft, ssRight;
 				stringstream ssLeft2;//[LYW_0815] : ROI추가(8)
 
@@ -1039,16 +1073,23 @@ int main()
 					fRightGround = float(ssTemp) / 100;
 					ssRight << fRightGround;
 				}
+#ifdef _ADD_ROI_1_
 				if (obj.m_bTrackingFlag[2]){  //[LYW_0815] : ROI추가(10)
 					int ssTemp = obj.m_sTrakingLane[2].fXcenter / 1000 * 100;
 					fLeftGround2 = float(ssTemp) / 100;
 					ssLeft2 << fLeftGround2;
 				}
-
+#endif
 				//Lane Draw & Lateral Distance Draw
 				//[LYW_0825] : m_imgResizeOrigin에 그린다.
+#ifndef _ADD_ROI_1_
+#ifdef _ORIGINAL_
 				if ((obj.m_bDraw[0] == true) && (obj.m_bDraw[1] == true)){
-					//if ((obj.m_bDraw[0] == true) && (obj.m_bDraw[1] == true) && (obj.m_bDraw[2]==true)){
+#endif
+#endif
+#ifdef _ADD_ROI_1_
+				if ((obj.m_bDraw[0] == true) && (obj.m_bDraw[1] == true) && (obj.m_bDraw[2]==true)){
+#endif
 					if (obj.m_bTrackingFlag[0]){
 						line(obj.m_imgResizeOrigin, obj.m_sTrakingLane[0].ptUvStartLine,
 							obj.m_sTrakingLane[0].ptUvEndLine, Scalar(0, 0, 255), 2);
@@ -1061,12 +1102,14 @@ int main()
 						putText(obj.m_imgResizeOrigin, ssRight.str(), obj.m_sTrakingLane[1].ptUvEndLine,
 							FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
 					}
-					//if (obj.m_bTrackingFlag[2]){ //[LYW_0815] : ROI추가(11)
-					//	line(obj.m_imgResizeOrigin, obj.m_sTrakingLane[2].ptUvStartLine,
-					//		obj.m_sTrakingLane[2].ptUvEndLine, Scalar(0, 0, 255), 2);
-					//	putText(obj.m_imgResizeOrigin, ssLeft2.str(), obj.m_sTrakingLane[2].ptUvEndLine,
-					//		FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
-					//}
+#ifdef _ADD_ROI_1_
+					if (obj.m_bTrackingFlag[2]){ //[LYW_0815] : ROI추가(11)
+						line(obj.m_imgResizeOrigin, obj.m_sTrakingLane[2].ptUvStartLine,
+							obj.m_sTrakingLane[2].ptUvEndLine, Scalar(0, 0, 255), 2);
+						putText(obj.m_imgResizeOrigin, ssLeft2.str(), obj.m_sTrakingLane[2].ptUvEndLine,
+							FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
+					}
+#endif
 				}
 
 
@@ -1162,8 +1205,9 @@ int main()
 		////tracking module
 		obj.ClearDetectionResult(0);
 		obj.ClearDetectionResult(1);
-		//	obj.ClearDetectionResult(2);//[LYW_0815] : ROI추가(12)
-
+#ifdef _ADD_ROI_1_
+		obj.ClearDetectionResult(2);//[LYW_0815] : ROI추가(12)
+#endif
 
 	}
 	cout << "Average processing time  : " << d_totalProcessTime / nCntProcess << endl;

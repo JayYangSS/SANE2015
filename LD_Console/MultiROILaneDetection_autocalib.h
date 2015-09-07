@@ -36,19 +36,19 @@ using namespace std;
 #define MIN_WORLD_WIDTH 2.0		//Left,Right lane minimum interval
 enum EROINUMBER{
 	CENTER_ROI = 0,
-	LEFT_ROI0,
-	LEFT_ROI1,
-	LEFT_ROI2,
-	LEFT_ROI3,
-	RIGHT_ROI0,
-	RIGHT_ROI1,
-	RIGHT_ROI2,
-	RIGHT_ROI3,
-	RIGHT_ROI4,
-	AUTOCALIB,
-	GROUND,
-	KALMAN_LEFT,
-	KALMAN_RIGHT
+	LEFT_ROI0, //1
+	LEFT_ROI1, //2
+	LEFT_ROI2, //3
+	LEFT_ROI3, //4
+	RIGHT_ROI0, //5
+	RIGHT_ROI1, //6
+	RIGHT_ROI2, //7
+	RIGHT_ROI3, //8
+	RIGHT_ROI4, //9
+	AUTOCALIB, //10
+	GROUND, //11
+	KALMAN_LEFT, //12
+	KALMAN_RIGHT //13
 };
 typedef enum LineType_ {
 	LINE_HORIZONTAL = 0,
@@ -237,7 +237,7 @@ public:
 	Mat m_ipmFiltered[MULTIROINUMBER];
 	Mat m_filteredThreshold[MULTIROINUMBER];
 
-	vector<SLine> m_lanes[MULTIROINUMBER];
+	vector<SLine> m_lanes[MULTIROINUMBER]; // ipmLanes(not world)
 	vector<float> m_laneScore[MULTIROINUMBER];
 	vector<SLine> m_lanesResult[MULTIROINUMBER];
 	vector<SLine> m_lanesGroundResult[MULTIROINUMBER]; //#Q: [LYW_0824] : GroundResult는 뭘까? 
@@ -271,7 +271,7 @@ public:
 	vector<SLine>::iterator m_iterTracking[TRACKINGNUMBER];
 	vector<SLine> m_GroundTracking[TRACKINGNUMBER];
 	vector<SLine>::iterator m_iterGroundTracking[TRACKINGNUMBER];
-	SWorldLane m_sTrakingLane[TRACKINGNUMBER];
+	SWorldLane m_sTrakingLane[TRACKINGNUMBER]; // moving average 값.(ground값)
 	SKalman m_SKalmanLane[TRACKINGNUMBER];
 	bool m_bDraw[TRACKINGNUMBER];
 	int nCnt[TRACKINGNUMBER];
@@ -2529,6 +2529,7 @@ void CMultiROILaneDetection::TrackingStageGround(EROINUMBER nflag, int nTracking
 		//#Q : [LYW_0829] : 왜이렇게 하는거지?? 이해가 잘 안돼...A : 화면에 CENTER_ROI의 탑-바텀으로 이어지게끔 그려주기 위해
 		//나중에 이 부분을 좀 수정해야 Tracking module을 독립적으로 사용할 수 있다! 아 아니다. 이 부분은 단지 그냥 트래킹되는 라인을 길게 늘려주는 것 뿐!!
 		// Tracking module을 독립적으로 하고 싶으면 그냥 flag숫자만 바꿔주면 되!!!
+		// [LYW_0907] : ground값으로 트래킹하려고!!
 		SLineTemp.ptStartLine.x = (SLineTemp.ptStartLine.y - m_sCameraInfo.fGroundTop)*SLineTemp.fXderiv
 			+ SLineTemp.ptStartLine.x;
 		SLineTemp.ptStartLine.y = m_sCameraInfo.fGroundTop; // ROI 맨 위
@@ -2538,6 +2539,8 @@ void CMultiROILaneDetection::TrackingStageGround(EROINUMBER nflag, int nTracking
 		SLineTemp.ptEndLine.y = m_sCameraInfo.fGroundBottom; // ROI 맨 아래
 
 		m_GroundTracking[nTrackingFlag].push_back(SLineTemp); //[LYW_0829] : LEFT_ROI2,3이 같은 nTrackingFlag을 하니깐 같이 넣겠네
+		
+		
 		
 		//#Q : [LYW_0829] : 이 작업은 왜 하는걸까?
 		if (m_GroundTracking[nTrackingFlag].size() > MOVING_AVERAGE_NUM){
@@ -2645,7 +2648,7 @@ void CMultiROILaneDetection::ClearDetectionResult(){
 	m_SKalmanRightLane.cntNum = 0;
 }
 void CMultiROILaneDetection::TrackingContinue(int nTrackingFlag){
-	if (m_vecTrackingFlag[nTrackingFlag].empty()){
+	if (m_vecTrackingFlag[nTrackingFlag].empty()){ // [LYW_0907]lane이 검출되지 않았을 때!!
 		nCnt[nTrackingFlag] += TRACKING_ERASE_LEVEL;
 
 	/*	if (nCnt[nTrackingFlag] >= TRACKINGERASE){
@@ -2733,6 +2736,7 @@ void CMultiROILaneDetection::TrackingContinue(int nTrackingFlag){
 		SLineResult.ptStartLine = m_sTrakingLane[nTrackingFlag].ptStartLane;
 		SLineResult.ptEndLine = m_sTrakingLane[nTrackingFlag].ptEndLane;
 
+		//ground값
 		m_SKalmanLane[nTrackingFlag].SKalmanTrackingLine = SLineResult;//평균내서 m_SKalmanLane에 넣어주는구나
 
 	}
@@ -2958,22 +2962,19 @@ void ShowResults(CMultiROILaneDetection &obj, EROINUMBER nflag){
 	Point((int)obj.m_lanesResult[nflag][i].ptEndLine.x,(int)obj.m_lanesResult[nflag][i].ptEndLine.y),
 	Scalar(0,0,255),2);*/
 	
-	if (nflag == LEFT_ROI0) //[LYW_0815]:LEFT_ROI0 --> 틀린 곳 : m_lanesReuslt는 ground다! --> 영상이미지좌표로 바꿔줘야되!!
-	{
-		printf("in LEFT_ROI0|| numLanes : %d in ShowResults\n", obj.m_lanesResult[nflag].size());
-		for (unsigned int i = 0; i < obj.m_lanesResult[nflag].size(); i++){
-			Point ptUvSt = obj.TransformPointGround2Image(Point((int)obj.m_lanesResult[nflag][i].ptStartLine.x, (int)obj.m_lanesResult[nflag][i].ptStartLine.y));
-			Point ptUvEnd = obj.TransformPointGround2Image(Point((int)obj.m_lanesResult[nflag][i].ptEndLine.x, (int)obj.m_lanesResult[nflag][i].ptEndLine.y));
-			line(obj.m_imgResizeOrigin,
-				ptUvSt,
-				ptUvEnd,
-				Scalar(0, 0, 255), 2);
-			obj.m_lanesResult[nflag].clear();
-		}
-		
-
-
-	}
+	//if (nflag == LEFT_ROI0) //[LYW_0815]:LEFT_ROI0 --> 틀린 곳 : m_lanesReuslt는 ground다! --> 영상이미지좌표로 바꿔줘야되!!
+	//{
+	//	printf("in LEFT_ROI0|| numLanes : %d in ShowResults\n", obj.m_lanesResult[nflag].size());
+	//	for (unsigned int i = 0; i < obj.m_lanesResult[nflag].size(); i++){
+	//		Point ptUvSt = obj.TransformPointGround2Image(Point((int)obj.m_lanesResult[nflag][i].ptStartLine.x, (int)obj.m_lanesResult[nflag][i].ptStartLine.y));
+	//		Point ptUvEnd = obj.TransformPointGround2Image(Point((int)obj.m_lanesResult[nflag][i].ptEndLine.x, (int)obj.m_lanesResult[nflag][i].ptEndLine.y));
+	//		line(obj.m_imgResizeOrigin,
+	//			ptUvSt,
+	//			ptUvEnd,
+	//			Scalar(0, 0, 255), 2);
+	//		obj.m_lanesResult[nflag].clear();
+	//	}
+	//}
 
 	char strImg[20];
 	//sprintf(strImgIpm,)
@@ -2986,6 +2987,12 @@ void ShowResults(CMultiROILaneDetection &obj, EROINUMBER nflag){
 	sprintf(strImg, "Filt%d", nNum);
 	imshow(strImg, obj.m_ipmFiltered[nflag]); //#Q : [LYW_0825] : RANSAC의 결과를 그려줘야되는거아냐?? m_ipmFiltered 이것을 왜 또 그려?
 
+
+	////[LYW_0907] : RANSAC결과 그려주기
+	//Mat matMat = Mat(2, 2 * m_lanesResult[nFlag].size(), CV_32FC1);
+	//Lines2Mat(m_lanesResult[nFlag], matMat);
+	//TransformGround2Image(matMat, matMat);
+	//
 
 }
 
