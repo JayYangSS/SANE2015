@@ -839,7 +839,7 @@ int main()
 	obj.SetRoiIpmCofig(LEFT_ROI3);
 	obj.SetRoiIpmCofig(RIGHT_ROI2);
 	obj.SetRoiIpmCofig(RIGHT_ROI3);
-#ifdef _ADD_ROI_
+#ifdef _ADD_ROI_1_
 	obj.SetRoiIpmCofig(LEFT_ROI0);//[LYW_0815] : ROI추가
 #endif
 
@@ -862,14 +862,14 @@ int main()
 	//tracking 모듈 초기화
 	obj.nCnt[0] = 0;
 	obj.nCnt[1] = 0;
-#ifdef _ADD_ROI_
+#ifdef _ADD_ROI_1_
 	obj.nCnt[2] = 0;//[LYW_0815]:roi추가
 #endif
 
 	
 	obj.m_bDraw[0] = false;
 	obj.m_bDraw[1] = false;
-#ifdef _ADD_ROI_
+#ifdef _ADD_ROI_1_
 	obj.m_bDraw[2] = false; ////[LYW_0815]:roi추가
 #endif
 	//tracking 모듈 초기화
@@ -1077,11 +1077,11 @@ int main()
 				if (obj.m_bTrackingFlag[2]){  //[LYW_0815] : ROI추가(10)
 					int ssTemp = obj.m_sTrakingLane[2].fXcenter / 1000 * 100;
 					fLeftGround2 = float(ssTemp) / 100;
-					ssLeft2 << fLeftGround2;
+					ssLeft2 << fLeftGround2;  
 				}
 #endif
 				//Lane Draw & Lateral Distance Draw
-				//[LYW_0825] : m_imgResizeOrigin에 그린다.
+				//[LYW_0825] : m_imgResizeqOrigin에 그린다.
 #ifndef _ADD_ROI_1_
 #ifdef _ORIGINAL_
 				if ((obj.m_bDraw[0] == true) && (obj.m_bDraw[1] == true)){
@@ -1209,7 +1209,9 @@ int main()
 		obj.ClearDetectionResult(2);//[LYW_0815] : ROI추가(12)
 #endif
 
-	}
+	} // end of startLine 883 test DB 시작
+
+
 	cout << "Average processing time  : " << d_totalProcessTime / nCntProcess << endl;
 	/*cout << "Total Frames : " << structEvaluation.nTotalFrame << endl;
 	cout << "Left Evaluation" << endl;
