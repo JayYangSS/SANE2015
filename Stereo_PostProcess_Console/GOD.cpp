@@ -113,7 +113,6 @@ void cvtPseudoColorImage(Mat srcGray, Mat& dstColor)
 	}
 }
 
-
 int DrawStixel(Mat& imgColorDisp, stixel_t* objStixels){
 	for (int u = 0; u < imgColorDisp.cols; u++){
 		line(imgColorDisp,
@@ -200,34 +199,6 @@ int PostProcess(Mat& imgDisp8, int nNumOfDisp)
 	}
 	
 	return 0;
-}
-
-// Computation of the 3D coordinates and remove all the pixels with a Z coodinate higher or lower than a threshold
-Mat compute3DAndRemove(Mat disp){
-	Mat res(disp.rows, disp.cols, CV_8U, Scalar(0));
-	float thresMax = 2.5;
-	float thresMin = -0.6;
-	//float u0 = 258; //unused here
-	float v0 = 156;
-	float au = 410;
-	float av = 410;
-	float b = 0.22;
-	float z0 = 1.28;
-	for (int v = 0; v<disp.rows; v++){
-		for (int u = 0; u<disp.cols; u++) {
-			int d = disp.at<unsigned char>(v, u);
-			//float x = (u-u0)*b/d - (b/2); //unused here
-			//float y = au*b/d;             //unused here
-			float z = z0 - (((v - v0)*au*b) / (av*d / 16));
-			if (z<thresMin || z>thresMax){
-				res.at<unsigned char>(v, u) = 0;
-			}
-			else{
-				res.at<unsigned char>(v, u) = d;
-			}
-		}
-	}
-	return res;
 }
 
 // Compute the v-disparity image histogram of disparity matrix
@@ -333,13 +304,11 @@ int main()
 	calculDisp(img1, img2, disp);
 	disp.convertTo(disp8, CV_8U, 255 / (48*16.));
 	imshow("diparity map", disp8);
-	
 
-	
 
 	//Mat imgDisp8Temp = disp8.clone();
 	//PostProcess(imgDisp8Temp, 48);
-	//PostProcess(disp8, 48);
+	PostProcess(disp8, 48);
 	//imshow("post process", imgDisp8Temp);
 	imshow("post process disparity", disp8);
 
@@ -420,7 +389,7 @@ int main()
 	t = getTickCount() - t;
 
 	//Mat imgDispfilter3 = FilterHeight3m(-1.842016, 200.22857, dispFiltered2);// 1m
-	Mat imgDispfilter3 = FilterHeight3m(-1.1016, 192.696210, dispFiltered2);// 1m
+	Mat imgDispfilter3 = FilterHeight3m(-0, 192.696210, dispFiltered2);// 1m
 	imshow("remove sky", imgDispfilter3);
 
 	t = getTickCount() - t;

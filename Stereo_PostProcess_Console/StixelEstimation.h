@@ -107,6 +107,7 @@ public:
 
 	//output
 	stixel_t* m_ptobjStixels;
+	vector<stixel_t> vecobjStixels;
 
 	//functions
 	CStixelEstimation();
@@ -143,6 +144,8 @@ public:
 	int HeightEstimation();
 	int StixelDistanceEstimation();
 	int StixelDistanceEstimation_col(int col, stixel_t& objStixel);
+	int StixelSegmentation();
+
 	int DrawStixelsColor();
 	int DrawStixelsGray();
 

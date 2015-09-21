@@ -439,7 +439,7 @@ int CStixelEstimation::HeightEstimation()
 	/*double slope = -0.5016;
 	double orig = 191.696210;*/
 	double orig = m_dGroundVdispOrig - 1;
-	double slope = -0.5016/m_nStixelWidth;
+	double slope = -0.5/m_nStixelWidth;
 
 	for (int u = 0; u<m_imgGrayDisp8.rows; u++){
 		for (int v = 0; v<m_imgGrayDisp8.cols; v++){
