@@ -21,6 +21,15 @@
     <ClCompile Include="trafficsign.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="trafficsign_ROI.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="trafficsign_adativeROI.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="trafficsign_adaptiveROI2.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ConvNet.h">
