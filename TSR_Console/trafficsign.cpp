@@ -134,15 +134,27 @@ int main()
 	initRead(Xmlfilename);
 	bayesian->load("trainDtBs.xml");
 
+	double fps = 15;
 
+	int fourcc = CV_FOURCC('X', 'V', 'I', 'D'); // codec
+
+	bool isColor = true;
+
+	VideoWriter *video = new VideoWriter;
+
+	if (!video->open("result.avi", fourcc, fps, Size(1280, 720), isColor)){
+
+		delete video;
+
+	}
 	//invTri = imread("invtri.png",0);
 	//RectangleM = imread("rectangle.png",0);
 	/* Load Video */
 	//cv::VideoCapture m_videoCapture("sunny.wmv");
 	//cv::VideoCapture m_videoCapture("blackbox2hd.wmv");
 	//	string source = "2015-03-05-11h-52m-26s_F_normal.mp4"; //2015-03-18-17h-26m-33s_F_normal//
-	string source = "sunny_03_urban.wmv";
-
+	//string source = "backlight_01.wmv";
+	string source = "cloudy_03_expressway.wmv";
 	//	string source = "2015-03-18-10h-10m-20s_F_normal.mp4";
 	//	string source = "2015-03-18-17h-20m-32s_F_normal.mp4";
 	//	string source = "2015-03-18-17h-26m-33s_F_normal.mp4";
@@ -182,7 +194,7 @@ int main()
 
 
 	ptVanishing.x = 640 - 20;
-	ptVanishing.y = 360;
+	ptVanishing.y = 360-20;
 
 
 	// tracker //
@@ -288,7 +300,7 @@ int main()
 
 
 
-
+		*video << imgshow;
 
 		//rectangle(srcImage,ROIset_U,CV_RGB(255,255,0),2);
 		//rectangle(srcImage,ROIset_R,CV_RGB(255,255,0),2);
@@ -297,14 +309,19 @@ int main()
 		imshow("imgshow", imgshow);
 		//imshow("drawimg",imgdrawTest);
 
+		char saveimg[50];
 
+		sprintf(saveimg,"imggg%d.jpg" , cntframe);
 
 		//imshow ("mask",imgROImask);
 		int waitTime;
 		(t*1000. / getTickFrequency()<70) ? waitTime = 70 - t*1000. / getTickFrequency() : waitTime = 70;
 		char c = waitKey(1);
+		if (c == 's')	imwrite(saveimg, imgshow);
+
 		if (c == 'q')	break;
 	}
+	delete video;
 	return 0;
 }
 
@@ -433,10 +450,10 @@ void Grouping(Rect& ROIset, Mat& srcImage, int& cntframe, float& fscale, vector<
 
 	Mat imgProb = Mat::zeros(vecHSV[1].rows, vecHSV[1].cols, CV_8UC1);
 	//MSER mserSaturation(5,50, 800, 0.2, 0.1, 250, 1.01, 0.003, 5); //0.7
-	MSER mserSaturation(7, 15, 700, 0.5, 0.1, 250, 1.01, 0.003, 5);
+	MSER mserSaturation(7, 30, 3500, 0.5, 0.1, 250, 1.01, 0.003, 5);
 	MSERsegmentation(mserSaturation, vecHSV[1], imgInput, CM, imgAdapThres, vecRect, points, 1, 1, 0, imgProb, AM, MserVec, ROIset, fscale);
 	//MSERsegmentation(mserSaturation, imgP1, imgInput, CM, imgAdapThres, vecRect, points, 1, 1, 0, imgProb, AM, MserVec, ROIset, fscale);
-	MSER mserGray(7, 15, 700, 0.5, 0.1, 250, 1.01, 0.003, 5);
+	MSER mserGray(7, 30, 3500, 0.5, 0.1, 250, 1.01, 0.003, 5);
 	MSERsegmentation(mserGray, vecHSV[2], imgInput, CM, imgAdapThres, vecRect, graypoints, 1, 1, 0, imgProb, AM, MserVec, ROIset, fscale);
 	//MSERsegmentation(mserGray, imgP2, imgInput, CM, imgAdapThres, vecRect, graypoints, 1, 1, 0, imgProb, AM, MserVec, ROIset, fscale);
 	//		imshow("drawimg",imgdrawTest);
@@ -1326,17 +1343,17 @@ void clustering(vector<Rect>& vecCluster, int distance)
 }
 
 
-void enhancement(Mat imgR, Mat imgG, Mat imgB, Mat& imgDst, Mat& imgDst2)
+void enhancement(Mat imgR, Mat imgG, Mat imgB, Mat& imgDstRed, Mat& imgDstBlue)
 {
 	imgR.convertTo(imgR, CV_32FC1);
 	imgG.convertTo(imgG, CV_32FC1);
 	imgB.convertTo(imgB, CV_32FC1);
-	Mat imgTempR(imgDst.size(), CV_32FC1);
-	Mat imgTempB(imgDst.size(), CV_32FC1);
+	Mat imgTempR(imgDstRed.size(), CV_32FC1);
+	Mat imgTempB(imgDstRed.size(), CV_32FC1);
 
-	for (int i = 0; i < imgDst.cols; i++)
+	for (int i = 0; i < imgDstRed.cols; i++)
 	{
-		for (int j = 0; j < imgDst.rows; j++)
+		for (int j = 0; j < imgDstRed.rows; j++)
 		{
 			imgTempR.at<float>(j, i) = (float)(255.0 * 2.0 * max(0.0f, (min(imgR.at<float>(j, i) - imgG.at<float>(j, i), imgR.at<float>(j, i) - imgB.at<float>(j, i)) / (imgR.at<float>(j, i) + imgG.at<float>(j, i) + imgB.at<float>(j, i)))));
 			imgTempB.at<float>(j, i) = (float)(255.0 * 2.0 * max(0.0f, (max(imgB.at<float>(j, i) - imgG.at<float>(j, i), imgB.at<float>(j, i) - imgR.at<float>(j, i)) / (imgR.at<float>(j, i) + imgG.at<float>(j, i) + imgB.at<float>(j, i)))));
@@ -1346,8 +1363,8 @@ void enhancement(Mat imgR, Mat imgG, Mat imgB, Mat& imgDst, Mat& imgDst2)
 
 	}
 
-	imgTempR.convertTo(imgDst, CV_8UC1);
-	imgTempB.convertTo(imgDst2, CV_8UC1);
+	imgTempR.convertTo(imgDstRed, CV_8UC1);
+	imgTempB.convertTo(imgDstBlue, CV_8UC1);
 
 	//waitKey(0);
 
