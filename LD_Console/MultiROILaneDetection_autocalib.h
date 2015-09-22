@@ -33,7 +33,8 @@ using namespace std;
 #define TRACKING_FLAG_NUM 3 //4
 #define TRACKING_ERASE_LEVEL 1
 #define TRACKINGERASE 5
-#define MIN_WORLD_WIDTH 2.0		//Left,Right lane minimum interval
+#define MIN_WORLD_WIDTH 2		//Left,Right lane minimum interval
+#define MAX_WORLD_WIDTH 5 //[LYW_0922] : 간격이 너무 벌어져도 버려
 enum EROINUMBER{
 	CENTER_ROI = 0,
 	LEFT_ROI0, //1
@@ -214,7 +215,7 @@ typedef struct STrackingFlag{ //#Q : 용도가 뭘지 잘 고민해봐!
 
 class CMultiROILaneDetection{
 
-///////////////////////////////////////start of variable declaration////////////////////////////////////////////
+	///////////////////////////////////////start of variable declaration////////////////////////////////////////////
 public:
 
 	CMultiROILaneDetection();
@@ -243,7 +244,7 @@ public:
 	vector<SLine> m_lanesGroundResult[MULTIROINUMBER]; //#Q: [LYW_0824] : GroundResult는 뭘까? 
 
 	//tracking module
-	STrackingFlag m_sTracking[MULTIROINUMBER]; 
+	STrackingFlag m_sTracking[MULTIROINUMBER];
 	//nFlag 각각이 어떤 tracking을 지칭하는지 가리키기 위함 ex. TrackingNumber 0은 LeftROI2&LeftROI3을 트랙킹함
 
 	bool m_bTracking[MULTIROINUMBER];
@@ -271,7 +272,7 @@ public:
 	vector<SLine>::iterator m_iterTracking[TRACKINGNUMBER];
 	vector<SLine> m_GroundTracking[TRACKINGNUMBER];
 	vector<SLine>::iterator m_iterGroundTracking[TRACKINGNUMBER];
-	SWorldLane m_sTrakingLane[TRACKINGNUMBER]; // moving average 값.(ground값)
+	SWorldLane m_sTrackingLane[TRACKINGNUMBER]; // moving average 값.(ground값)
 	SKalman m_SKalmanLane[TRACKINGNUMBER];
 	bool m_bDraw[TRACKINGNUMBER];
 	int nCnt[TRACKINGNUMBER];
@@ -288,9 +289,9 @@ private:
 	SVD m_SvdCalc;
 	Mat m_MatFx;
 	Mat m_MatFy;
-///////////////////////////////////////end of variable declaration//////////////////////////////////////////////
+	///////////////////////////////////////end of variable declaration//////////////////////////////////////////////
 
-///////////////////////////////////////start of variable declaration////////////////////////////////////////////
+	///////////////////////////////////////start of variable declaration////////////////////////////////////////////
 public:
 	void SetRoiIpmCofig(EROINUMBER nFlag); //[LYW_0824]: Calibration 결과값을 이용한 ROI초기화셋팅--> VP,LUT만들기 
 
@@ -557,7 +558,7 @@ void CMultiROILaneDetection::TransformImage2Ground(const Mat &matInPoints, Mat &
 	float *pMatInPoints4 = (float*)(&matInPoints4.data[0]);
 	float *pMatInPointsr4 = (float*)(&matInPointsr4.data[0]);
 
-	for (int i = 0; i<matInPoints.cols; i++)
+	for (int i = 0; i < matInPoints.cols; i++)
 	{
 		double div = pMatInPointsr4[matInPointsr4.cols * 0 + i];
 		pMatInPoints4[matInPoints4.cols * 0 + i] /= div;
@@ -600,7 +601,7 @@ void CMultiROILaneDetection::TransformGround2Image(const Mat &matInPoints, Mat &
 	};
 	Mat matMat(3, 3, CV_32FC1, matp);
 	matInPoints3 = matMat*matInPoints3;
-	for (int i = 0; i<matInPoints.cols; i++)
+	for (int i = 0; i < matInPoints.cols; i++)
 	{
 		float div = matInPointsr3.at<float>(0, i);
 		matInPoints3.at<float>(0, i) = matInPoints3.at<float>(0, i) / div;
@@ -609,7 +610,7 @@ void CMultiROILaneDetection::TransformGround2Image(const Mat &matInPoints, Mat &
 	matInPoints2.copyTo(matOutPoints);
 }
 
-//[LYW_0724] : LUT를 만드는 함수 uvGrid & xyGrid
+//[LYW_0724] : LUT( uvGrid & xyGrid), VP만드는 함수
 void CMultiROILaneDetection::SetRoiIpmCofig(EROINUMBER nFlag){
 	m_bTracking[nFlag] = false;
 	SetVanishingPoint(); // (ptVanishingPoint.x, ptVanishingPoint.y)
@@ -657,9 +658,9 @@ void CMultiROILaneDetection::SetRoiIpmCofig(EROINUMBER nFlag){
 	float *pMatXyGrid = (float*)&matXyGrid.data[0];
 	int i, j;
 	float x, y;
-	for (i = 0, y = yfMax - .5*stepRow; i<outRow; i++, y -= stepRow)//delete .at() complete
+	for (i = 0, y = yfMax - .5*stepRow; i < outRow; i++, y -= stepRow)//delete .at() complete
 	{
-		for (j = 0, x = xfMin + .5*stepCol; j<outCol; j++, x += stepCol)
+		for (j = 0, x = xfMin + .5*stepCol; j < outCol; j++, x += stepCol)
 		{
 			pMatXyGrid[matXyGrid.cols * 0 + i*outCol + j] = x;
 			pMatXyGrid[matXyGrid.cols * 1 + i*outCol + j] = y;
@@ -676,7 +677,7 @@ void CMultiROILaneDetection::SetRoiIpmCofig(EROINUMBER nFlag){
 	m_imgIPM[nFlag].create(m_sRoiInfo[nFlag].sizeIPM, CV_32FC1);
 
 
-    //#Q : [LYW_0824] :용도가 뭘까????
+	//#Q : [LYW_0824] :용도가 뭘까????
 	m_sRoiInfo[nFlag].dXLimit[0] = matXyGrid.at<float>(0, 0);
 	m_sRoiInfo[nFlag].dXLimit[1] = matXyGrid.at<float>(0, (outRow - 1)*outCol + outCol - 1);
 	m_sRoiInfo[nFlag].dYLimit[1] = matXyGrid.at<float>(1, 0);
@@ -714,15 +715,15 @@ void CMultiROILaneDetection::GetIPM(EROINUMBER nFlag){
 	int nUvGridWidth = m_matUVGrid[nFlag].cols;
 	int nUvGridHeight = m_matUVGrid[nFlag].rows;
 	//IPM image make process
-	for (i = 0; i<nIpmHeight; i++)
-		for (j = 0; j<nIpmWidth; j++){
+	for (i = 0; i < nIpmHeight; i++)
+		for (j = 0; j < nIpmWidth; j++){
 			/*get pixel coordiantes*/
 
 			ui = pMatUvGrid[nUvGridWidth * 0 + i*nIpmWidth + j];
 			vi = pMatUvGrid[nUvGridWidth * 1 + i*nIpmWidth + j];
 			/*check if out-of-bounds*/
 			if (ui<m_sRoiInfo[nFlag].nLeft || ui>m_sRoiInfo[nFlag].nRight ||
-				vi<m_sRoiInfo[nFlag].nTop || vi>m_sRoiInfo[nFlag].nBottom) { 
+				vi<m_sRoiInfo[nFlag].nTop || vi>m_sRoiInfo[nFlag].nBottom) {
 				ppMatOutImage[nIpmWidth*i + j] = (float)dmean;
 				//if()
 			}
@@ -779,22 +780,22 @@ void CMultiROILaneDetection::FilterLinesIPM(EROINUMBER nFlag){
 
 	subtract(m_imgIPM[nFlag], dMean, m_ipmFiltered[nFlag]);
 
-    //[LYW_0824] : m_MatFx : 2nd-oder derivative || m_MatFy : smoothing
+	//[LYW_0824] : m_MatFx : 2nd-oder derivative || m_MatFy : smoothing
 	filter2D(m_ipmFiltered[nFlag], m_ipmFiltered[nFlag], m_ipmFiltered[nFlag].depth(),
 		m_MatFx, Point(-1, -1), 0.0, BORDER_REPLICATE);
 	filter2D(m_ipmFiltered[nFlag], m_ipmFiltered[nFlag], m_ipmFiltered[nFlag].depth(),
 		m_MatFy, Point(-1, -1), 0.0, BORDER_REPLICATE);
 	//double dStartTick = (double)getTickCount();
-	
-    Mat rowMat;
+
+	Mat rowMat;
 	rowMat = Mat(m_ipmFiltered[nFlag]).reshape(0, 1); //1row로 누적시킴 || num of channel = '0' 채널변경x, rows=1 --> A : histogram과 같은 역할.
-    //#Q : 각 열의 (idx,value)가 의미하는 바는? (영상의 col, 누적시킨 픽셀 intensity의 합?)
+	//#Q : 각 열의 (idx,value)가 의미하는 바는? (영상의 col, 누적시킨 픽셀 intensity의 합?)
 
 	//get the quantile
 	float fQval;
 	fQval = quantile((float*)&rowMat.data[0], rowMat.cols, m_sConfig.fLowerQuantile);//Quantile 97% --> A: intensity찾기위함이였어
 	//[LYW_0824] : 1row의 누적된 이미지에서 값이 상위97%인 column(??)를 찾음 --> threshold value로 지정
-    //#Q : [LYW_0824] : row값이 아냐... 그냥 pixel의 intensity값 같은데???? 맞나?? 그래야 다음줄이 이해가 되는데??
+	//#Q : [LYW_0824] : row값이 아냐... 그냥 pixel의 intensity값 같은데???? 맞나?? 그래야 다음줄이 이해가 되는데??
 	threshold(m_ipmFiltered[nFlag], m_filteredThreshold[nFlag], fQval, NULL, THRESH_TOZERO);	//Threshold 미만 value를 zero로, 나머지 그대로
 	//ThresholdLower(imgSubImage,imgSubImage, fQtileThreshold);
 	//double dEndTick = (double)getTickCount();
@@ -865,7 +866,7 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 	}
 
 	//check if didnt find local maxima
-	if (sumLinesMax.size() == 0 && nMax>m_sRoiInfo[nFlag].nDetectionThreshold){
+	if (sumLinesMax.size() == 0 && nMax > m_sRoiInfo[nFlag].nDetectionThreshold){
 		//put maximum
 		sumLinesMaxLoc.push_back(nMaxLoc);
 		sumLinesMax.push_back(nMax);
@@ -877,7 +878,7 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 
 	//process the found maxima
 	pfMatSumLinesData = (float*)matSumLines.data;
-	for (int i = 0; i<(int)sumLinesMax.size(); i++){
+	for (int i = 0; i < (int)sumLinesMax.size(); i++){
 		//get subpixel accuracy
 		double maxLocAcc = GetLocalMaxSubPixel(
 			(double)pfMatSumLinesData[matSumLines.cols*MAX(sumLinesMaxLoc[i] - 1, 0) + 0],
@@ -927,20 +928,20 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 }
 void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 	vector<SLine> lines = m_lanes[nFlag]; // [LYW_0724] : line fitting해야할 후보들, m_laneScore와 짝을 이룬다. (같은 index에 score가 저장되어 있음)
-    //그렇지만 이 프로그램(승준이꺼)에서는 max값만 넘어오기때문에 딱 하나만 넘겨옮
-    //#debug
+	//그렇지만 이 프로그램(승준이꺼)에서는 max값만 넘어오기때문에 딱 하나만 넘겨옮
+	//#debug
 	if (nFlag == LEFT_ROI0) printf("LEFT_ROI0: numLines:%d in LineFitting_1\n", lines.size()); //result:1 여기까지는 잘 넘어온다.
 	if (nFlag == LEFT_ROI2) printf("LEFT_ROI2: numLines:%d in LineFitting_1\n", lines.size());
-    vector<float> lineScores = m_laneScore[nFlag];
-	
-    /*cout<<m_lanes[nFlag].at(1).ptStartLine<<endl;
+	vector<float> lineScores = m_laneScore[nFlag];
+
+	/*cout<<m_lanes[nFlag].at(1).ptStartLine<<endl;
 	cout<<lines.at(1).ptStartLine<<endl;
 	cout<<m_laneScore[nFlag].at(1)<<endl;
 	cout<<lineScores.at(1)<<endl;*/
 	int width = m_sRoiInfo[nFlag].sizeIPM.width - 1;
 	int height = m_sRoiInfo[nFlag].sizeIPM.height - 1;
 
-    //#Q : [LYW_0824] : GroupLines는 왜 하는지 --> 클러스터링하는건가?? 승준이도 모른데.
+	//#Q : [LYW_0824] : GroupLines는 왜 하는지 --> 클러스터링하는건가?? 승준이도 모른데.
 	GroupLines(lines, lineScores, m_sRoiInfo[nFlag].nGroupThreshold, Size_<float>((float)width, (float)height));
 	float overlapThreshold = m_sRoiInfo[nFlag].fOverlapThreshold; //0.5; //.8;
 
@@ -952,7 +953,7 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 	int window = m_sRoiInfo[nFlag].nRansacLineWindow; //15;
 	vector<SLine> newLines;
 	vector<float> newScores;
-	for (int i = 0; i<(int)vecRectBoxes.size(); i++) //lines
+	for (int i = 0; i < (int)vecRectBoxes.size(); i++) //lines
 	{
 		// 	fprintf(stderr, "i=%d\n", i);
 		//Line line = lines[i];
@@ -1006,15 +1007,15 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 			if (nBorderX<(nBorderGap) || nBorderX>(m_sRoiInfo[nFlag].sizeIPM.width - nBorderGap))
 				put = false;
 
-            
+
 			if (put){
-                newLines.push_back(line);
+				newLines.push_back(line);
 				newScores.push_back(lineScore);
 				//#debug
-                if (nFlag == LEFT_ROI0)
+				if (nFlag == LEFT_ROI0)
 				{
 					printf("cnt in LineFitting\n");
-                    printf("numLines:%d in Linefitting\n", newLines.size());
+					printf("numLines:%d in Linefitting\n", newLines.size());
 				}
 			}
 		} // if
@@ -1030,10 +1031,10 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 	m_lanes[nFlag].clear();
 	m_laneScore[nFlag].clear();
 
-	if (newScores.size()>2 && nFlag == AUTOCALIB){ // [LYW_0829] : AUTOCALIB할 때 라인이 3개이상 들어왔을 때 문제를 해결하기위함
+	if (newScores.size() > 2 && nFlag == AUTOCALIB){ // [LYW_0829] : AUTOCALIB할 때 라인이 3개이상 들어왔을 때 문제를 해결하기위함
 		//int nFirst,nSecond;
 		int nFirstIdx, nSecondIdx;
-		if (newScores[0]>newScores[1]){
+		if (newScores[0] > newScores[1]){
 			nFirstIdx = 0, nSecondIdx = 1;
 			//nFirst=newScores[0],nSecond=newScores[1];
 		}
@@ -1047,7 +1048,7 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 				nSecondIdx = nFirstIdx;
 				nFirstIdx = i;
 			}
-			else if (newScores[i]>newScores[nSecondIdx]){
+			else if (newScores[i] > newScores[nSecondIdx]){
 				nSecondIdx = i;
 			}
 		}
@@ -1060,7 +1061,7 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 		m_lanes[nFlag] = newLines;
 		m_laneScore[nFlag] = newScores;
 		//#debug
-        if (nFlag == LEFT_ROI0) printf("numLines:%d in LineFitting\n", m_lanes[nFlag].size()); // 출력해봤더니 0으로 찍혀...-_-;;
+		if (nFlag == LEFT_ROI0) printf("numLines:%d in LineFitting\n", m_lanes[nFlag].size()); // 출력해봤더니 0으로 찍혀...-_-;;
 	}
 
 	//clean
@@ -1071,19 +1072,19 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 
 //IPM에서 검출된 lines --> Image로
 void CMultiROILaneDetection::IPM2ImLines(EROINUMBER nFlag){ // 
-//[LYW_0825] : lines --> mat -( TransformGround2Image() )-> mat - ( Mat2Lines() ) -> Lines ( m_lanesResult )
+	//[LYW_0825] : lines --> mat -( TransformGround2Image() )-> mat - ( Mat2Lines() ) -> Lines ( m_lanesResult )
 
 	if (m_lanes[nFlag].size() != 0){
 		//PointImIPM2World
 		//m_lanes[nFlag].
 		//IPM2WORLD
-		for (int i = 0; i<m_lanes[nFlag].size(); i++){
+		for (int i = 0; i < m_lanes[nFlag].size(); i++){
 			m_lanesResult[nFlag].push_back(m_lanes[nFlag].at(i));
 			//cout<<m_lanes[nFlag].at(i).ptStartLine<<endl;
 			//cout<<m_lanesResult[nFlag].at(i).ptStartLine<<endl;
 
 
-            //#Q : [LYW_0825] : IPMLines --> ImageLines로 변환하는 과정인 것 같지???  A: IPMLines -> groundLines까지만 했음. 아직 ImageLines안바꿈
+			//#Q : [LYW_0825] : IPMLines --> ImageLines로 변환하는 과정인 것 같지???  A: IPMLines -> groundLines까지만 했음. 아직 ImageLines안바꿈
 			//[LYW_0829]
 			//IPMimage의 좌표 --> ground로 변환하는 방법 --> 카메라중심으로부터 가까이에 있을수록 월드y좌표는 작다.즉, ptStart의 y가 ptEnd보다 작다.
 			//주의 ! ground좌표를 아직 영상좌표로 바꾸지 않았음.
@@ -1104,19 +1105,19 @@ void CMultiROILaneDetection::IPM2ImLines(EROINUMBER nFlag){ //
 			m_lanesGroundResult[nFlag].push_back(m_lanesResult[nFlag].at(i));
 		}
 
-        //#Q : dummy line은 왜 넣는거지?? 근데 main detection할 때는 안하나봐???
+		//#Q : dummy line은 왜 넣는거지?? 근데 main detection할 때는 안하나봐???
 		//WORLD2IMAGE
 		//convert them from world frame into camera frame
 		//put a dummy line at the beginning till we check that cvDiv bug
-		printf("m_lanesReuslt size : %d in Lines2ImLines\n", m_lanesResult[nFlag].size() );
+		printf("m_lanesReuslt size : %d in Lines2ImLines\n", m_lanesResult[nFlag].size());
 		if (nFlag == AUTOCALIB){
-		
+
 			//convert to mat and get in image coordinates
 			Mat matMat = Mat(2, 2 * m_lanesResult[nFlag].size(), CV_32FC1);
 			Lines2Mat(m_lanesResult[nFlag], matMat);
 			m_lanesResult[nFlag].clear();
 			TransformGround2Image(matMat, matMat);
-			Mat2Lines(matMat, m_lanesResult[nFlag]);
+			Mat2Lines(matMat, m_lanesResult[nFlag]); //[LYW_0916] : m_lanesResult는 위에서는 ground의 lines들을 저장하다가 이번엔 이미지의 lines들로 저장되네
 		}
 	}
 
@@ -1135,7 +1136,7 @@ void CMultiROILaneDetection::GetVectorMax(const Mat &matInVector, double &dMax, 
 		/*loop*/
 		for (int i = matInVector.cols - 1 - nIgnore; i >= 0 + nIgnore; i--){
 
-			if (tmax<(double)pfMatInVectorData[0 * matInVector.cols + i]){
+			if (tmax < (double)pfMatInVectorData[0 * matInVector.cols + i]){
 
 				tmax = (double)pfMatInVectorData[0 * matInVector.cols + i];
 				tmaxLoc = i;
@@ -1150,7 +1151,7 @@ void CMultiROILaneDetection::GetVectorMax(const Mat &matInVector, double &dMax, 
 		/*loop*/
 		for (int i = matInVector.rows - 1 - nIgnore; i >= 0 + nIgnore; i--){
 
-			if (tmax<(double)pfMatInVectorData[i*matInVector.cols + 0]){
+			if (tmax < (double)pfMatInVectorData[i*matInVector.cols + 0]){
 				tmax = (double)pfMatInVectorData[i*matInVector.cols + 0];
 				tmaxLoc = i;
 			}
@@ -1187,8 +1188,8 @@ double CMultiROILaneDetection::GetLocalMaxSubPixel(double dVal1, double dVal2, d
 void CMultiROILaneDetection::GetMaxLineScore(EROINUMBER nFlag){
 	float fMaxScore = MAXCOMP;
 	int nMaxIter = 0;
-	for (int i = 0; i<m_laneScore[nFlag].size(); i++){
-		nMaxIter = (m_laneScore[nFlag].at(i)>fMaxScore ? i : nMaxIter);
+	for (int i = 0; i < m_laneScore[nFlag].size(); i++){
+		nMaxIter = (m_laneScore[nFlag].at(i) > fMaxScore ? i : nMaxIter);
 		fMaxScore = m_laneScore[nFlag].at(nMaxIter);
 	}
 
@@ -1200,7 +1201,7 @@ void CMultiROILaneDetection::GetMaxLineScore(EROINUMBER nFlag){
 	//reload
 	m_lanes[nFlag].push_back(SMAxLane);
 	m_laneScore[nFlag].push_back(fMaxScore);
-    //#debug
+	//#debug
 	if (nFlag == LEFT_ROI0) printf("numLines:%d in GetMaxLinesScore\n", m_lanes[nFlag].size()); //result : 1개 나옮.
 }
 //tracking module
@@ -1210,7 +1211,7 @@ void CMultiROILaneDetection::GetTrackingLineCandidateModule(EROINUMBER nFlag){
 	vector<SWorldLane> vecWorldLane;
 	SLine sLineTemp;
 	SWorldLane sWorldLaneTemp;
-    //#Q : [LYW_0825] : dXScale로 나누고, dXLimit더하는 이유는 뭘까???
+	//#Q : [LYW_0825] : dXScale로 나누고, dXLimit더하는 이유는 뭘까???
 	for (int i = 0; i < m_lanes[nFlag].size(); i++){//m_lanes는 각각의 ROI에 대한 line fitting 결과임
 		sLineTemp.ptStartLine.x = m_lanes[nFlag].at(i).ptStartLine.x / m_sRoiInfo[nFlag].dXScale; //IPM image 2 World 변환을 위한 계산
 		sLineTemp.ptStartLine.x += m_sRoiInfo[nFlag].dXLimit[0]; //IPM image 2 World 변환을 위한 계산
@@ -1222,7 +1223,7 @@ void CMultiROILaneDetection::GetTrackingLineCandidateModule(EROINUMBER nFlag){
 		sLineTemp.ptEndLine.y = m_lanes[nFlag].at(i).ptEndLine.y / m_sRoiInfo[nFlag].dYScale;
 		sLineTemp.ptEndLine.y = m_sRoiInfo[nFlag].dYLimit[1] - m_lanes[nFlag].at(i).ptEndLine.y;
 
-        // [LYW_0825] : fXcenter, fXderiv는 tracking 때 쓰려고 하는 변수인가???
+		// [LYW_0825] : fXcenter, fXderiv는 tracking 때 쓰려고 하는 변수인가???
 		sWorldLaneTemp.fXcenter = (sLineTemp.ptStartLine.x + sLineTemp.ptEndLine.x) / 2;
 		sWorldLaneTemp.fXderiv = sLineTemp.ptStartLine.x - sLineTemp.ptEndLine.x;
 		//20150519/////////////////////////////////////////////////////////////////////////////
@@ -1238,7 +1239,7 @@ void CMultiROILaneDetection::GetTrackingLineCandidateModule(EROINUMBER nFlag){
 	int nTargetTracker = m_sTracking[nFlag].nTargetTracker;
 
 	//ROI 내에서 검출된 여러 라인을 추적한 차선과의 거리를 비교하여 가장 가까운 라인을 남김 --> false alaram제거하는 기능
-    //[LYW_0825] :#Q : m_SKalmanLane[nTargetTracker].SKalmanTrackingLine.fXcenter는 estimated된 값인가???
+	//[LYW_0825] :#Q : m_SKalmanLane[nTargetTracker].SKalmanTrackingLine.fXcenter는 estimated된 값인가???
 	for (int i = 0; i < vecWorldLane.size(); i++){
 		fTempComp = abs(m_SKalmanLane[nTargetTracker].SKalmanTrackingLine.fXcenter - vecWorldLane.at(i).fXcenter);
 		if (fTempComp < fMinDist){
@@ -1334,8 +1335,8 @@ void CMultiROILaneDetection::GetMaxLineScoreTwo(EROINUMBER nFlag){
 	float fMaxScore = MAXCOMP;
 	int nMaxIter = 0;
 	float fScoreArr[2];
-	for (int i = 0; i<m_laneScore[nFlag].size(); i++){
-		nMaxIter = (m_laneScore[nFlag].at(i)<fMaxScore ? i : nMaxIter);
+	for (int i = 0; i < m_laneScore[nFlag].size(); i++){
+		nMaxIter = (m_laneScore[nFlag].at(i) < fMaxScore ? i : nMaxIter);
 	}
 	fMaxScore = m_laneScore[nFlag].at(nMaxIter);
 	SLine SMAxLane = m_lanes[nFlag].at(nMaxIter);
@@ -1355,7 +1356,7 @@ void CMultiROILaneDetection::Lines2Mat(const vector<SLine> &lines, Mat &mat)
 	//loop and put values
 	int j;
 	float* pfMat = (float*)mat.data;
-	for (int i = 0; i<(int)lines.size(); i++)
+	for (int i = 0; i < (int)lines.size(); i++)
 	{
 		j = 2 * i;
 
@@ -1388,11 +1389,11 @@ void CMultiROILaneDetection::GroupLines(vector<SLine> &lines, vector<float> &lin
 {
 
 	//convert the lines into r-theta parameters
-    //#Q : [LYW_0825] : GroupLines이건 왜 하는걸까?? line2R-theta왜 하는거야?
+	//#Q : [LYW_0825] : GroupLines이건 왜 하는걸까?? line2R-theta왜 하는거야?
 	int numInLines = lines.size();
 	vector<float> rs(numInLines);
 	vector<float> thetas(numInLines);
-	for (int i = 0; i<numInLines; i++)
+	for (int i = 0; i < numInLines; i++)
 		LineXY2RTheta(lines[i], rs[i], thetas[i]);
 
 	//flag for stopping
@@ -1410,12 +1411,12 @@ void CMultiROILaneDetection::GroupLines(vector<SLine> &lines, vector<float> &lin
 				jr != rs.end(); jr++, jtheta++, jscore++)
 		{
 			//add pi if neg
-			float t1 = *itheta<0 ? *itheta : *itheta + CV_PI;
-			float t2 = *jtheta<0 ? *jtheta : *jtheta + CV_PI;
+			float t1 = *itheta < 0 ? *itheta : *itheta + CV_PI;
+			float t2 = *jtheta < 0 ? *jtheta : *jtheta + CV_PI;
 			//get distance
 			dist = 1 * fabs(*ir - *jr) + 1 * fabs(t1 - t2);//fabs(*itheta - *jtheta);
 			//check if minimum
-			if (dist<minDist)
+			if (dist < minDist)
 			{
 				minDist = dist;
 				minIr = ir; minItheta = itheta;
@@ -1444,7 +1445,7 @@ void CMultiROILaneDetection::GroupLines(vector<SLine> &lines, vector<float> &lin
 	//lines.resize(rs.size());
 	vector<float> newScores = lineScores;
 	lineScores.clear();
-	for (int i = 0; i<(int)rs.size(); i++)
+	for (int i = 0; i < (int)rs.size(); i++)
 	{
 		//get the line
 		SLine line;
@@ -1489,11 +1490,11 @@ void CMultiROILaneDetection::LineXY2RTheta(const SLine &line, float &r, float &t
 		float r1 = line.ptStartLine.x * cos(theta) + line.ptStartLine.y * sin(theta);
 		r = line.ptEndLine.x * cos(theta) + line.ptEndLine.y * sin(theta);
 		//adjust to add pi if necessary
-		if (r1<0 || r<0)
+		if (r1 < 0 || r < 0)
 		{
 			//add pi
 			theta += CV_PI;
-			if (theta>CV_PI)
+			if (theta > CV_PI)
 				theta -= 2 * CV_PI;
 			//take abs
 			r = fabs(r);
@@ -1533,7 +1534,7 @@ void CMultiROILaneDetection::IntersectLineRThetaWithBB(float r, float theta, con
 		Point2d(0, yleft), Point2d(bbox.width, yright) };
 	//get the starting point
 	int i;
-	for (i = 0; i<4; i++)
+	for (i = 0; i < 4; i++)
 	{
 		//if point inside, then put it
 
@@ -1546,7 +1547,7 @@ void CMultiROILaneDetection::IntersectLineRThetaWithBB(float r, float theta, con
 		}
 	}
 	//get the ending point
-	for (i++; i<4; i++)
+	for (i++; i < 4; i++)
 	{
 		//if point inside, then put it
 		if (IsPointInside(pts[i], bbox))
@@ -1578,7 +1579,7 @@ void CMultiROILaneDetection::GetLinesBoundingBoxes(const vector<SLine> &lines, L
 	switch (type)
 	{
 	case LINE_VERTICAL:
-		for (unsigned int i = 0; i<lines.size(); ++i)
+		for (unsigned int i = 0; i < lines.size(); ++i)
 		{
 			//get min and max x and add the bounding box covering the whole height
 			start = (int)min(lines[i].ptStartLine.x, lines[i].ptEndLine.x);
@@ -1588,7 +1589,7 @@ void CMultiROILaneDetection::GetLinesBoundingBoxes(const vector<SLine> &lines, L
 		break;
 
 	case LINE_HORIZONTAL:
-		for (unsigned int i = 0; i<lines.size(); ++i)
+		for (unsigned int i = 0; i < lines.size(); ++i)
 		{
 			//get min and max y and add the bounding box covering the whole width
 			start = (int)min(lines[i].ptStartLine.y, lines[i].ptEndLine.y);
@@ -1704,8 +1705,8 @@ void CMultiROILaneDetection::SetMat(Mat& imgInMat, Rect_<int> RectMask, double v
 
 	rectInfunction = Rect(0, 0, xstart - 1, imgInMat.rows);
 	//cout<<rectInfunction<<endl;
-	if (rectInfunction.x<imgInMat.cols && rectInfunction.y<imgInMat.rows &&
-		rectInfunction.x >= 0 && rectInfunction.y >= 0 && rectInfunction.width>0 && rectInfunction.height>0)
+	if (rectInfunction.x < imgInMat.cols && rectInfunction.y < imgInMat.rows &&
+		rectInfunction.x >= 0 && rectInfunction.y >= 0 && rectInfunction.width > 0 && rectInfunction.height > 0)
 	{
 		imgInMat(rectInfunction) = val;
 	}
@@ -1713,8 +1714,8 @@ void CMultiROILaneDetection::SetMat(Mat& imgInMat, Rect_<int> RectMask, double v
 
 	rectInfunction = Rect(xend + 1, 0, imgInMat.cols - xend - 1, imgInMat.rows);
 	//cout<<rectInfunction<<endl;
-	if (rectInfunction.x<imgInMat.cols && rectInfunction.y<imgInMat.rows &&
-		rectInfunction.x >= 0 && rectInfunction.y >= 0 && rectInfunction.width>0 && rectInfunction.height>0)
+	if (rectInfunction.x < imgInMat.cols && rectInfunction.y < imgInMat.rows &&
+		rectInfunction.x >= 0 && rectInfunction.y >= 0 && rectInfunction.width > 0 && rectInfunction.height > 0)
 	{
 		imgInMat(rectInfunction) = val;
 	}
@@ -1723,8 +1724,8 @@ void CMultiROILaneDetection::SetMat(Mat& imgInMat, Rect_<int> RectMask, double v
 
 	rectInfunction = Rect(xstart, 0, RectMask.width, ystart - 1);
 	//cout<<rectInfunction<<endl;
-	if (rectInfunction.x<imgInMat.cols && rectInfunction.y<imgInMat.rows &&
-		rectInfunction.x >= 0 && rectInfunction.y >= 0 && rectInfunction.width>0 && rectInfunction.height>0)
+	if (rectInfunction.x < imgInMat.cols && rectInfunction.y < imgInMat.rows &&
+		rectInfunction.x >= 0 && rectInfunction.y >= 0 && rectInfunction.width > 0 && rectInfunction.height > 0)
 	{
 
 		imgInMat(rectInfunction) = val;
@@ -1735,8 +1736,8 @@ void CMultiROILaneDetection::SetMat(Mat& imgInMat, Rect_<int> RectMask, double v
 	//rect = cvRect(xstart, yend+1, mask.width, inMat->height-yend-1);
 	rectInfunction = Rect(xstart, yend + 1, RectMask.width, imgInMat.rows - yend - 1);
 	//cout<<rectInfunction<<endl;
-	if (rectInfunction.x<imgInMat.cols && rectInfunction.y<imgInMat.rows &&
-		rectInfunction.x >= 0 && rectInfunction.y >= 0 && rectInfunction.width>0 && rectInfunction.height>0)
+	if (rectInfunction.x < imgInMat.cols && rectInfunction.y < imgInMat.rows &&
+		rectInfunction.x >= 0 && rectInfunction.y >= 0 && rectInfunction.width > 0 && rectInfunction.height > 0)
 	{
 
 		imgInMat(rectInfunction) = val;
@@ -1764,7 +1765,7 @@ void CMultiROILaneDetection::FitRansacLine(const Mat& matImage, int numSamples, 
 		return;
 
 	if (matPoints.cols != 1)
-		if (numSamples>matPoints.cols)
+		if (numSamples > matPoints.cols)
 			numSamples = matPoints.cols;
 	//subtract half
 
@@ -1824,7 +1825,7 @@ void CMultiROILaneDetection::FitRansacLine(const Mat& matImage, int numSamples, 
 	float *pfMatPoints = (float*)matPoints.data;
 	//cout<<"Iterations"<<numIterations<<endl;
 	//outer loop
-	for (int i = 0; i<numIterations; i++)
+	for (int i = 0; i < numIterations; i++)
 	{
 		//set flag to zero
 		matPointIn.zeros(1, matPoints.cols, CV_8SC1);
@@ -1832,7 +1833,7 @@ void CMultiROILaneDetection::FitRansacLine(const Mat& matImage, int numSamples, 
 		SampleWeighted(matWeights, numSamples, matRandInd, rngNum);
 
 
-		for (int j = 0; j<numSamples; j++)
+		for (int j = 0; j < numSamples; j++)
 		{
 			//flag it as included
 
@@ -1845,7 +1846,7 @@ void CMultiROILaneDetection::FitRansacLine(const Mat& matImage, int numSamples, 
 		FitRobustLine(matSamplePoints, curLineRTheta, curLineAbc);
 		//get end points from points in the samplePoints
 		minc = 1e5; mind = 1e5; maxc = -1e5; maxd = -1e5;
-		for (int j = 0; getEndPoints && j<numSamples; ++j)
+		for (int j = 0; getEndPoints && j < numSamples; ++j)
 		{
 			//get x & y
 
@@ -1858,13 +1859,13 @@ void CMultiROILaneDetection::FitRansacLine(const Mat& matImage, int numSamples, 
 			else if (lineType == LINE_VERTICAL)
 				c = y;
 			//compare
-			if (c>maxc)
+			if (c > maxc)
 			{
 				maxc = c;
 
 				ptMax = Point_<float>(x, y);		//////////////////////////////////////////////////////////////////////////
 			}
-			if (c<minc)
+			if (c < minc)
 			{
 				minc = c;
 
@@ -1874,7 +1875,7 @@ void CMultiROILaneDetection::FitRansacLine(const Mat& matImage, int numSamples, 
 
 		//loop on other points and compute distance to the line
 		score = 0;
-		for (int j = 0; j<matPoints.cols; j++)//
+		for (int j = 0; j < matPoints.cols; j++)//
 		{
 			// 	    //if not already inside
 
@@ -1903,7 +1904,7 @@ void CMultiROILaneDetection::FitRansacLine(const Mat& matImage, int numSamples, 
 			float* pfMatFitPoints = (float*)matFitPoints.data;
 			int k = 0;
 			//loop on points and copy points included
-			for (int j = 0; j<matPoints.cols; j++)//
+			for (int j = 0; j < matPoints.cols; j++)//
 			{
 
 
@@ -1921,7 +1922,7 @@ void CMultiROILaneDetection::FitRansacLine(const Mat& matImage, int numSamples, 
 			//compute distances to new line
 			dist = 0.;
 			//compute distances to new line
-			for (int j = 0; j<matFitPoints.cols; j++)
+			for (int j = 0; j < matFitPoints.cols; j++)
 				//for (int j=0; j<fitPoints->cols; j++)
 			{////	
 				x = pfMatFitPoints[matFitPoints.cols * 0 + j];//
@@ -1962,7 +1963,7 @@ void CMultiROILaneDetection::FitRansacLine(const Mat& matImage, int numSamples, 
 			//clear fitPoints
 
 			//check if to keep the line as best
-			if (score >= scoreThreshold && score>bestScore)//dist<bestDist //(numClose > bestScore)
+			if (score >= scoreThreshold && score > bestScore)//dist<bestDist //(numClose > bestScore)
 			{
 				//update max
 				bestScore = score; //numClose;
@@ -2025,8 +2026,8 @@ bool CMultiROILaneDetection::GetNonZeroPoints(const Mat& matInMat, Mat& matOutMa
 	float* pfMatInMat = (float*)matInMat.data;
 	float* pfMatOutMat = (float*)matOutMat.data;
 	/*loop and allocate the points*/
-	for (int i = 0; i<matInMat.rows; i++)
-		for (int j = 0; j<matInMat.cols; j++)
+	for (int i = 0; i < matInMat.rows; i++)
+		for (int j = 0; j < matInMat.cols; j++)
 			if (pfMatInMat[i*matInMat.cols + j])
 			{
 				pfMatOutMat[0 * matOutMat.cols + k] = (float)j;
@@ -2048,10 +2049,10 @@ void CMultiROILaneDetection::CumSum(const Mat &inMat, Mat &outMat)
 	float* pfOutMatData = (float*)outMat.data;
 
 	if (inMat.rows == 1)
-		for (int i = 1; i<outMat.cols; i++)
+		for (int i = 1; i < outMat.cols; i++)
 			pfOutMatData[0 * outMat.cols + i] += pfOutMatData[0 * outMat.cols + i - 1];
 	else
-		for (int i = 1; i<outMat.rows; i++)
+		for (int i = 1; i < outMat.rows; i++)
 			pfOutMatData[i*outMat.cols + 0] += pfOutMatData[(i - 1)*outMat.cols + 0];
 
 }
@@ -2068,7 +2069,7 @@ void CMultiROILaneDetection::SampleWeighted(const Mat &cumSum, int numSamples, M
 
 	if (numSamples >= cumSum.cols)
 	{
-		for (; i<numSamples; i++)
+		for (; i < numSamples; i++)
 		{
 			piRandInd[randInd.cols*i + 0] = i;
 		}
@@ -2077,7 +2078,7 @@ void CMultiROILaneDetection::SampleWeighted(const Mat &cumSum, int numSamples, M
 	else
 	{
 		//loop
-		while (i<numSamples)
+		while (i < numSamples)
 		{
 			//get random number
 
@@ -2089,7 +2090,7 @@ void CMultiROILaneDetection::SampleWeighted(const Mat &cumSum, int numSamples, M
 
 			//make sure this index wasnt chosen before
 			bool put = true;
-			for (int k = 0; k<i; k++)
+			for (int k = 0; k < i; k++)
 			{
 
 				if (piRandInd[randInd.cols*k + 0] == j)
@@ -2213,7 +2214,7 @@ void CMultiROILaneDetection::GetCameraPose(EROINUMBER nFlag, Vector<Mat> &vecMat
 	int nFrameSize = vecMat.size();
 	m_imgIPM[nFlag].create(m_sRoiInfo[nFlag].sizeIPM, CV_32FC1);
 	Mat imgSum = Mat::zeros(vecMat[0].size(), CV_32FC1);
-	for (int i = 0; i<nFrameSize; i++)
+	for (int i = 0; i < nFrameSize; i++)
 	{
 		//vecMat[i].convertTo(vecMat[i],CV_64FC1);
 		//imgSum = imgSum*(i+1);
@@ -2271,15 +2272,15 @@ void CMultiROILaneDetection::KalmanTrackingStage(int nTrackingFlag){
 	}
 	//error시 이부분 확인 여기까지
 
-	if (m_SKalmanLane[nTrackingFlag].cntNum == 0){
-		m_SKalmanLane[nTrackingFlag].SKalmanTrackingLineBefore = m_SKalmanLane[nTrackingFlag].SKalmanTrackingLine;
+	if (m_SKalmanLane[nTrackingFlag].cntNum == 0){ //[LYW_0917] 트래킹 처음일 때 
+		m_SKalmanLane[nTrackingFlag].SKalmanTrackingLineBefore = m_SKalmanLane[nTrackingFlag].SKalmanTrackingLine; //[LYW_0917] : moving average결과를 꽂아주네
 		KalmanSetting(m_SKalmanLane[nTrackingFlag]);
 	}
 	else
 	{
 		//prediction은 이전 frame을 가지고 predict()수행
 		//predict()결과에 현재 frame의 x,deriv를 이용해서 검사하기 : correct()
-		Mat matPrediction = m_SKalmanLane[nTrackingFlag].KF.predict();
+		Mat matPrediction = m_SKalmanLane[nTrackingFlag].KF.predict(); //#Q : [LYW_0917] : predict()결과는 언제쓰이는거야?
 		SLine SLinePredict;
 		SLinePredict.fXcenter = matPrediction.at<float>(0);
 		SLinePredict.fXderiv = matPrediction.at<float>(1);
@@ -2294,16 +2295,16 @@ void CMultiROILaneDetection::KalmanTrackingStage(int nTrackingFlag){
 		SLineEstimated.fXderiv = matEstimated.at<float>(1);
 
 
-		m_sTrakingLane[nTrackingFlag].ptStartLane.x = (m_sTrakingLane[nTrackingFlag].ptStartLane.y - m_sTrakingLane[nTrackingFlag].ptEndLane.y) / 2
+		m_sTrackingLane[nTrackingFlag].ptStartLane.x = (m_sTrackingLane[nTrackingFlag].ptStartLane.y - m_sTrackingLane[nTrackingFlag].ptEndLane.y) / 2
 			* SLineEstimated.fXderiv + SLineEstimated.fXcenter;
-		m_sTrakingLane[nTrackingFlag].ptEndLane.x = (-m_sTrakingLane[nTrackingFlag].ptStartLane.y + m_sTrakingLane[nTrackingFlag].ptEndLane.y) / 2
+		m_sTrackingLane[nTrackingFlag].ptEndLane.x = (-m_sTrackingLane[nTrackingFlag].ptStartLane.y + m_sTrackingLane[nTrackingFlag].ptEndLane.y) / 2
 			* SLineEstimated.fXderiv + SLineEstimated.fXcenter;
-		Point ptUvSt = TransformPointGround2Image(m_sTrakingLane[nTrackingFlag].ptStartLane);
-		Point ptUvEnd = TransformPointGround2Image(m_sTrakingLane[nTrackingFlag].ptEndLane);
-		m_sTrakingLane[nTrackingFlag].ptUvStartLine = ptUvSt;
-		m_sTrakingLane[nTrackingFlag].ptUvEndLine = ptUvEnd;
-		m_sTrakingLane[nTrackingFlag].fXcenter = SLineEstimated.fXcenter;
-		m_sTrakingLane[nTrackingFlag].fXderiv = SLineEstimated.fXderiv;
+		Point ptUvSt = TransformPointGround2Image(m_sTrackingLane[nTrackingFlag].ptStartLane);
+		Point ptUvEnd = TransformPointGround2Image(m_sTrackingLane[nTrackingFlag].ptEndLane);
+		m_sTrackingLane[nTrackingFlag].ptUvStartLine = ptUvSt;
+		m_sTrackingLane[nTrackingFlag].ptUvEndLine = ptUvEnd;
+		m_sTrackingLane[nTrackingFlag].fXcenter = SLineEstimated.fXcenter;
+		m_sTrackingLane[nTrackingFlag].fXderiv = SLineEstimated.fXderiv;
 
 		//line(m_imgResizeOrigin, ptUvSt, ptUvEnd, Scalar(0, 0, 255), 2);
 		//m_bLeftDraw = true;
@@ -2526,8 +2527,10 @@ void CMultiROILaneDetection::TrackingStageGround(EROINUMBER nflag, int nTracking
 			/ SLineTemp.fGroundHeight;// #Q : [LYW_0829] : 기울기가 dx/dy 되있음... 왜??? --> X의변화량을 표현하기위함.
 
 
-		//#Q : [LYW_0829] : 왜이렇게 하는거지?? 이해가 잘 안돼...A : 화면에 CENTER_ROI의 탑-바텀으로 이어지게끔 그려주기 위해
-		//나중에 이 부분을 좀 수정해야 Tracking module을 독립적으로 사용할 수 있다! 아 아니다. 이 부분은 단지 그냥 트래킹되는 라인을 길게 늘려주는 것 뿐!!
+		//#Q : [LYW_0829] : 왜이렇게 하는거지?? 이해가 잘 안돼...A : 화면에 CENTER_ROI의 탑-바텀으로 이어지게끔 그려주기 위해!!!
+		//[LYW_0916] : 각각의 ROI에서 검출된 line들을 탑-바텁으로 늘려준 후 push_back해준다. 같은 nTrackingFlag을 가진 애들은 같은 저장소로 누적된다.
+		//그래서 결국 같은 라인으로 트래킹하게 된다. 
+		//결국 늘려준 라인으로 화면에 그려주게된다.
 		// Tracking module을 독립적으로 하고 싶으면 그냥 flag숫자만 바꿔주면 되!!!
 		// [LYW_0907] : ground값으로 트래킹하려고!!
 		SLineTemp.ptStartLine.x = (SLineTemp.ptStartLine.y - m_sCameraInfo.fGroundTop)*SLineTemp.fXderiv
@@ -2539,10 +2542,10 @@ void CMultiROILaneDetection::TrackingStageGround(EROINUMBER nflag, int nTracking
 		SLineTemp.ptEndLine.y = m_sCameraInfo.fGroundBottom; // ROI 맨 아래
 
 		m_GroundTracking[nTrackingFlag].push_back(SLineTemp); //[LYW_0829] : LEFT_ROI2,3이 같은 nTrackingFlag을 하니깐 같이 넣겠네
-		
-		
-		
-		//#Q : [LYW_0829] : 이 작업은 왜 하는걸까?
+
+
+
+		//#Q : [LYW_0829] : 이 작업은 왜 하는걸까? --> A : 누적시키면서 맨 앞에 있는 놈 제거해서 업데이트해야지
 		if (m_GroundTracking[nTrackingFlag].size() > MOVING_AVERAGE_NUM){
 			m_iterGroundTracking[nTrackingFlag] = m_GroundTracking[nTrackingFlag].begin();
 			m_GroundTracking[nTrackingFlag].erase(m_iterGroundTracking[nTrackingFlag]);
@@ -2651,44 +2654,47 @@ void CMultiROILaneDetection::TrackingContinue(int nTrackingFlag){
 	if (m_vecTrackingFlag[nTrackingFlag].empty()){ // [LYW_0907]lane이 검출되지 않았을 때!!
 		nCnt[nTrackingFlag] += TRACKING_ERASE_LEVEL;
 
-	/*	if (nCnt[nTrackingFlag] >= TRACKINGERASE){
-			nCnt[nTrackingFlag] = 0;
-			m_Tracking[nTrackingFlag].clear();
-			m_GroundTracking[nTrackingFlag].clear();
-			m_bTrackingFlag[nTrackingFlag] = false;
-			m_SKalmanLane[nTrackingFlag].cntNum = 0;
-		}*/
+		//[LYW_0921] : 이 부분 주석 했더니 검출이 이상해서 주석하면 안될것 같으니깐 아래와 중복되는 내용을 제외한 나머지는 다시 풀어줘
+		//if (nCnt[nTrackingFlag] >= TRACKINGERASE){
+		//	nCnt[nTrackingFlag] = 0;
+		//	m_Tracking[nTrackingFlag].clear();
+		//	m_GroundTracking[nTrackingFlag].clear();
+		//	m_bTrackingFlag[nTrackingFlag] = false;
+		//	m_SKalmanLane[nTrackingFlag].cntNum = 0;
+		//}
 		m_SKalmanLane[nTrackingFlag].cntErase += TRACKING_ERASE_LEVEL; //#Q:[LYW_0829] : nCnt와 m_SKalmanLane.cntErase 차이는?
-		if (m_SKalmanLane[nTrackingFlag].cntErase >= TRACKINGERASE){
+		if (m_SKalmanLane[nTrackingFlag].cntErase >= TRACKINGERASE){ //[LYW_0922] : TRACKINGERASE보다 작으면 검출되지 않아도 그래도 화면에 그려진다.
 			m_SKalmanLane[nTrackingFlag].cntErase = 0;
 			nCnt[nTrackingFlag] = 0;
 			m_Tracking[nTrackingFlag].clear();
-			m_bTrackingFlag[nTrackingFlag] = false;
+			m_GroundTracking[nTrackingFlag].clear(); //[LYW_0921] : 추가했더니 오검출 문제 해결 --> Kalman Tracking Stage에 들어가자마자 return
+			m_SKalmanLane[nTrackingFlag].cntNum = 0; //[LYW_0921] : 
+			m_bTrackingFlag[nTrackingFlag] = false; //[LYW_0921] : KalmanTrackingStage에서 바로 return 됨
 		}
-
+		return;
 	}
-	else
+	else ////[LYW_0916] : 검출되면 cntErase감소시켜
 	{
-		/*if (nCnt[nTrackingFlag] >= 0){
-			if ((nCnt[nTrackingFlag] -= TRACKING_ERASE_LEVEL) == 0)
-				nCnt[nTrackingFlag] = 0;
-			else
-				nCnt[nTrackingFlag] -= TRACKING_ERASE_LEVEL;
-		}
-		else
-			nCnt[nTrackingFlag] = 0;
-*/
+		//if (nCnt[nTrackingFlag] >= 0){
+		//if ((nCnt[nTrackingFlag] -= TRACKING_ERASE_LEVEL) == 0)
+		//nCnt[nTrackingFlag] = 0;
+		//else
+		//nCnt[nTrackingFlag] -= TRACKING_ERASE_LEVEL;
+		//}
+		//else
+		nCnt[nTrackingFlag] = 0;
+
 		if (m_SKalmanLane[nTrackingFlag].cntErase >= 0){
-			if ((m_SKalmanLane[nTrackingFlag].cntErase -= TRACKING_ERASE_LEVEL) == 0)
+			if ((m_SKalmanLane[nTrackingFlag].cntErase -= TRACKING_ERASE_LEVEL) == 0) //[LYW_0916] : 0이하로 내려가는걸 방지
 				m_SKalmanLane[nTrackingFlag].cntErase = 0;
 			else
 				m_SKalmanLane[nTrackingFlag].cntErase -= TRACKING_ERASE_LEVEL;
 		}
 		else
-			m_SKalmanLane[nTrackingFlag].cntErase = 0;
+			m_SKalmanLane[nTrackingFlag].cntErase = 0;//[LYW_0916] : 0이하로 내려가는걸 방지
 	}
 
-	if (m_GroundTracking[nTrackingFlag].size() > TRACKING_FLAG_NUM){ //#Q: 각각의 ROI에서 라인 1개씩 넣어주면 2개뿐이지 않나??? 아 만약 누적개수를 의미한다면....음..그렇지
+	if (m_GroundTracking[nTrackingFlag].size() > TRACKING_FLAG_NUM){ //[LYW_0922] : 
 		m_bTrackingFlag[nTrackingFlag] = true;
 
 		//Moving Average Filter
@@ -2697,8 +2703,8 @@ void CMultiROILaneDetection::TrackingContinue(int nTrackingFlag){
 		SLine SGroundLeftLine;
 		SGroundLeftLine.fXcenter = 0;
 		SGroundLeftLine.fXderiv = 0;
-		for (int i = 0; i <m_GroundTracking[nTrackingFlag].size(); i++){ //#Q:[LYW_0829] : 위,아래 ROI에서 검출된 레인들의 평균을 계산???
-			ptStart += m_GroundTracking[nTrackingFlag][i].ptStartLine;
+		for (int i = 0; i < m_GroundTracking[nTrackingFlag].size(); i++){ //#Q:[LYW_0829] : 위,아래 ROI에서 검출된 레인들의 평균을 계산???
+			ptStart += m_GroundTracking[nTrackingFlag][i].ptStartLine; // //[LYW_0916] : ROI2,3든 비슷한 지점 탑라인에서
 			ptEnd += m_GroundTracking[nTrackingFlag][i].ptEndLine;
 			SGroundLeftLine.fXcenter += m_GroundTracking[nTrackingFlag][i].fXcenter;
 			SGroundLeftLine.fXderiv += m_GroundTracking[nTrackingFlag][i].fXderiv;
@@ -2713,28 +2719,28 @@ void CMultiROILaneDetection::TrackingContinue(int nTrackingFlag){
 		SGroundLeftLine.fXcenter /= nSize;
 		SGroundLeftLine.fXderiv /= nSize;
 
-		m_sTrakingLane[nTrackingFlag].fXcenter = SGroundLeftLine.fXcenter;
-		m_sTrakingLane[nTrackingFlag].fXderiv = SGroundLeftLine.fXderiv;
-		m_sTrakingLane[nTrackingFlag].fYtop = ptStart.y;
-		m_sTrakingLane[nTrackingFlag].fYBottom = ptEnd.y;
-		m_sTrakingLane[nTrackingFlag].ptStartLane = ptStart;
-		m_sTrakingLane[nTrackingFlag].ptEndLane = ptEnd;
+		m_sTrackingLane[nTrackingFlag].fXcenter = SGroundLeftLine.fXcenter;
+		m_sTrackingLane[nTrackingFlag].fXderiv = SGroundLeftLine.fXderiv;
+		m_sTrackingLane[nTrackingFlag].fYtop = ptStart.y;
+		m_sTrackingLane[nTrackingFlag].fYBottom = ptEnd.y;
+		m_sTrackingLane[nTrackingFlag].ptStartLane = ptStart;
+		m_sTrackingLane[nTrackingFlag].ptEndLane = ptEnd;
 		//#Q: 여기아래 왜 이렇게 계산하는지 궁금해 --> A : 없어도 된다.!!1
 		/*ptStart.x = (ptStart.y - ptEnd.y) / 2 * m_sTrakingLane[nTrackingFlag].fXderiv + m_sTrakingLane[nTrackingFlag].fXcenter;
 		ptEnd.x = (ptEnd.y - ptStart.y) / 2 * m_sTrakingLane[nTrackingFlag].fXderiv + m_sTrakingLane[nTrackingFlag].fXcenter;
-*/
+		*/
 		//[LYW_0829] : groundLines -> ImageLines로 바꿔줘야 그릴 수 있다.	
 		Point ptUvSt = TransformPointGround2Image(ptStart);
 		Point ptUvEnd = TransformPointGround2Image(ptEnd);
-		m_sTrakingLane[nTrackingFlag].ptUvStartLine = ptUvSt;
-		m_sTrakingLane[nTrackingFlag].ptUvEndLine = ptUvEnd;
+		m_sTrackingLane[nTrackingFlag].ptUvStartLine = ptUvSt;
+		m_sTrackingLane[nTrackingFlag].ptUvEndLine = ptUvEnd;
 
-		//20150524
+		//Q : [LYW_0916] : 근데 굳이 왜 temp로 한번 더 복사를 하지??m_sTrackingLane으로 
 		SLine SLineResult;
-		SLineResult.fXcenter = m_sTrakingLane[nTrackingFlag].fXcenter;
-		SLineResult.fXderiv = m_sTrakingLane[nTrackingFlag].fXderiv;
-		SLineResult.ptStartLine = m_sTrakingLane[nTrackingFlag].ptStartLane;
-		SLineResult.ptEndLine = m_sTrakingLane[nTrackingFlag].ptEndLane;
+		SLineResult.fXcenter = m_sTrackingLane[nTrackingFlag].fXcenter;
+		SLineResult.fXderiv = m_sTrackingLane[nTrackingFlag].fXderiv;
+		SLineResult.ptStartLine = m_sTrackingLane[nTrackingFlag].ptStartLane;
+		SLineResult.ptEndLine = m_sTrackingLane[nTrackingFlag].ptEndLane;
 
 		//ground값
 		m_SKalmanLane[nTrackingFlag].SKalmanTrackingLine = SLineResult;//평균내서 m_SKalmanLane에 넣어주는구나
@@ -2954,14 +2960,14 @@ void ShowResults(CMultiROILaneDetection &obj, EROINUMBER nflag){
 	Scalar(0,0,255),2);*/
 
 	rectangle(obj.m_imgResizeOrigin, obj.m_sRoiInfo[nflag].ptRoi, obj.m_sRoiInfo[nflag].ptRoiEnd, Scalar(255, 0, 0), 2);
-	
+
 	//Draw lane Orignin //[LYW_0815] : 트래킹 결과를 나중에 그릴려고 이 부분은 일단 주석처리
 	/*for(unsigned int i=0; i< obj.m_lanesResult[nflag].size();i++)
 	line(obj.m_imgResizeOrigin,
 	Point((int)obj.m_lanesResult[nflag][i].ptStartLine.x,(int)obj.m_lanesResult[nflag][i].ptStartLine.y),
 	Point((int)obj.m_lanesResult[nflag][i].ptEndLine.x,(int)obj.m_lanesResult[nflag][i].ptEndLine.y),
 	Scalar(0,0,255),2);*/
-	
+
 	//if (nflag == LEFT_ROI0) //[LYW_0815]:LEFT_ROI0 --> 틀린 곳 : m_lanesReuslt는 ground다! --> 영상이미지좌표로 바꿔줘야되!!
 	//{
 	//	printf("in LEFT_ROI0|| numLanes : %d in ShowResults\n", obj.m_lanesResult[nflag].size());
@@ -2980,12 +2986,13 @@ void ShowResults(CMultiROILaneDetection &obj, EROINUMBER nflag){
 	//sprintf(strImgIpm,)
 	sprintf(strImg, "IPM%d", nNum);
 	imshow(strImg, obj.m_imgIPM[nflag]);
+	sprintf(strImg, "Filt%d", nNum);
+	imshow(strImg, obj.m_ipmFiltered[nflag]); //#Q : [LYW_0825] : RANSAC의 결과를 그려줘야되는거아냐?? m_ipmFiltered 이것을 왜 또 그려? A : 그 다음꺼는 normalized
 	sprintf(strImg, "FN%d", nNum);
 	ShowImageNormalize(strImg, obj.m_ipmFiltered[nflag]);
 	sprintf(strImg, "FT%d", nNum);
 	ShowImageNormalize(strImg, obj.m_filteredThreshold[nflag]);
-	sprintf(strImg, "Filt%d", nNum);
-	imshow(strImg, obj.m_ipmFiltered[nflag]); //#Q : [LYW_0825] : RANSAC의 결과를 그려줘야되는거아냐?? m_ipmFiltered 이것을 왜 또 그려?
+
 
 
 	////[LYW_0907] : RANSAC결과 그려주기
@@ -3383,7 +3390,7 @@ void DifferentialImgProcess(vector<Mat> &vecImgDiff, Mat origin, vector<Point> &
 		if ((matColSum.at<float>(i)) < 2.5)
 		{
 			line(origin, Point(0, i), Point(matColSum.at<float>(i), i), Scalar(255, 0, 0), 1);
-			if (i>matColSum.rows / 2)
+			if (i > matColSum.rows / 2)
 				vecRoiBottom.push_back(Point(matColSum.at<float>(i), i));
 		}
 		else

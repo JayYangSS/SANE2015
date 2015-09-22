@@ -1,22 +1,17 @@
-//승준 다차선모드 복붙
+//
 
 /*
-[LYW_0815]
-영완 코드 다차선 시도 시작 :
-[LYW_0829]
-ROI확장 및 다차선 1차시도 성공
 
-git_Test
+무인차를 위한 코드 수정 및 실행을 위해 임시백업해둠 SANE과제 결과출력을 위해 코드 몇가지 추가되었었음
 
-why??
 
-1more_test
 
 */
 
 
-//#define _ADD_ROI_1_
-#define _ORIGINAL_
+#define _ADD_ROI_2_
+#define _ADD_ROI_1_
+//#define _ORIGINAL_
 
 #include "highgui.h"
 #include "cv.h"
@@ -93,6 +88,7 @@ enum DB_ROAD{
 
 string g_strOriginalWindow = "OriginalImg";
 
+int cnt = 0;
 
 int nFlagInputFrameType;
 
@@ -247,6 +243,8 @@ int main()
 	strcpy(szAnnotationSaveFile, szTestDir);
 	strcat(szAnnotationSaveFile, szSaveText);
 	CMultiROILaneDetection obj;		//constructor
+	Size sizeOrigImg;
+	Size sizeResizeImg;
 	obj.nLeftCnt = 0;
 	obj.nRightCnt = 0;
 	if (DB_NUM == CVLAB) // [LYW_0824] : Extrinsic Parameter setting
@@ -273,6 +271,7 @@ int main()
 		obj.m_sCameraInfo.ptOpticalCenter.y = (float)180;
 		obj.m_sCameraInfo.fHeight = (float)1250;
 	}
+	//initialization
 	obj.m_sCameraInfo.fPitch = 4.0 * PI / 180;
 	obj.m_sCameraInfo.fYaw = 0.0 * PI / 180;
 
@@ -290,12 +289,11 @@ int main()
 
 
 
-	Size sizeOrigImg;
-	Size sizeResizeImg;
+
 	//fileInformation_t preScanDB_t2;
 	strcpy(obj.m_sPreScanDB.szDataDir, szPrescanDB_dir);
 
-	unsigned int nTotalFrame = 50;
+	unsigned int nTotalFrame = 90;
 
 	obj.m_nFrameNum = FIRSTFRAMENUM; // 1
 	//first frame read
@@ -416,7 +414,7 @@ int main()
 
 	//main loof start
 	//[LYW_0724]: 90프레임 누적
-	for (int i = FIRSTFRAMENUM; obj.m_nFrameNum<nTotalFrame; obj.m_nFrameNum++, i++){
+	for (int i = FIRSTFRAMENUM; obj.m_nFrameNum < nTotalFrame; obj.m_nFrameNum++, i++){
 
 		//frame read
 		if (obj.m_nFrameNum != FIRSTFRAMENUM){ // [LYW_0824] : 위에서 첫프레임은 읽었으니깐! 2번째fr부터 읽어오면되
@@ -437,7 +435,7 @@ int main()
 	}// end of 90fr 저장하기
 
 	//show 90fr 확인용
-	for (int i = 0; i<originImg.size(); i++){ // originImg.size() = 90 fr
+	for (int i = 0; i < originImg.size(); i++){ // originImg.size() = 90 fr
 		Mat imgOriginTemp = originImgClr[i].clone();
 		rectangle(imgOriginTemp, Rect(obj.m_sRoiInfo[AUTOCALIB].nLeft, obj.m_sRoiInfo[AUTOCALIB].nTop, obj.m_sRoiInfo[AUTOCALIB].sizeRoi.width, obj.m_sRoiInfo[AUTOCALIB].sizeRoi.height),
 			Scalar(0, 255, 0));
@@ -474,7 +472,7 @@ int main()
 
 
 			Mat imgSum;// = Mat::zeros(obj.m_ipmFiltered[AUTOCALIB].size(),CV_32FC1);
-			for (int i = 0; i<originImg.size(); i++){ // 90 
+			for (int i = 0; i < originImg.size(); i++){ // 90 
 				obj.m_imgResizeScaleGray = originImg[i];
 
 				obj.GetIPM(AUTOCALIB);
@@ -514,12 +512,12 @@ int main()
 			//fout<<namePitchYaw<<endl;
 			fout << pitch << "\t" << yaw << "\t";
 			dCompareScore = 0.0;
-			for (int i = 0; i<obj.m_laneScore[AUTOCALIB].size(); i++){
+			for (int i = 0; i < obj.m_laneScore[AUTOCALIB].size(); i++){
 				//printf("%d : %f ",i,obj.m_laneScore[AUTOCALIB][i]);
 				fout << obj.m_laneScore[AUTOCALIB][i] << "\t";
 				dCompareScore += obj.m_laneScore[AUTOCALIB][i];
 			}
-			if (dCompareScore>dMaxScore){ //검출 차선이 2개일 경우라는 조건을 추가해야함 (아직 미추가)
+			if (dCompareScore > dMaxScore){ //검출 차선이 2개일 경우라는 조건을 추가해야함 (아직 미추가)
 				dMaxScore = dCompareScore;
 				fMaxPitch = pitch;
 				fMaxYaw = yaw;
@@ -529,7 +527,7 @@ int main()
 					AutoCalibLane.push_back(obj.m_lanesResult[AUTOCALIB][0]);
 					AutoCalibLane.push_back(obj.m_lanesResult[AUTOCALIB][1]);
 				}
-
+				ShowResults(obj, AUTOCALIB); //[LYW_0916] : 새로 추가
 			}
 			fout << endl;
 			cout << endl;
@@ -567,8 +565,9 @@ int main()
 
 	obj.m_sCameraInfo.fPitch = (float)fMaxPitch * PI / 180;
 	obj.m_sCameraInfo.fYaw = (float)fMaxYaw * PI / 180;
-	obj.SetRoiIpmCofig(AUTOCALIB);
+	obj.SetRoiIpmCofig(AUTOCALIB); //#Q : [LYW_0915] : 이건 왜 또하는거지?
 
+	//#Q : [LYW_0915] : m_sImgCenter, m_sWorldCenterInit용도가뭐야?
 	obj.m_sImgCenter.ptStartLine.x = (AutoCalibLane[0].ptStartLine.x + AutoCalibLane[1].ptStartLine.x) / 2;
 	obj.m_sImgCenter.ptStartLine.y = (AutoCalibLane[0].ptStartLine.y + AutoCalibLane[1].ptStartLine.y) / 2;
 	obj.m_sImgCenter.ptEndLine.x = (AutoCalibLane[0].ptEndLine.x + AutoCalibLane[1].ptEndLine.x) / 2;
@@ -579,6 +578,8 @@ int main()
 	obj.m_sWorldCenterInit.fXcenter = (obj.m_sWorldCenterInit.ptStartLane.x + obj.m_sWorldCenterInit.ptEndLane.x) / 2;
 	obj.m_sWorldCenterInit.fXderiv = obj.m_sWorldCenterInit.ptStartLane.x - obj.m_sWorldCenterInit.ptEndLane.x;
 
+	//[LYW_0915] : obj.m_sCameraInfo.fGroundTop,fGroundBottom은 AUTOCALIB단계에서 검출된 두 라인의 평균점의 TOP,Bottom 초기 ROI범위에서 벗어나지는 않는다.
+	//fGroundTop & fGroundBottom이 트래킹할 때 적용된다.
 	obj.m_sCameraInfo.fGroundTop = obj.m_sWorldCenterInit.ptStartLane.y;
 	obj.m_sCameraInfo.fGroundBottom = obj.m_sWorldCenterInit.ptEndLane.y;
 	//cout << obj.m_sCameraInfo.fGroundTop << endl;
@@ -616,7 +617,7 @@ int main()
 	Rect_<int> rectLeftTop, rectLeftBottom;
 	Rect_<int> rectRightTop, rectRightBottom;
 
-	vector<Point> vecLeft;
+	vector<Point> vecLeft; //5등분하는 점들의 집합
 	vector<Point> vecRight;
 	int nDivNum = 5;
 	//Auto calibration과정에서 검출한 결과 차선인 AutoCalibLane을 vector<Point>로 균등 분할 함수 (4등분)
@@ -735,10 +736,11 @@ int main()
 
 #ifdef _ADD_ROI_1_
 
-	//[LYW_0815]: ROI추가 시도
+	//[LYW_0815]: LEFT_ROI추가 시도
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	//LEFT_ROI0
-	obj.m_sRoiInfo[LEFT_ROI0].nLeft = obj.m_sRoiInfo[LEFT_ROI2].nLeft - obj.m_sRoiInfo[LEFT_ROI2].sizeRoi.width;
+	obj.m_sRoiInfo[LEFT_ROI0].nLeft = obj.m_sRoiInfo[LEFT_ROI2].nLeft - obj.m_sRoiInfo[LEFT_ROI2].sizeRoi.width*2;
 	obj.m_sRoiInfo[LEFT_ROI0].nRight = obj.m_sRoiInfo[LEFT_ROI2].nLeft;
 	obj.m_sRoiInfo[LEFT_ROI0].nTop = rectLeftTop.y - rectLeftTop.height / 2;
 	obj.m_sRoiInfo[LEFT_ROI0].nBottom = rectLeftTop.y + rectLeftTop.height / 2;
@@ -767,9 +769,51 @@ int main()
 	obj.m_sRoiInfo[LEFT_ROI0].nRansacLineWindow = 15;
 
 
+	////////////////////////////end of LEFT_ROI0/////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef _ADD_ROI_2_
+	//[LYW_0917] : ROI_RIGHT0추가
+
+	//RIGHT_ROI0
+	obj.m_sRoiInfo[RIGHT_ROI0].nLeft = rectRightTop.x + rectRightTop.width / 2;
+	obj.m_sRoiInfo[RIGHT_ROI0].nRight = obj.m_sRoiInfo[RIGHT_ROI0].nLeft + rectRightTop.width*2;
+	obj.m_sRoiInfo[RIGHT_ROI0].nTop = rectRightTop.y - rectRightTop.height / 2;
+	obj.m_sRoiInfo[RIGHT_ROI0].nBottom = rectRightTop.y + rectRightTop.height / 2;
+	obj.m_sRoiInfo[RIGHT_ROI0].sizeRoi.width = obj.m_sRoiInfo[RIGHT_ROI0].nRight - obj.m_sRoiInfo[RIGHT_ROI0].nLeft;
+	obj.m_sRoiInfo[RIGHT_ROI0].sizeRoi.height = obj.m_sRoiInfo[RIGHT_ROI0].nBottom - obj.m_sRoiInfo[RIGHT_ROI0].nTop;
+	obj.m_sRoiInfo[RIGHT_ROI0].ptRoi.x = obj.m_sRoiInfo[RIGHT_ROI0].nLeft;
+	obj.m_sRoiInfo[RIGHT_ROI0].ptRoi.y = obj.m_sRoiInfo[RIGHT_ROI0].nTop;
+	obj.m_sRoiInfo[RIGHT_ROI0].ptRoiEnd.x = obj.m_sRoiInfo[RIGHT_ROI0].ptRoi.x + obj.m_sRoiInfo[RIGHT_ROI0].sizeRoi.width;
+	obj.m_sRoiInfo[RIGHT_ROI0].ptRoiEnd.y = obj.m_sRoiInfo[RIGHT_ROI0].ptRoi.y + obj.m_sRoiInfo[RIGHT_ROI0].sizeRoi.height;
+	obj.m_sRoiInfo[RIGHT_ROI0].sizeIPM.width =
+		(obj.m_sRoiInfo[RIGHT_ROI0].nRight - obj.m_sRoiInfo[RIGHT_ROI0].nLeft)*fWidthScale;
+	obj.m_sRoiInfo[RIGHT_ROI0].sizeIPM.height =
+		(obj.m_sRoiInfo[RIGHT_ROI0].nBottom - obj.m_sRoiInfo[RIGHT_ROI0].nTop)*fHeightScale;
+
+	obj.m_sRoiInfo[RIGHT_ROI0].nDetectionThreshold = 1.5;
+	obj.m_sRoiInfo[RIGHT_ROI0].nGetEndPoint = 0;
+	obj.m_sRoiInfo[RIGHT_ROI0].nGroupThreshold = 10;
+	obj.m_sRoiInfo[RIGHT_ROI0].fOverlapThreshold = 0.3;
+
+	obj.m_sRoiInfo[RIGHT_ROI0].nRansacNumSamples = 5;	//Ransac 정확도 parameter
+	obj.m_sRoiInfo[RIGHT_ROI0].nRansacNumIterations = 40;
+	obj.m_sRoiInfo[RIGHT_ROI0].nRansacNumGoodFit = 10;
+	obj.m_sRoiInfo[RIGHT_ROI0].fRansacThreshold = 0.2;
+	obj.m_sRoiInfo[RIGHT_ROI0].nRansacScoreThreshold = 0;
+	obj.m_sRoiInfo[RIGHT_ROI0].nRansacLineWindow = 15;
+
 #endif
+////////////////////////////end of RIGHT_ROI0/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+#endif // #endif of _ADD_ROI_1_
+
+
 
 
 
@@ -800,6 +844,7 @@ int main()
 	obj.m_sRoiInfo[RIGHT_ROI2].fRansacThreshold = 0.2;
 	obj.m_sRoiInfo[RIGHT_ROI2].nRansacScoreThreshold = 0;
 	obj.m_sRoiInfo[RIGHT_ROI2].nRansacLineWindow = 15;
+
 
 
 	//RIGHT_ROI3
@@ -841,6 +886,11 @@ int main()
 	obj.SetRoiIpmCofig(RIGHT_ROI3);
 #ifdef _ADD_ROI_1_
 	obj.SetRoiIpmCofig(LEFT_ROI0);//[LYW_0815] : ROI추가
+#ifdef _ADD_ROI_2_
+	obj.SetRoiIpmCofig(RIGHT_ROI0);//[LYW_0917] : ROI_RIGHT0추가
+
+#endif
+
 #endif
 
 	Point ptVanSt, ptVanEnd;
@@ -864,17 +914,25 @@ int main()
 	obj.nCnt[1] = 0;
 #ifdef _ADD_ROI_1_
 	obj.nCnt[2] = 0;//[LYW_0815]:roi추가
+#ifdef _ADD_ROI_2_
+	obj.nCnt[3] = 0;//[LYW_0917]: RIFHT_ROI0추가
+#endif
 #endif
 
-	
+
 	obj.m_bDraw[0] = false;
 	obj.m_bDraw[1] = false;
 #ifdef _ADD_ROI_1_
 	obj.m_bDraw[2] = false; ////[LYW_0815]:roi추가
+#ifdef _ADD_ROI_2_
+	obj.m_bDraw[3] = false; //[LYW_0917]: RIFHT_ROI0추가
 #endif
+#endif
+
+
 	//tracking 모듈 초기화
 
-	int jMax = 5;
+	int jMax = 6;
 	if (DB_NUM == PRESCAN || DB_ROADINFO == EXPRESSWAY){
 		jMax = 0;
 	}
@@ -882,9 +940,16 @@ int main()
 
 	for (int j = 0; j <= jMax; j++){
 		char szEnvironment[20];
-		if (j == 10){
+		if (j == 6){
 			strcpy(szEnvironment, "Purity, Urban road");
 			strcpy(szTestDir, "./[DB]FreeScaleDemo/Purity/Urban/Straight_1/2015-04-13-09h-07m-32s_F_normal_");  // PUS 평가 완료
+		}
+		else if (j == 0){
+			strcpy(szEnvironment, "Cloudy, Express road");
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_1/2015-04-13-14h-20m-45s_straight_");
+			strcpy(szTestDir, "./[DB]CVLAB_Lane/Cloudy/Expressway/Straight_1/2015-04-13-14h-50m-44s_F_normal_");  // for demo
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_3/2015-04-13-14h-20m-45s_straight_3_");		// CUS 평가 완료
+			//strcpy(szTestDir, "H:/[DB]CVLAB_Lane/Cloudy/Urban/Straight_4/2015-04-13-14h-20m-45s_straight_4_");
 		}
 		else if (j == 1){
 			strcpy(szEnvironment, "Cloudy, Urban road");
@@ -913,14 +978,18 @@ int main()
 			strcpy(szTestDir, "./[DB]FreeScaleDemo/Rainy/Urban/Straight_3/2015-04-13-17h-37m-00s_");		// RUS 평가 완료
 		}
 		strcpy(obj.m_sPreScanDB.szDataDir, szTestDir);
-		if (j != 2)
+		if (j != 10)
 			for (int i = FIRSTFRAMENUM;; i++){
 				/*obj.m_imgResizeScaleGray = originImg[i];
 				obj.m_imgResizeOrigin = originImgClr[i];*/
 				SetFrameName(obj.m_sPreScanDB.szDataName, obj.m_sPreScanDB.szDataDir, i);
 				obj.m_imgOrigin = imread(string(obj.m_sPreScanDB.szDataName));
 				if (obj.m_imgOrigin.empty())
+				{
+					cnt = 0;
 					break;
+				}
+
 
 
 				obj.InitialResizeFunction(sizeResizeImg);
@@ -929,13 +998,18 @@ int main()
 
 				//detection start
 				//[LYW]드디어 시작!!!
-
+				cnt++;
 				obj.StartLanedetection(LEFT_ROI2);
 				obj.StartLanedetection(LEFT_ROI3);
 				obj.StartLanedetection(RIGHT_ROI2);
 				obj.StartLanedetection(RIGHT_ROI3);
 #ifdef _ADD_ROI_1_
-				obj.StartLanedetection(LEFT_ROI0); //[LYW_0815] : ROI추가
+				obj.StartLanedetection(LEFT_ROI0); //[LYW_0815] : ROI추가 
+
+#ifdef _ADD_ROI_2_
+				obj.StartLanedetection(RIGHT_ROI0); //[LYW_0917]: RIFHT_ROI0추가
+
+#endif
 #endif
 				//////////////////////////////////////////////////////////////////////////
 				double dTrackingSt = (double)getTickCount();
@@ -964,6 +1038,9 @@ int main()
 				obj.TrackingStageGround(RIGHT_ROI3, 1); //[LYW_0907] : driving_right_trackingFlag : 1
 #ifdef _ADD_ROI_1_
 				obj.TrackingStageGround(LEFT_ROI0, 2); //[LYW_0815] : ROI추가(1) [LYW_0907] : left_adjacent_tracking : 2
+#ifdef _ADD_ROI_2_
+				obj.TrackingStageGround(RIGHT_ROI0,3); //[LYW_0917]: RIFHT_ROI0추가
+#endif
 #endif
 				////tkm before		//Tracking continue 판별식
 				/*obj.TrackingContinue();*/
@@ -973,6 +1050,9 @@ int main()
 				obj.TrackingContinue(1);
 #ifdef _ADD_ROI_1_
 				obj.TrackingContinue(2); //[LYW_0815] : ROI추가(2)
+#ifdef _ADD_ROI_2_
+				obj.TrackingContinue(3); //[LYW_0917]: RIFHT_ROI0추가
+#endif
 #endif
 				////tracking module
 				if (obj.m_bTrackingFlag[obj.m_sTracking[LEFT_ROI2].nTargetTracker] == false){
@@ -991,31 +1071,40 @@ int main()
 				if (obj.m_bTrackingFlag[obj.m_sTracking[LEFT_ROI0].nTargetTracker] == false){
 					obj.m_sTracking[LEFT_ROI0].bTracking = false;
 				}//[LYW_0815] : ROI추가(3)
+#ifdef _ADD_ROI_2_
+				if (obj.m_bTrackingFlag[obj.m_sTracking[RIGHT_ROI0].nTargetTracker] == false){
+					obj.m_sTracking[RIGHT_ROI0].bTracking = false;
+			}//[LYW_0917]: RIFHT_ROI0추가			
+#endif
 #endif
 				////tracking module
 				obj.KalmanTrackingStage(0);
 				obj.KalmanTrackingStage(1);
 #ifdef _ADD_ROI_1_
 				obj.KalmanTrackingStage(2); //[LYW_0815] q : ROI추가(4)
+#ifdef _ADD_ROI_2_
+				obj.KalmanTrackingStage(3); //[LYW_0917]: RIFHT_ROI0추가
+#endif
 #endif
 
 				//tracking module
 				//[LYW_0815] : 이건 예외처리한 것 같음. 좌우 차선의 간격이 좁아지면 제거
 				if ((obj.m_bDraw[0] == true) && (obj.m_bDraw[1] == true)){
-					float fRightGround = obj.m_sTrakingLane[1].fXcenter / 1000;
-					float fLeftGround = obj.m_sTrakingLane[0].fXcenter / 1000;
+					float fRightGround = obj.m_sTrackingLane[1].fXcenter / 1000;
+					float fLeftGround = obj.m_sTrackingLane[0].fXcenter / 1000;
 					if ((fRightGround - fLeftGround) < MIN_WORLD_WIDTH)
 					{
 						obj.ClearDetectionResult(0);
 						obj.ClearDetectionResult(1);
 					}
 				}
+				//[LYW_0921] : 아래와 같이 하면 계속 꺼져... world좌표로 계산하면 거리가 왜곡되나?? 왜 안될까?
 				//if ((obj.m_bDraw[0] == true) && (obj.m_bDraw[2] == true)){ // driving left lane vs. left adjacent lane
-				//	float fRightGround = obj.m_sTrakingLane[1].fXcenter / 1000;
-				//	float fLeftGround = obj.m_sTrakingLane[0].fXcenter / 1000;
-				//	if ((fRightGround - fLeftGround) < MIN_WORLD_WIDTH)
+				//	float fRightGround = obj.m_sTrackingLane[2].fXcenter / 1000;
+				//	float fLeftGround = obj.m_sTrackingLane[0].fXcenter / 1000;
+				//	if ((fRightGround - fLeftGround) < MIN_WORLD_WIDTH || (-fRightGround + fLeftGround) > MAX_WORLD_WIDTH)
 				//	{
-				//		obj.ClearDetectionResult(0);
+				//		//obj.ClearDetectionResult(0);
 				//		obj.ClearDetectionResult(2); // [LYW_0907] : 
 				//	}
 				//}
@@ -1044,214 +1133,266 @@ int main()
 
 #ifdef _ADD_ROI_1_
 				ShowResults(obj, LEFT_ROI0);//[LYW_0815] : ROI추가(6)
+#ifdef _ADD_ROI_2_
+				ShowResults(obj, RIGHT_ROI0);//[LYW_0917]: RIFHT_ROI0추가
 #endif
-				
+#endif
+
 				obj.ClearResultVector(LEFT_ROI2);
 				obj.ClearResultVector(LEFT_ROI3);
 				obj.ClearResultVector(RIGHT_ROI2);
 				obj.ClearResultVector(RIGHT_ROI3);
 #ifdef _ADD_ROI_1_
 				obj.ClearResultVector(LEFT_ROI0); //[LYW_0815] : ROI추가(7)
+#ifdef _ADD_ROI_2_
+				obj.ClearResultVector(RIGHT_ROI0); //[LYW_0917]: RIFHT_ROI0추가
+#endif
 #endif
 				stringstream ssLeft, ssRight;
 				stringstream ssLeft2;//[LYW_0815] : ROI추가(8)
+				stringstream ssRight2;//[LYW_0917]: RIFHT_ROI0추가
 
 				float fLeftGround, fRightGround;
 				float fLeftGround2;//[LYW_0815] : ROI추가(9)
+				float fRightGround2; //[LYW_0917]: RIFHT_ROI0추가
 
 
 				////tracking module
 				//#Q:[LYW_0829] : lateral distance계산하는 것 같은데 어떻게 계산하는거지?
 				if (obj.m_bTrackingFlag[0]){
 
-					int ssTemp = obj.m_sTrakingLane[0].fXcenter / 1000 * 100;
+					int ssTemp = obj.m_sTrackingLane[0].fXcenter / 1000 * 100;
 					fLeftGround = float(ssTemp) / 100;
 					ssLeft << fLeftGround;
 				}
 				if (obj.m_bTrackingFlag[1]){
-					int ssTemp = obj.m_sTrakingLane[1].fXcenter / 1000 * 100;
+					int ssTemp = obj.m_sTrackingLane[1].fXcenter / 1000 * 100;
 					fRightGround = float(ssTemp) / 100;
 					ssRight << fRightGround;
 				}
 #ifdef _ADD_ROI_1_
 				if (obj.m_bTrackingFlag[2]){  //[LYW_0815] : ROI추가(10)
-					int ssTemp = obj.m_sTrakingLane[2].fXcenter / 1000 * 100;
+					int ssTemp = obj.m_sTrackingLane[2].fXcenter / 1000 * 100;
 					fLeftGround2 = float(ssTemp) / 100;
-					ssLeft2 << fLeftGround2;  
+					ssLeft2 << fLeftGround2;
+				}
+#ifdef _ADD_ROI_2_
+				if (obj.m_bTrackingFlag[3]){  //[LYW_0815] : ROI추가(10)
+					int ssTemp = obj.m_sTrackingLane[3].fXcenter / 1000 * 100;
+					fRightGround2 = float(ssTemp) / 100;
+					ssRight2 << fRightGround2;
 				}
 #endif
+#endif
+
+
+
 				//Lane Draw & Lateral Distance Draw
 				//[LYW_0825] : m_imgResizeqOrigin에 그린다.
-#ifndef _ADD_ROI_1_
-#ifdef _ORIGINAL_
+				//[LYW_0917] : tracking결과를 그린다.
+
+
+
 				if ((obj.m_bDraw[0] == true) && (obj.m_bDraw[1] == true)){
-#endif
-#endif
-#ifdef _ADD_ROI_1_
-				if ((obj.m_bDraw[0] == true) && (obj.m_bDraw[1] == true) && (obj.m_bDraw[2]==true)){
-#endif
+
 					if (obj.m_bTrackingFlag[0]){
-						line(obj.m_imgResizeOrigin, obj.m_sTrakingLane[0].ptUvStartLine,
-							obj.m_sTrakingLane[0].ptUvEndLine, Scalar(0, 0, 255), 2);
-						putText(obj.m_imgResizeOrigin, ssLeft.str(), obj.m_sTrakingLane[0].ptUvEndLine,
+						line(obj.m_imgResizeOrigin, obj.m_sTrackingLane[0].ptUvStartLine,
+							obj.m_sTrackingLane[0].ptUvEndLine, Scalar(0, 0, 255), 2);
+						putText(obj.m_imgResizeOrigin, ssLeft.str(), obj.m_sTrackingLane[0].ptUvEndLine,
 							FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
 					}
 					if (obj.m_bTrackingFlag[1]){
-						line(obj.m_imgResizeOrigin, obj.m_sTrakingLane[1].ptUvStartLine,
-							obj.m_sTrakingLane[1].ptUvEndLine, Scalar(0, 0, 255), 2);
-						putText(obj.m_imgResizeOrigin, ssRight.str(), obj.m_sTrakingLane[1].ptUvEndLine,
+						line(obj.m_imgResizeOrigin, obj.m_sTrackingLane[1].ptUvStartLine,
+							obj.m_sTrackingLane[1].ptUvEndLine, Scalar(0, 0, 255), 2);
+						putText(obj.m_imgResizeOrigin, ssRight.str(), obj.m_sTrackingLane[1].ptUvEndLine,
 							FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
 					}
+				}
+
 #ifdef _ADD_ROI_1_
+				if ((obj.m_bDraw[2] == true))
+				{
 					if (obj.m_bTrackingFlag[2]){ //[LYW_0815] : ROI추가(11)
-						line(obj.m_imgResizeOrigin, obj.m_sTrakingLane[2].ptUvStartLine,
-							obj.m_sTrakingLane[2].ptUvEndLine, Scalar(0, 0, 255), 2);
-						putText(obj.m_imgResizeOrigin, ssLeft2.str(), obj.m_sTrakingLane[2].ptUvEndLine,
+						line(obj.m_imgResizeOrigin, obj.m_sTrackingLane[2].ptUvStartLine,
+							obj.m_sTrackingLane[2].ptUvEndLine, Scalar(0, 0, 255), 2);
+						putText(obj.m_imgResizeOrigin, ssLeft2.str(), obj.m_sTrackingLane[2].ptUvStartLine,
 							FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
 					}
+				}
 #endif
+
+#ifdef _ADD_ROI_2_
+				if ((obj.m_bDraw[3] == true))
+				{
+					if (obj.m_bTrackingFlag[3]){ //[LYW_0917]: RIFHT_ROI0추가
+						line(obj.m_imgResizeOrigin, obj.m_sTrackingLane[3].ptUvStartLine,
+							obj.m_sTrackingLane[3].ptUvEndLine, Scalar(0, 0, 255), 2);
+						putText(obj.m_imgResizeOrigin, ssRight2.str(), obj.m_sTrackingLane[3].ptStartLane,
+							FONT_HERSHEY_COMPLEX, 1, Scalar(50, 50, 200), 2, 8, false);
+					}
 				}
+#endif
 
 
-				//line(obj.m_imgResizeOrigin, obj.m_sImgCenter.ptStartLine, obj.m_sImgCenter.ptEndLine, Scalar(255, 0, 255),2);
-				stringstream ssCenter;
-				int ssTemp = (obj.m_sWorldCenterInit.fXcenter) / 1000 / 2 * 100;
-				ssCenter << float(ssTemp) / 100;
-				/*putText(obj.m_imgResizeOrigin, ssCenter.str(), obj.m_sImgCenter.ptEndLine,
-				FONT_HERSHEY_COMPLEX_SMALL, 1, Scalar(255, 0, 255), 1, 8, false);*/
-				////////////////////////////////////////////////////////////////////////////
-				////test
 
-				//Mat matMat = Mat(2, 1, CV_32FC1);
-				//float* pfMat = (float*)matMat.data;
-				//pfMat[0] = obj.m_sLeftTrakingLane.fXcenter + obj.m_sLeftTrakingLane.fXderiv / 2+1000;
-				//pfMat[1] = 20000;
-				//obj.TransformGround2Image(matMat, matMat);
-				//Point ptTemp = Point(pfMat[0], pfMat[1]);
-				////circle(obj.m_imgResizeOrigin, ptTemp, 2, Scalar(255, 0, 0), 2);
+					//line(obj.m_imgResizeOrigin, obj.m_sImgCenter.ptStartLine, obj.m_sImgCenter.ptEndLine, Scalar(255, 0, 255),2);
+					stringstream ssCenter;
+					int ssTemp = (obj.m_sWorldCenterInit.fXcenter) / 1000 / 2 * 100;
+					ssCenter << float(ssTemp) / 100;
+					/*putText(obj.m_imgResizeOrigin, ssCenter.str(), obj.m_sImgCenter.ptEndLine,
+					FONT_HERSHEY_COMPLEX_SMALL, 1, Scalar(255, 0, 255), 1, 8, false);*/
+					////////////////////////////////////////////////////////////////////////////
+					////test
 
-				//pfMat[0] = obj.m_sLeftTrakingLane.fXcenter + obj.m_sLeftTrakingLane.fXderiv / 2 + 2000;
-				//pfMat[1] = 20000;
-				//obj.TransformGround2Image(matMat, matMat);
-				//ptTemp = Point(pfMat[0], pfMat[1]);
-				////circle(obj.m_imgResizeOrigin, ptTemp, 2, Scalar(0, 0, 255), 2);
+					//Mat matMat = Mat(2, 1, CV_32FC1);
+					//float* pfMat = (float*)matMat.data;
+					//pfMat[0] = obj.m_sLeftTrakingLane.fXcenter + obj.m_sLeftTrakingLane.fXderiv / 2+1000;
+					//pfMat[1] = 20000;
+					//obj.TransformGround2Image(matMat, matMat);
+					//Point ptTemp = Point(pfMat[0], pfMat[1]);
+					////circle(obj.m_imgResizeOrigin, ptTemp, 2, Scalar(255, 0, 0), 2);
 
-				////test end
-				////////////////////////////////////////////////////////////////////////////
+					//pfMat[0] = obj.m_sLeftTrakingLane.fXcenter + obj.m_sLeftTrakingLane.fXderiv / 2 + 2000;
+					//pfMat[1] = 20000;
+					//obj.TransformGround2Image(matMat, matMat);
+					//ptTemp = Point(pfMat[0], pfMat[1]);
+					////circle(obj.m_imgResizeOrigin, ptTemp, 2, Scalar(0, 0, 255), 2);
 
-				////anotation show
-				//SWorldLane GroundLeft;
-				//SWorldLane GroundRight;
-				//if (EVALUATION == true){
-				//	LoadExtractedPoint(fp, GroundLeft.ptUvStartLine, GroundLeft.ptUvEndLine, GroundRight.ptUvStartLine, GroundRight.ptUvEndLine);
+					////test end
+					////////////////////////////////////////////////////////////////////////////
 
-				//	if ((GroundLeft.ptUvStartLine.x != EMPTY) && (GroundLeft.ptUvEndLine.x != EMPTY)){
-				//		line(obj.m_imgResizeOrigin, GroundLeft.ptUvStartLine, GroundLeft.ptUvEndLine, Scalar(255, 0, 0), 3);
-				//	}
-				//	else{
-				//		//cout << "	Left GroundTruth		 lane Detect EMPTY" << endl;
-				//	}
-				//		
-				//	if ((GroundRight.ptUvStartLine.x != EMPTY) && (GroundRight.ptUvEndLine.x != EMPTY)){
-				//		line(obj.m_imgResizeOrigin, GroundRight.ptUvStartLine, GroundRight.ptUvEndLine, Scalar(255, 0, 0), 3);
-				//	}
-				//	else{
-				//		//cout << "	Right GroundTruth		 lane Detect EMPTY" << endl;
-				//	}
-				//		
-				//	if (obj.m_sLeftTrakingLane.ptUvStartLine.x == EMPTY){
-				//		//cout << "	Left		 lane Detect EMPTY" << endl;
-				//	}
-				//	if (obj.m_sRightTrakingLane.ptUvStartLine.x == EMPTY){
-				//		//cout << "	Right		 lane Detect EMPTY" << endl;
-				//	}
-				//	EvaluationFunc(obj, structEvaluation, GroundLeft, GroundRight, obj.m_sLeftTrakingLane, obj.m_sRightTrakingLane);
+					////anotation show
+					//SWorldLane GroundLeft;
+					//SWorldLane GroundRight;
+					//if (EVALUATION == true){
+					//	LoadExtractedPoint(fp, GroundLeft.ptUvStartLine, GroundLeft.ptUvEndLine, GroundRight.ptUvStartLine, GroundRight.ptUvEndLine);
 
-				//}
+					//	if ((GroundLeft.ptUvStartLine.x != EMPTY) && (GroundLeft.ptUvEndLine.x != EMPTY)){
+					//		line(obj.m_imgResizeOrigin, GroundLeft.ptUvStartLine, GroundLeft.ptUvEndLine, Scalar(255, 0, 0), 3);
+					//	}
+					//	else{
+					//		//cout << "	Left GroundTruth		 lane Detect EMPTY" << endl;
+					//	}
+					//		
+					//	if ((GroundRight.ptUvStartLine.x != EMPTY) && (GroundRight.ptUvEndLine.x != EMPTY)){
+					//		line(obj.m_imgResizeOrigin, GroundRight.ptUvStartLine, GroundRight.ptUvEndLine, Scalar(255, 0, 0), 3);
+					//	}
+					//	else{
+					//		//cout << "	Right GroundTruth		 lane Detect EMPTY" << endl;
+					//	}
+					//		
+					//	if (obj.m_sLeftTrakingLane.ptUvStartLine.x == EMPTY){
+					//		//cout << "	Left		 lane Detect EMPTY" << endl;
+					//	}
+					//	if (obj.m_sRightTrakingLane.ptUvStartLine.x == EMPTY){
+					//		//cout << "	Right		 lane Detect EMPTY" << endl;
+					//	}
+					//	EvaluationFunc(obj, structEvaluation, GroundLeft, GroundRight, obj.m_sLeftTrakingLane, obj.m_sRightTrakingLane);
 
-				//cout << endl;
-				//
+					//}
 
-				////////////////////////////////////////////////////////////////////////////
+					//cout << endl;
+					//
 
-				putText(obj.m_imgResizeOrigin, szEnvironment, Point(10, 50),
-					FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 255), 2, 8, false);
+					////////////////////////////////////////////////////////////////////////////
+
+					putText(obj.m_imgResizeOrigin, szEnvironment, Point(10, 50),
+						FONT_HERSHEY_COMPLEX, 1, Scalar(0, 0, 255), 2, 8, false);
 
 
-				stringstream ssTime;
-				char szProcTime[20] = "FPS : ";
-				char szMs[10] = "ms";
-				ssTime << szProcTime;
-				ssTime << (int)(1000 / dCurrentProcessTime);
-				//ssTime << szMs;
-				putText(obj.m_imgResizeOrigin, ssTime.str(), Point(10, 90),
-					FONT_HERSHEY_COMPLEX, 1, Scalar(255, 0, 50), 2, 8, false);
+					stringstream ssTime;
+					char szProcTime[20] = "FPS : ";
+					char szMs[10] = "ms";
+					ssTime << szProcTime;
+					ssTime << (int)(1000 / dCurrentProcessTime);
+					//ssTime << szMs;
+					putText(obj.m_imgResizeOrigin, ssTime.str(), Point(10, 90),
+						FONT_HERSHEY_COMPLEX, 1, Scalar(255, 0, 50), 2, 8, false);
 
-				////TrackingStage(obj, LEFT_ROI2);
-				////imshow("original_gray", obj.m_imgResizeScaleGray);
-				imshow("Result Img", obj.m_imgResizeOrigin);
-				////obj.GetIPM(GROUND);
-				////imshow("IPM_GROUND", obj.m_imgIPM[GROUND]);
-				//ShowResults(obj,AUTOCALIB);
-				////waitKey(20);
-				char cTemp = waitKey(1);
-				if (cTemp == 'q'){
-					break;
-					//i -= 2;
-				}
-			}// end of 하나의 frame에서 detection & tracking 다
-		//obj.ClearDetectionResult();
+					////TrackingStage(obj, LEFT_ROI2);
+					////imshow("original_gray", obj.m_imgResizeScaleGray);
+					imshow("Result Img", obj.m_imgResizeOrigin);
 
-		////tracking module
-		obj.ClearDetectionResult(0);
-		obj.ClearDetectionResult(1);
+					//	//szEnvironment
+					//	//if (cnt % 10 == 0){
+					//		char saneResult[10];
+					//		sprintf(saneResult, "./sane/%s/img_%d.png",szEnvironment, cnt);
+					//		//strcpy(saneResult, "./sane/");
+					//		//strcat(saneResult, szEnvironment);
+					//		//strcat(saneResult, "/");
+					//		//strcat(saneResult, szEnvironment);
+					//		//sprintf(saneResult, "img_%d.png", cnt);
+					//		imwrite(saneResult, obj.m_imgResizeOrigin);
+					////	}
+					//	
+					////obj.GetIPM(GROUND);
+					////imshow("IPM_GROUND", obj.m_imgIPM[GROUND]);
+					//ShowResults(obj,AUTOCALIB);
+					////waitKey(20);
+					char cTemp = waitKey(0);
+					if (cTemp == 'q'){
+						break;
+						//i -= 2;
+					}
+				}// end of 하나의 frame에서 detection & tracking 다
+				//obj.ClearDetectionResult();
+
+				////tracking module
+				obj.ClearDetectionResult(0);
+				obj.ClearDetectionResult(1);
 #ifdef _ADD_ROI_1_
-		obj.ClearDetectionResult(2);//[LYW_0815] : ROI추가(12)
+				obj.ClearDetectionResult(2);//[LYW_0815] : ROI추가(12)
+#endif
+#ifdef _ADD_ROI_2_
+				obj.ClearDetectionResult(3);//[LYW_0917]: RIFHT_ROI0추가
 #endif
 
-	} // end of startLine 883 test DB 시작
+				cnt++;
 
 
-	cout << "Average processing time  : " << d_totalProcessTime / nCntProcess << endl;
-	/*cout << "Total Frames : " << structEvaluation.nTotalFrame << endl;
-	cout << "Left Evaluation" << endl;
-	cout << "TP : " << structEvaluation.LeftTP << endl;
-	cout << "FP : " << structEvaluation.LeftFP << endl;
-	cout << "FN : " << structEvaluation.LeftFN << endl;
-	cout << "TN : " << structEvaluation.LeftTN << endl;
-
-	cout << "Right Evaluation" << endl;
-	cout << "TP : " << structEvaluation.RightTP << endl;
-	cout << "FP : " << structEvaluation.RightFP << endl;
-	cout << "FN : " << structEvaluation.RightFN << endl;
-	cout << "TN : " << structEvaluation.RightTN << endl;
-
-	cout << "Total Evaluation" << endl;
-
-	cout << "TP : " << structEvaluation.LeftTP + structEvaluation.RightTP << endl;
-	cout << "FP : " << structEvaluation.LeftFP + structEvaluation.RightFP << endl;
-	cout << "FN : " << structEvaluation.LeftFN + structEvaluation.RightFN << endl;
-	cout << "TN : " << structEvaluation.LeftTN + structEvaluation.RightTN << endl;
-
-	cout << "Total Ground Truth: " << structEvaluation.nLeftGroundTruth + structEvaluation.nRightGroundTruth << endl;*/
-	waitKey(0);
-	///end
-	cout << "-------------------------------" << endl;
-	cout << "process END" << endl;
-	//for(int i=0; i<vecIpmFiltered.size();i++){
-	//	imshow("pushed vecter mat",vecIpmFiltered[i]);
-	//	//printf("%d\n",i);
-	//	waitKey(1);
-	//	//ShowImageNormalize("aa",vecIpmFiltered[i]);
-	//	//cout<<vecIpmFiltered.size()<<endl;
-	//	//printf("%d\n",i);
-	//	//waitKey(0);
-	//}
-	//obj.GetCameraPose(AUTOCALIB, vecIpmFiltered);
-	//ShowResults(obj,AUTOCALIB);
-	//waitKey(0);
-	return 0;
-}
+			} // end of startLine 883 test DB 시작
 
 
-//my function
+		cout << "Average processing time  : " << d_totalProcessTime / nCntProcess << endl;
+		/*cout << "Total Frames : " << structEvaluation.nTotalFrame << endl;
+		cout << "Left Evaluation" << endl;
+		cout << "TP : " << structEvaluation.LeftTP << endl;
+		cout << "FP : " << structEvaluation.LeftFP << endl;
+		cout << "FN : " << structEvaluation.LeftFN << endl;
+		cout << "TN : " << structEvaluation.LeftTN << endl;
+
+		cout << "Right Evaluation" << endl;
+		cout << "TP : " << structEvaluation.RightTP << endl;
+		cout << "FP : " << structEvaluation.RightFP << endl;
+		cout << "FN : " << structEvaluation.RightFN << endl;
+		cout << "TN : " << structEvaluation.RightTN << endl;
+
+		cout << "Total Evaluation" << endl;
+
+		cout << "TP : " << structEvaluation.LeftTP + structEvaluation.RightTP << endl;
+		cout << "FP : " << structEvaluation.LeftFP + structEvaluation.RightFP << endl;
+		cout << "FN : " << structEvaluation.LeftFN + structEvaluation.RightFN << endl;
+		cout << "TN : " << structEvaluation.LeftTN + structEvaluation.RightTN << endl;
+
+		cout << "Total Ground Truth: " << structEvaluation.nLeftGroundTruth + structEvaluation.nRightGroundTruth << endl;*/
+		waitKey(0);
+		///end
+		cout << "-------------------------------" << endl;
+		cout << "process END" << endl;
+		//for(int i=0; i<vecIpmFiltered.size();i++){
+		//	imshow("pushed vecter mat",vecIpmFiltered[i]);
+		//	//printf("%d\n",i);
+		//	waitKey(1);
+		//	//ShowImageNormalize("aa",vecIpmFiltered[i]);
+		//	//cout<<vecIpmFiltered.size()<<endl;
+		//	//printf("%d\n",i);
+		//	//waitKey(0);
+		//}
+		//obj.GetCameraPose(AUTOCALIB, vecIpmFiltered);
+		//ShowResults(obj,AUTOCALIB);
+		//waitKey(0);
+		return 0;
+	}
+
+
+	//my function
