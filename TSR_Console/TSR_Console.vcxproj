@@ -79,12 +79,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ConvNet.cpp" />
+    <ClCompile Include="kalmanFilter.cpp" />
     <ClCompile Include="main.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="main_adaptive.cpp" />
     <ClCompile Include="trafficsign.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="trafficsign_adaptiveROI2.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -98,6 +101,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="TSC.cpp" />
     <ClCompile Include="TSD.cpp" />
     <ClCompile Include="TST.cpp" />
   </ItemGroup>
@@ -105,6 +109,8 @@
     <ClInclude Include="ConvNet.h" />
     <ClInclude Include="EM.h" />
     <ClInclude Include="kalmanFilter.h" />
+    <ClInclude Include="structure.h" />
+    <ClInclude Include="TSC.h" />
     <ClInclude Include="TSD.h" />
     <ClInclude Include="TST.h" />
   </ItemGroup>
