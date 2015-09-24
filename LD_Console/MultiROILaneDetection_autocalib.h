@@ -32,7 +32,7 @@ using namespace std;
 #define MOVING_AVERAGE_NUM 7
 #define TRACKING_FLAG_NUM 3 //4
 #define TRACKING_ERASE_LEVEL 1
-#define TRACKINGERASE 5
+#define TRACKINGERASE 4
 #define MIN_WORLD_WIDTH 2		//Left,Right lane minimum interval
 #define MAX_WORLD_WIDTH 5 //[LYW_0922] : 간격이 너무 벌어져도 버려
 enum EROINUMBER{
@@ -213,6 +213,39 @@ typedef struct STrackingFlag{ //#Q : 용도가 뭘지 잘 고민해봐!
 	int nTargetTracker = -1;
 }STrackingFlag;
 
+
+//[LYW_0923] : Profiling
+typedef struct SProfiling{
+
+	//double dStartTimeGetIPM;
+	//double dEndTimeGetIPM;
+	double dTotalTimeGetIPM;
+
+	//double dStartTimeFilterLinesIPM;
+	//double dEndTimeFilterLinesIPM;
+	double dTotalTimeFilterLinesIPM;
+
+	//double dStartTimeGetLinesIPM;
+	//double dEndTimeGetLinesIPM;
+	double dTotalTimeGetLinesIPM;
+
+	//double dStartTimeLineFitting;
+	//double dEndTimeLineFitting;
+	double dTotalTimeLineFitting;
+
+	//double dStartTimeIPM2IMLines;
+	//double dEndTimeIPM2IMLines;
+	double dTotalTimeIPM2IMLines;
+	
+	//double dStartTimeLaneDetection;
+	//double dEndTimeLaneDetection;
+	double dTotalTimeLaneDetection;
+
+}SProfiling;
+
+
+
+
 class CMultiROILaneDetection{
 
 	///////////////////////////////////////start of variable declaration////////////////////////////////////////////
@@ -285,6 +318,12 @@ public:
 
 	bool m_bLeftDraw;
 	bool m_bRightDraw;
+
+	//[LYW_0923] : Profiling
+	SProfiling m_profiling[MULTIROINUMBER];
+	int m_nTotalCnt;
+
+
 private:
 	SVD m_SvdCalc;
 	Mat m_MatFx;
@@ -296,11 +335,57 @@ public:
 	void SetRoiIpmCofig(EROINUMBER nFlag); //[LYW_0824]: Calibration 결과값을 이용한 ROI초기화셋팅--> VP,LUT만들기 
 
 	void StartLanedetection(EROINUMBER nFlag){
+		
+		//double dStartTime = (double)getTickCount();
+		
 		GetIPM(nFlag); //input = grayImg,uvGrid & xyGrid LUT || output = IpmImg
 		FilterLinesIPM(nFlag);	//input = m_imgIPM, Output1= m_ipmFiltered, Output2= m_ipmFilteredThreshold
 		GetLinesIPM(nFlag);
 		LineFitting(nFlag);
 		IPM2ImLines(nFlag);
+
+		//double dEndTime = (double)getTickCount();
+		//m_profiling[nFlag].dTotalTimeLaneDetection += (dEndTime - dStartTime)/getTickFrequency();
+		//if (nFlag == LEFT_ROI2)
+		//	cout << "__LEFT_ROI2: " << m_profiling[nFlag].dTotalTimeLaneDetection << endl;
+		//else if (nFlag == LEFT_ROI0)
+		//	cout << "__LEFT_ROI0: " << m_profiling[nFlag].dTotalTimeLaneDetection << endl;
+		//else if (nFlag == LEFT_ROI3)
+		//	cout << "__LEFT_ROI3: " << m_profiling[nFlag].dTotalTimeLaneDetection << endl;
+		//else if (nFlag == RIGHT_ROI0)
+		//	cout << "RIGHT_ROI0: " << m_profiling[nFlag].dTotalTimeLaneDetection << endl;
+		//else if (nFlag == RIGHT_ROI2)
+		//	cout << "__RIGHT_ROI2: " << m_profiling[nFlag].dTotalTimeLaneDetection << endl;
+		//else if (nFlag == RIGHT_ROI3)
+		//	cout << "__RIGHT_ROI3: " << m_profiling[nFlag].dTotalTimeLaneDetection << endl;
+
+
+	
+
+		//switch (nFlag)
+		//{
+		//	case LEFT_ROI0:
+		//		cout << "Average pTime in LaneDetection on LEFT_ROI0 : " << m_profiling[nFlag].dTotalTimeLaneDetection / m_nTotalCnt << endl;
+		//		break;
+		//	case LEFT_ROI2:
+		//		cout << "Average pTime in LaneDetection on LEFT_ROI2 : " << m_profiling[nFlag].dTotalTimeLaneDetection / m_nTotalCnt << endl;
+		//		break;
+		//	case LEFT_ROI3:
+		//		cout << "Average pTime in LaneDetection on LEFT_ROI3 : " << m_profiling[nFlag].dTotalTimeLaneDetection / m_nTotalCnt << endl;
+		//		break;
+		//	case RIGHT_ROI0:
+		//		cout << "Average pTime in LaneDetection on RIGHT_ROI0 : " << m_profiling[nFlag].dTotalTimeLaneDetection / m_nTotalCnt << endl;
+		//		break;
+		//	case RIGHT_ROI2:
+		//		cout << "Average pTime in LaneDetection on RIGHT_ROI2 : " << m_profiling[nFlag].dTotalTimeLaneDetection / m_nTotalCnt << endl;
+		//		break;
+		//	case RIGHT_ROI3:
+		//		cout << "Average pTime in LaneDetection on RIGHT_ROI3 : " << m_profiling[nFlag].dTotalTimeLaneDetection / m_nTotalCnt << endl;
+		//		break;
+		//}
+
+
+
 	}
 
 	void InitialResizeFunction(Size sizeResize);
@@ -697,6 +782,8 @@ void CMultiROILaneDetection::SetRoiIpmCofig(EROINUMBER nFlag){
 //처리결과 : 각ROI의 IPM image
 void CMultiROILaneDetection::GetIPM(EROINUMBER nFlag){
 
+	//[LYW_0923] : Profiling
+	//double dStartTime = (double)getTickCount();
 
 	Scalar sMean = mean(m_imgResizeScaleGray);
 	double dmean = sMean.val[0];
@@ -761,6 +848,10 @@ void CMultiROILaneDetection::GetIPM(EROINUMBER nFlag){
 			}*/
 		}
 
+	
+	//double dEndTime = getTickCount();
+	//m_profiling[nFlag].dTotalTimeGetIPM += (dEndTime - dStartTime) / getTickFrequency();
+
 }
 //OriginImg : resize & normalized & RGB2GRAY
 void CMultiROILaneDetection::InitialResizeFunction(Size sizeResize){
@@ -775,6 +866,9 @@ void CMultiROILaneDetection::InitialResizeFunction(Size sizeResize){
 //처리결과 : Filtered Threhold IPM image
 void CMultiROILaneDetection::FilterLinesIPM(EROINUMBER nFlag){
 	//define the two kernels
+
+	//[LYW_0923] : Profiling
+	double dStartTime = (double)getTickCount();
 
 	Scalar dMean = mean(m_imgIPM[nFlag]);
 
@@ -800,6 +894,11 @@ void CMultiROILaneDetection::FilterLinesIPM(EROINUMBER nFlag){
 	//ThresholdLower(imgSubImage,imgSubImage, fQtileThreshold);
 	//double dEndTick = (double)getTickCount();
 	//cout<<"reshape & quantile & threshold time  "<<(dEndTick-dStartTick) / getTickFrequency()*1000.0<<" msec"<<endl;
+
+
+	double dEndTime = (double)getTickCount();
+	m_profiling[nFlag].dTotalTimeFilterLinesIPM = (dEndTime - dStartTime) / getTickFrequency();
+
 }
 
 void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
@@ -929,9 +1028,7 @@ void CMultiROILaneDetection::GetLinesIPM(EROINUMBER nFlag){
 void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 	vector<SLine> lines = m_lanes[nFlag]; // [LYW_0724] : line fitting해야할 후보들, m_laneScore와 짝을 이룬다. (같은 index에 score가 저장되어 있음)
 	//그렇지만 이 프로그램(승준이꺼)에서는 max값만 넘어오기때문에 딱 하나만 넘겨옮
-	//#debug
-	if (nFlag == LEFT_ROI0) printf("LEFT_ROI0: numLines:%d in LineFitting_1\n", lines.size()); //result:1 여기까지는 잘 넘어온다.
-	if (nFlag == LEFT_ROI2) printf("LEFT_ROI2: numLines:%d in LineFitting_1\n", lines.size());
+	
 	vector<float> lineScores = m_laneScore[nFlag];
 
 	/*cout<<m_lanes[nFlag].at(1).ptStartLine<<endl;
@@ -1011,12 +1108,6 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 			if (put){
 				newLines.push_back(line);
 				newScores.push_back(lineScore);
-				//#debug
-				if (nFlag == LEFT_ROI0)
-				{
-					printf("cnt in LineFitting\n");
-					printf("numLines:%d in Linefitting\n", newLines.size());
-				}
 			}
 		} // if
 		//clear
@@ -1060,8 +1151,6 @@ void CMultiROILaneDetection::LineFitting(EROINUMBER nFlag){
 	else{ // [LYW_0724] : Auto Calib가 아닌 일반적인 detection단계에서 찾은 차선을 다 넣어주는거야! 
 		m_lanes[nFlag] = newLines;
 		m_laneScore[nFlag] = newScores;
-		//#debug
-		if (nFlag == LEFT_ROI0) printf("numLines:%d in LineFitting\n", m_lanes[nFlag].size()); // 출력해봤더니 0으로 찍혀...-_-;;
 	}
 
 	//clean
@@ -1109,7 +1198,7 @@ void CMultiROILaneDetection::IPM2ImLines(EROINUMBER nFlag){ //
 		//WORLD2IMAGE
 		//convert them from world frame into camera frame
 		//put a dummy line at the beginning till we check that cvDiv bug
-		printf("m_lanesReuslt size : %d in Lines2ImLines\n", m_lanesResult[nFlag].size());
+		
 		if (nFlag == AUTOCALIB){
 
 			//convert to mat and get in image coordinates
@@ -1201,8 +1290,7 @@ void CMultiROILaneDetection::GetMaxLineScore(EROINUMBER nFlag){
 	//reload
 	m_lanes[nFlag].push_back(SMAxLane);
 	m_laneScore[nFlag].push_back(fMaxScore);
-	//#debug
-	if (nFlag == LEFT_ROI0) printf("numLines:%d in GetMaxLinesScore\n", m_lanes[nFlag].size()); //result : 1개 나옮.
+	
 }
 //tracking module
 //m_sTracking[nflag].bTracking
@@ -2960,6 +3048,14 @@ void ShowResults(CMultiROILaneDetection &obj, EROINUMBER nflag){
 	Scalar(0,0,255),2);*/
 
 	rectangle(obj.m_imgResizeOrigin, obj.m_sRoiInfo[nflag].ptRoi, obj.m_sRoiInfo[nflag].ptRoiEnd, Scalar(255, 0, 0), 2);
+
+	if (nflag == LEFT_ROI0 || nflag == RIGHT_ROI0)
+		rectangle(obj.m_imgResizeOrigin, obj.m_sRoiInfo[nflag].ptRoi, obj.m_sRoiInfo[nflag].ptRoiEnd, Scalar(220, 0, 220), 2);
+
+
+
+
+
 
 	//Draw lane Orignin //[LYW_0815] : 트래킹 결과를 나중에 그릴려고 이 부분은 일단 주석처리
 	/*for(unsigned int i=0; i< obj.m_lanesResult[nflag].size();i++)
